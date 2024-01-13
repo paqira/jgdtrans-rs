@@ -1,0 +1,39 @@
+[package]
+name = "jgdtrans"
+version = "0.1.0"
+edition = "2021"
+authors = ["Kentaro Tatumi <paqira.2019@gmail.com>"]
+license = "MIT OR Apache-2.0"
+description = "Coordinate Transformer by Gridded Correction Parameter (par file)"
+readme = "README.md"
+categories = ["Science::Geospatial"]
+keywords = [
+    "GIS",
+    "Coordinate Transformation",
+    "par file",
+    "TKY2JGD",
+    "PatchJGD",
+    "PatchJGD(H)",
+    "HyokoRev",
+    "SemiDyna",
+    "SemiDynaEXE",
+    "geonetF3",
+    "ITRF2014",
+]
+
+repository = "https://github.com/paqira/jgdtrans-rs"
+
+[dependencies]
+serde_repr = { version = "0.1.18", optional = true }
+serde = { version = "1.0.194", features = ["derive"], optional = true }
+# for doctest
+serde_json = { version = "1.0.111", optional = true }
+
+[features]
+default = []
+serde = ["dep:serde", "dep:serde_repr"]
+__test = ["dep:serde", "dep:serde_repr", "dep:serde_json"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--html-in-header", "doc/katex.html"]

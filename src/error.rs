@@ -3,7 +3,7 @@ use crate::mesh::{MeshCoord, MeshNode, MeshUnit};
 /// Alias for a `Result<T, jgdtrans::error::Error>`.
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// Represents all possible errors that can occur by this create.
+/// Represents all possible errors that can occur by this crate.
 #[derive(Debug)]
 pub struct Error {
     pub err: Box<ErrorImpl>,

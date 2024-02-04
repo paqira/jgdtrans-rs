@@ -33,8 +33,9 @@ fn main -> Result<(), Box<dyn Error>> {
 }
 ```
 
-Unofficial Rust impl. of coordinate transformer by _Gridded Correction Parameter_
-which Geospatial Information Authority of Japan (GIAJ, formerly GSIJ) distributing.
+Unofficial coordinate transformer by _Gridded Correction Parameter_
+which Geospatial Information Authority of Japan (GIAJ, formerly GSIJ) distributing
+for Rust.
 
 国土地理院が公開している .par ファイルによる変換（逆変換）の非公式な実装です。
 
@@ -42,20 +43,25 @@ Features:
 
 - Offline transformation (no web API)
   - オフライン変換（web API 不使用）
-- Support both original forward/backward transformation
+- Supports both original forward/backward transformation
   - 順変換と逆変換の両方をサポート
-- Support verified backward transformation
+- Supports verified backward transformation
   - 精度を保証した逆変換のサポート
-- Support all TKY2JGD, PatchJGD, PatchJGD(H), HyokoRev, SemiDynaEXE, geonetF3 and ITRF2014 (POS2JGD),
-  e.g. Tokyo Datum to JGD2000 (EPSG:4301 to EPSG:4612) and JGD2000 to JGD2011 (EPSG:4612 to EPSG:6668)
+- Supports all TKY2JGD, PatchJGD and PatchJGD(H), HyokoRev, SemiDynaEXE, geonetF3 and ITRF2014 (POS2JGD)
+  - For example, Tokyo Datum to JGD2000 (EPSG:4301 to EPSG:4612)
+    and JGD2000 to JGD2011 (EPSG:4612 to EPSG:6668)
   - 上記の全てをサポート
 - Clean implementation
   - 保守が容易な実装
-- No dependency; depends on [`serde`](https://crates.io/crates/serde) and
-  [`serde_repr`](https://crates.io/crates/serde_repr) creates only if `serde` feature on
+- No dependency
+  - It depends on [`serde`][serde] and [`serde_repr`][serde_repr] crates only if `serde` feature on
   - 依存パッケージなし
 
-`jdgtrans` requires nightly channel so far.
+[serde]: https://crates.io/crates/serde
+[serde_repr]: https://crates.io/crates/serde_repr
+
+`jdgtrans` requires nightly channel,
+it depends on `#![feature(float_next_up_down)]`.
 
 This package does not contain parameter files, download it from GIAJ.
 
@@ -63,7 +69,7 @@ This package does not contain parameter files, download it from GIAJ.
 
 ## Optional Features
 
-- `serde`: supports serialization/deserialization by [`serde` create](https://crates.io/crates/serde).
+- `serde`: supports serialization/deserialization by [`serde` crate](https://crates.io/crates/serde).
 
 ## Licence
 

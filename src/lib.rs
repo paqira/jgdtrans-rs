@@ -47,18 +47,20 @@
 //! - Supports verified backward transformation
 //! - Supports all TKY2JGD [^2], PatchJGD and PatchJGD(H) [^3],
 //!   HyokoRev [^4], SemiDynaEXE [^5], geonetF3 and ITRF2014 (POS2JGD) [^6]
-//!   - including Tokyo Datum (EPSG:4301) to JGD2000 (EPSG:4612)
-//!     and JGD2000 (EPSG:4612) to JGD2011 (EPSG:6668)
+//!   - For example, Tokyo Datum to JGD2000 (EPSG:4301 to EPSG:4612)
+//!     and JGD2000 to JGD2011 (EPSG:4612 to EPSG:6668)
 //! - Clean implementation
 //! - No dependency
-//!   - Depends on [`serde`](https://crates.io/crates/serde) and
-//!     [`serde_repr`](https://crates.io/crates/serde_repr) creates only if `serde` feature on
+//!   - It depends on [`serde`][serde] and [`serde_repr`][serde_repr] crates only if `serde` feature on
+//!
+//! [serde]: https://crates.io/crates/serde
+//! [serde_repr]: https://crates.io/crates/serde_repr
 //!
 //! This package does not contain parameter files, download it from GIAJ [^7].
 //!
 //! このパッケージはパラメータファイルを提供しません。公式サイトよりダウンロードしてください [^7]。
 //!
-//! We refer to _TKY2JGD for Windows Ver.1.3.79_ [^8].
+//! We use _TKY2JGD for Windows Ver.1.3.79_ [^8] as a reference.
 //!
 //! # Serialization and Deserialization
 //!
@@ -98,7 +100,7 @@
 //! # Ok(())}
 //! ```
 //!
-//! In addition, it supports (de)serialization by [`serde` create](https://crates.io/crates/serde)
+//! In addition, it supports (de)serialization by [`serde` crate](https://crates.io/crates/serde)
 //! for all `struct` including [`Transformer`] (deserialized object of par-formatted data)
 //! only if the feature `serde` is enable.
 //! We show a (de)serialization example to/from json;
@@ -157,8 +159,6 @@
 //!       which compatible to CC BY 4.0.
 //!
 //! [^9]: Python implementation: <https://github.com/paqira/JGDtrans-py>.
-
-#![feature(doc_cfg)]
 #![feature(float_next_up_down)]
 
 #[doc(inline)]

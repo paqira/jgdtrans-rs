@@ -2,7 +2,7 @@
 name = "jgdtrans"
 version = "0.1.0"
 edition = "2021"
-authors = ["Kentaro Tatumi <paqira.2019@gmail.com>"]
+authors = ["Kentaro Tatsumi <paqira.2019@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "Coordinate Transformer by Gridded Correction Parameter (par file)"
 readme = "README.md"
@@ -25,11 +25,11 @@ repository = "https://github.com/paqira/jgdtrans-rs"
 
 [dependencies]
 serde_repr = { version = "0.1.18", optional = true }
-serde = { version = "1.0.194", features = ["derive"], optional = true }
+serde = { version = "1.0.196", features = ["derive"], optional = true }
 
 [dev-dependencies]
 # for doctest
-serde_json = { version = "1.0.111" }
+serde_json = { version = "1.0.113" }
 
 [features]
 default = []

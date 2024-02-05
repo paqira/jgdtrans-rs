@@ -13,9 +13,6 @@ permissions:
 jobs:
   linux:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target: [x86_64, ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,6 +20,8 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy, rustfmt
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
       - name: Lint & Format
         run: |
           cargo fmt --check

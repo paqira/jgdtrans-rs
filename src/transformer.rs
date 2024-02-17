@@ -8,6 +8,7 @@ use crate::error::{Error, Result};
 use crate::mesh::{MeshCell, MeshUnit};
 use crate::{Format, Point};
 
+#[inline]
 fn bilinear_interpolation(sw: &f64, se: &f64, nw: &f64, ne: &f64, lat: &f64, lng: &f64) -> f64 {
     sw * (1. - lng) * (1. - lat) + se * lng * (1. - lat) + nw * (1. - lng) * lat + ne * lng * lat
 }
@@ -16,8 +17,8 @@ fn bilinear_interpolation(sw: &f64, se: &f64, nw: &f64, ne: &f64, lat: &f64, lng
 ///
 /// see: https://en.wikipedia.org/wiki/Kahan_summation_algorithm#Further_enhancements
 fn ksum(vs: &[f64]) -> f64 {
-    let mut sum = f64::default();
-    let mut c = f64::default();
+    let mut sum = 0.0;
+    let mut c = 0.0;
     for v in vs {
         let t = sum + *v;
         c += if sum.ge(v) {
@@ -176,7 +177,7 @@ impl Correction {
 
 /// The statistics of parameter.
 ///
-/// This is a component of the result that [`Transformer::summary()`] returns.
+/// This is a component of the result that [`Transformer::statistics()`] returns.
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Statistics {
@@ -207,28 +208,24 @@ impl Statistics {
         }
     }
 
-    fn default() -> Self {
-        Self {
-            count: None,
-            mean: None,
-            std: None,
-            abs: None,
-            min: None,
-            max: None,
-        }
-    }
-
     fn from_arr(vs: &[f64]) -> Self {
         if vs.is_empty() {
-            return Self::default();
+            return Self {
+                count: None,
+                mean: None,
+                std: None,
+                abs: None,
+                min: None,
+                max: None,
+            };
         }
 
         let length = vs.len() as f64;
 
         let sum = ksum(vs);
 
-        let mut max: f64 = f64::MIN;
-        let mut min: f64 = f64::MAX;
+        let mut max = f64::MIN;
+        let mut min = f64::MAX;
         let mut std: Vec<f64> = Vec::new();
         let mut abs: Vec<f64> = Vec::new();
 
@@ -252,7 +249,7 @@ impl Statistics {
 
 /// The statistical summary of parameter.
 ///
-/// This is a result that [`Transformer::summary()`] returns.
+/// This is a result that [`Transformer::statistics()`] returns.
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct StatisticalSummary {
@@ -401,6 +398,7 @@ impl Transformer {
     pub fn from_str(s: &str, format: Format) -> Result<Transformer> {
         crate::parser::from_str(s, format)
     }
+
     /// Returns the statistical summary.
     ///
     /// This fills the result by [`None`] if the population is empty,
@@ -435,7 +433,7 @@ impl Transformer {
     /// assert_eq!(stats.latitude.max, Some(-0.0062));
     /// # Ok(())}
     /// ```
-    pub fn summary(&self) -> StatisticalSummary {
+    pub fn statistics(&self) -> StatisticalSummary {
         macro_rules! extract {
             ($name:ident) => {
                 self.parameter
@@ -462,6 +460,18 @@ impl Transformer {
             longitude,
             altitude,
         }
+    }
+
+    fn make_result(point: &Point, corr: Correction) -> Point {
+        let latitude = point.latitude + corr.latitude;
+        let longitude = point.longitude + corr.longitude;
+        let altitude = point.altitude + corr.altitude;
+
+        Point::new(
+            crate::utils::normalize_latitude(&latitude),
+            crate::utils::normalize_longitude(&longitude),
+            altitude,
+        )
     }
 
     /// Returns the forward-transformed position from [`point`](Point).
@@ -497,12 +507,7 @@ impl Transformer {
     /// ```
     pub fn forward(&self, point: &Point) -> Result<Point> {
         let corr = self.forward_corr(point)?;
-
-        Ok(Point::new(
-            point.latitude + corr.latitude,
-            point.longitude + corr.longitude,
-            point.altitude + corr.altitude,
-        ))
+        Ok(Self::make_result(point, corr))
     }
 
     /// Returns the backward-transformed position from [`point`](Point).
@@ -546,12 +551,7 @@ impl Transformer {
     /// ```
     pub fn backward(&self, point: &Point) -> Result<Point> {
         let corr = self.backward_corr(point)?;
-
-        Ok(Point::new(
-            point.latitude + corr.latitude,
-            point.longitude + corr.longitude,
-            point.altitude + corr.altitude,
-        ))
+        Ok(Self::make_result(point, corr))
     }
 
     /// Returns the validated backward-transformed position.
@@ -594,52 +594,48 @@ impl Transformer {
     /// ```
     pub fn backward_safe(&self, point: &Point) -> Result<Point> {
         let corr = self.backward_corr_safe(point)?;
-
-        Ok(Point::new(
-            point.latitude + corr.latitude,
-            point.longitude + corr.longitude,
-            point.altitude + corr.altitude,
-        ))
+        Ok(Self::make_result(point, corr))
     }
 
     fn parameter_quadruple(
         &self,
         cell: &MeshCell,
     ) -> Result<(&Parameter, &Parameter, &Parameter, &Parameter)> {
-        macro_rules! make_error {
-            ($code:ident, $corner:expr) => {
-                Error {
-                    err: Box::new(error::ErrorImpl::ParameterNotFound {
-                        kind: $corner,
-                        meshcode: $code,
-                    }),
-                }
-            };
-        }
-
         let meshcode = cell.sw.to_meshcode();
-        let sw = self.parameter.get(&meshcode).ok_or(make_error!(
-            meshcode,
-            error::ParameterNotFoundKind::SouthWest
-        ))?;
+        let sw = self
+            .parameter
+            .get(&meshcode)
+            .ok_or(Error::new_parameter_not_found(
+                error::ParameterNotFoundKind::SouthWest,
+                meshcode,
+            ))?;
 
         let meshcode = cell.se.to_meshcode();
-        let se = self.parameter.get(&meshcode).ok_or(make_error!(
-            meshcode,
-            error::ParameterNotFoundKind::SouthEast
-        ))?;
+        let se = self
+            .parameter
+            .get(&meshcode)
+            .ok_or(Error::new_parameter_not_found(
+                error::ParameterNotFoundKind::SouthEast,
+                meshcode,
+            ))?;
 
         let meshcode = cell.nw.to_meshcode();
-        let nw = self.parameter.get(&meshcode).ok_or(make_error!(
-            meshcode,
-            error::ParameterNotFoundKind::NorthWest
-        ))?;
+        let nw = self
+            .parameter
+            .get(&meshcode)
+            .ok_or(Error::new_parameter_not_found(
+                error::ParameterNotFoundKind::NorthWest,
+                meshcode,
+            ))?;
 
         let meshcode = cell.ne.to_meshcode();
-        let ne = self.parameter.get(&meshcode).ok_or(make_error!(
-            meshcode,
-            error::ParameterNotFoundKind::NorthEast
-        ))?;
+        let ne = self
+            .parameter
+            .get(&meshcode)
+            .ok_or(Error::new_parameter_not_found(
+                error::ParameterNotFoundKind::NorthEast,
+                meshcode,
+            ))?;
 
         Ok((sw, se, nw, ne))
     }
@@ -683,7 +679,7 @@ impl Transformer {
         // y: latitude, x: longitude
         let (y, x) = cell.position(point);
 
-        let scale = 3600.;
+        const SCALE: f64 = 3600.;
 
         let latitude = bilinear_interpolation(
             &sw.latitude,
@@ -692,7 +688,7 @@ impl Transformer {
             &ne.latitude,
             &y,
             &x,
-        ) / scale;
+        ) / SCALE;
 
         let longitude = bilinear_interpolation(
             &sw.longitude,
@@ -701,7 +697,7 @@ impl Transformer {
             &ne.longitude,
             &y,
             &x,
-        ) / scale;
+        ) / SCALE;
 
         let altitude = bilinear_interpolation(
             &sw.altitude,
@@ -750,9 +746,9 @@ impl Transformer {
     /// ```
     pub fn backward_corr(&self, point: &Point) -> Result<Correction> {
         // 12. / 3600.
-        let delta = 1. / 300.;
+        const DELTA: f64 = 1. / 300.;
 
-        let temporal = Point::new(point.latitude - delta, point.longitude + delta, 0.0);
+        let temporal = Point::new(point.latitude - DELTA, point.longitude + DELTA, 0.0);
 
         let corr = self.forward_corr(&temporal)?;
         let reference = Point::new(
@@ -804,9 +800,9 @@ impl Transformer {
     pub fn backward_corr_safe(&self, point: &Point) -> Result<Correction> {
         // Newtown's Method
 
-        let scale = 3600.;
-        let criteria = 2.5e-9;
-        let iteration = 3;
+        const SCALE: f64 = 3600.;
+        const CRITERIA: f64 = 2.5e-9;
+        const ITERATION: usize = 3;
 
         let mut yn = point.latitude;
         let mut xn = point.longitude;
@@ -817,7 +813,7 @@ impl Transformer {
             };
         }
 
-        for _ in 0..iteration {
+        for _ in 0..ITERATION {
             let cell = MeshCell::try_from_point(point, self.unit)?;
             let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
 
@@ -830,7 +826,7 @@ impl Transformer {
                 &ne.latitude,
                 &y,
                 &x,
-            ) / scale;
+            ) / SCALE;
 
             let corr_x = bilinear_interpolation(
                 &sw.longitude,
@@ -839,27 +835,31 @@ impl Transformer {
                 &ne.longitude,
                 &y,
                 &x,
-            ) / scale;
+            ) / SCALE;
 
             let fx = diff!(point.longitude, xn, corr_x);
             let fy = diff!(point.latitude, yn, corr_y);
 
+            // for readability
+            macro_rules! lng_sub {
+                ($a:ident, $b:ident) => {
+                    $a.longitude - $b.longitude
+                };
+            }
+            macro_rules! lat_sub {
+                ($a:ident, $b:ident) => {
+                    $a.latitude - $b.latitude
+                };
+            }
+
             // fx,x
-            let fx_x = -1.
-                - ((se.longitude - sw.longitude) * (1. - yn) + (ne.longitude - nw.longitude) * yn)
-                    / scale;
+            let fx_x = -1. - (lng_sub!(se, sw) * (1. - yn) + lng_sub!(ne, nw) * yn) / SCALE;
             // fx,y
-            let fx_y = -((nw.longitude - sw.longitude) * (1. - xn)
-                + (ne.longitude - se.longitude) * xn)
-                / scale;
+            let fx_y = -(lng_sub!(nw, sw) * (1. - xn) + lng_sub!(ne, se) * xn) / SCALE;
             // fy,x
-            let fy_x = -((se.latitude - sw.latitude) * (1. - yn)
-                + (ne.latitude - nw.latitude) * yn)
-                / scale;
+            let fy_x = -(lat_sub!(se, sw) * (1. - yn) + lat_sub!(ne, nw) * yn) / SCALE;
             // fx,y
-            let fy_y = -1.
-                - ((ne.latitude - sw.latitude) * (1. - xn) + (ne.latitude - se.latitude) * xn)
-                    / scale;
+            let fy_y = -1. - (lat_sub!(ne, sw) * (1. - xn) + lat_sub!(ne, se) * xn) / SCALE;
 
             // # and its determinant
             let det = fx_x * fy_y - fy_x * fy_x;
@@ -869,11 +869,10 @@ impl Transformer {
             yn -= (fx_x * fy - fy_x * fx) / det;
 
             let corr = self.forward_corr(&Point::new(yn, xn, 0.0))?;
-            let (diff_x, diff_y) = (
-                diff!(point.longitude, xn, corr.longitude),
-                diff!(point.latitude, yn, corr.latitude),
-            );
-            if diff_x.abs().le(&criteria) && diff_y.abs().le(&criteria) {
+
+            let diff_x = diff!(point.longitude, xn, corr.longitude);
+            let diff_y = diff!(point.latitude, yn, corr.latitude);
+            if diff_x.abs().le(&CRITERIA) && diff_y.abs().le(&CRITERIA) {
                 return Ok(Correction {
                     latitude: -corr.latitude,
                     longitude: -corr.longitude,
@@ -886,8 +885,8 @@ impl Transformer {
             err: Box::new(error::ErrorImpl::NotCovergent {
                 latitude: yn,
                 longitude: xn,
-                criteria,
-                iteration,
+                criteria: CRITERIA,
+                iteration: ITERATION,
             }),
         })
     }
@@ -1079,7 +1078,7 @@ mod tests {
                     (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
                 ])
                 .build()
-                .summary();
+                .statistics();
 
             assert_eq!(
                 stats.latitude,
@@ -1115,7 +1114,7 @@ mod tests {
                 )
             );
 
-            let stats = TransformerBuilder::new(MeshUnit::One).build().summary();
+            let stats = TransformerBuilder::new(MeshUnit::One).build().statistics();
             assert_eq!(
                 stats.latitude,
                 Statistics {
@@ -1153,7 +1152,7 @@ mod tests {
             let stats = TransformerBuilder::new(MeshUnit::Five)
                 .parameters([(54401005, Parameter::new(1., 0.0, f64::NAN))])
                 .build()
-                .summary();
+                .statistics();
 
             assert_eq!(stats.latitude, Statistics::new(1, 1.0, 0.0, 1.0, 1.0, 1.0));
             assert_eq!(stats.longitude, Statistics::new(1, 0.0, 0.0, 0.0, 0.0, 0.0));

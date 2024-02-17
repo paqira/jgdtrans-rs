@@ -3,22 +3,22 @@ use std::{fmt::Display, str::FromStr};
 
 use crate::{error, Error, Result};
 
-/// Returns the rounded latitude into -90.0 <= and <= 90.0.
+/// Returns the normalized latitude into -90.0 <= and <= 90.0.
 ///
-/// We note that "rounding" may be interesting (the Earth is round).
+/// We note that it may be interesting (the Earth is round).
 ///
 /// # Example
 ///
 /// ```
-/// # use jgdtrans::utils::round_latitude;
-/// assert_eq!(round_latitude(&35.0), 35.0);
-/// assert_eq!(round_latitude(&100.0), 80.0);
-/// assert_eq!(round_latitude(&190.0), -10.0);
-/// assert_eq!(round_latitude(&-100.0), -80.0);
-/// assert_eq!(round_latitude(&-190.0), 10.0);
-/// assert!(round_latitude(&f64::NAN).is_nan());
+/// # use jgdtrans::utils::normalize_latitude;
+/// assert_eq!(normalize_latitude(&35.0), 35.0);
+/// assert_eq!(normalize_latitude(&100.0), 80.0);
+/// assert_eq!(normalize_latitude(&190.0), -10.0);
+/// assert_eq!(normalize_latitude(&-100.0), -80.0);
+/// assert_eq!(normalize_latitude(&-190.0), 10.0);
+/// assert!(normalize_latitude(&f64::NAN).is_nan());
 /// ```
-pub fn round_latitude(t: &f64) -> f64 {
+pub fn normalize_latitude(t: &f64) -> f64 {
     if t.is_nan() {
         return *t;
     };
@@ -37,20 +37,20 @@ pub fn round_latitude(t: &f64) -> f64 {
     res
 }
 
-/// Returns the rounded longitude -180.0 <= and <= 180.0.
+/// Returns the normalize longitude -180.0 <= and <= 180.0.
 ///
-/// We note that "rounding" may be interesting (the Earth is round).
+/// We note that it may be interesting (the Earth is round).
 ///
 /// # Example
 ///
 /// ```
-/// # use jgdtrans::utils::round_longitude;
-/// assert_eq!(round_longitude(&145.0), 145.0);
-/// assert_eq!(round_longitude(&190.0), -170.0);
-/// assert_eq!(round_longitude(&-190.0), 170.0);
-/// assert!(round_longitude(&f64::NAN).is_nan());
+/// # use jgdtrans::utils::normalize_longitude;
+/// assert_eq!(normalize_longitude(&145.0), 145.0);
+/// assert_eq!(normalize_longitude(&190.0), -170.0);
+/// assert_eq!(normalize_longitude(&-190.0), 170.0);
+/// assert!(normalize_longitude(&f64::NAN).is_nan());
 /// ```
-pub fn round_longitude(t: &f64) -> f64 {
+pub fn normalize_longitude(t: &f64) -> f64 {
     if t.is_nan() {
         return *t;
     };
@@ -220,17 +220,10 @@ impl FromStr for DMS {
     /// # Ok(())}
     /// ```
     fn from_str(s: &str) -> Result<Self> {
-        macro_rules! make_error {
-            ($s:ident) => {
-                Error {
-                    err: Box::new(error::ErrorImpl::ParseDMSError { s: $s.to_string() }),
-                }
-            };
-        }
-
         // integer-like
         if let Some(res) = Self::parse_integer(s) {
-            return Self::try_new(res.0, res.1, res.2, res.3, 0.0).map_err(|_| make_error!(s));
+            return Self::try_new(res.0, res.1, res.2, res.3, 0.0)
+                .map_err(|_| Error::new_parse_dms_error(s.to_string()));
         }
 
         // float-like
@@ -241,7 +234,7 @@ impl FromStr for DMS {
 
         // too many '.'
         if parts.next().is_some() {
-            return Err(make_error!(s));
+            return Err(Error::new_parse_dms_error(s.to_string()));
         };
 
         match (integer, fraction) {
@@ -250,12 +243,14 @@ impl FromStr for DMS {
             //
             // "1"
             (Some(i), None) => {
-                let res = Self::parse_integer(i).ok_or(make_error!(s))?;
+                let res =
+                    Self::parse_integer(i).ok_or(Error::new_parse_dms_error(s.to_string()))?;
                 Self::try_new(res.0, res.1, res.2, res.3, 0.0)
             }
             // "1."
             (Some(i), Some("")) => {
-                let res = Self::parse_integer(i).ok_or(make_error!(s))?;
+                let res =
+                    Self::parse_integer(i).ok_or(Error::new_parse_dms_error(s.to_string()))?;
                 Self::try_new(res.0, res.1, res.2, res.3, 0.0)
             }
             //
@@ -264,23 +259,25 @@ impl FromStr for DMS {
             // "+.1" or ".1"
             (Some(i), Some(f)) if i.eq("+") || i.is_empty() => match Self::perse_fraction(f) {
                 Some(fract) => Self::try_new(Sign::Plus, 0, 0, 0, fract),
-                _ => Err(make_error!(s)),
+                _ => Err(Error::new_parse_dms_error(s.to_string())),
             },
             // "-.1"
             (Some(i), Some(f)) if i.eq("-") => match Self::perse_fraction(f) {
                 Some(fract) => Self::try_new(Sign::Minus, 0, 0, 0, fract),
-                _ => Err(make_error!(s)),
+                _ => Err(Error::new_parse_dms_error(s.to_string())),
             },
             //
             // formal float
             //
             // "1.1"
             (Some(i), Some(f)) => {
-                let res = Self::parse_integer(i).ok_or(make_error!(s))?;
-                let fract = Self::perse_fraction(f).ok_or(make_error!(s))?;
+                let res =
+                    Self::parse_integer(i).ok_or(Error::new_parse_dms_error(s.to_string()))?;
+                let fract =
+                    Self::perse_fraction(f).ok_or(Error::new_parse_dms_error(s.to_string()))?;
                 Self::try_new(res.0, res.1, res.2, res.3, fract)
             }
-            _ => Err(make_error!(s)),
+            _ => Err(Error::new_parse_dms_error(s.to_string())),
         }
     }
 }

@@ -8,6 +8,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct Error {
     pub err: Box<ErrorImpl>,
 }
+
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{}", self.err)
@@ -24,6 +25,54 @@ impl Error {
     /// Returns a error kind.
     pub fn kind(&self) -> &ErrorImpl {
         &self.err
+    }
+}
+
+impl Error {
+    pub(crate) fn new_parse_par(
+        start: usize,
+        end: usize,
+        lineno: usize,
+        kind: ParseParErrorImpl,
+    ) -> Self {
+        Self {
+            err: Box::new(ErrorImpl::ParseParError {
+                kind,
+                lineno,
+                start,
+                end,
+            }),
+        }
+    }
+
+    pub(crate) fn new_out_of_range_meshcode(code: u32) -> Self {
+        Self {
+            err: Box::new(ErrorImpl::OutOfRangeMeshcode { value: code }),
+        }
+    }
+
+    pub(crate) fn new_incosistent_mesh_unit(coord: MeshCoord, unit: MeshUnit) -> Self {
+        Self {
+            err: Box::new(ErrorImpl::IncosistentMeshUnit { unit, coord }),
+        }
+    }
+
+    pub(crate) fn new_incosistent_mesh_cell(a: MeshNode, b: MeshNode, unit: MeshUnit) -> Self {
+        Self {
+            err: Box::new(ErrorImpl::IncosistentMeshCell { a, b, unit }),
+        }
+    }
+
+    pub(crate) fn new_parameter_not_found(kind: ParameterNotFoundKind, meshcode: u32) -> Self {
+        Self {
+            err: Box::new(ErrorImpl::ParameterNotFound { kind, meshcode }),
+        }
+    }
+
+    pub(crate) fn new_parse_dms_error(s: String) -> Self {
+        Self {
+            err: Box::new(ErrorImpl::ParseDMSError { s }),
+        }
     }
 }
 
@@ -200,17 +249,16 @@ impl std::fmt::Display for ErrorImpl {
             ErrorImpl::NotCovergent {
                 iteration,
                 criteria,
-                latitude: _,
-                longitude: _,
+                ..
             } => write!(
                 f,
                 "error is still higher than {criteria:?} even exhaust {iteration:?} iterations"
             ),
             ErrorImpl::MeshCoordOverFlow => write!(f, "MeshCoord over flow"),
-            ErrorImpl::IncosistentMeshUnit { coord: _, unit } => {
+            ErrorImpl::IncosistentMeshUnit { unit, .. } => {
                 write!(f, "invalid unit: {unit:?} is incosistent with MeshCoord")
             }
-            ErrorImpl::IncosistentMeshCell { a: _, b: _, unit } => {
+            ErrorImpl::IncosistentMeshCell { unit, .. } => {
                 write!(
                     f,
                     "invalid MeshCell: nodes not construct a unit cell in unit {unit:?}"
@@ -225,28 +273,15 @@ impl std::fmt::Display for ErrorImpl {
                     "invalid MeshCoord: {kind} digit must satisfy {low:?} <= and <= {high:?}"
                 )
             }
-            ErrorImpl::OutOfRangeMeshCorrd {
-                value: _,
-                low,
-                high,
-            } => write!(
+            ErrorImpl::OutOfRangeMeshCorrd { low, high, .. } => write!(
                 f,
                 "invalid MeshCoord: must satisfy {low:?} <= and <= {high:?}"
             ),
             ErrorImpl::OutOfRangeMeshcode { value } => {
                 write!(f, "invalid meshcode: {}", value)
             }
-            ErrorImpl::OutOfRangeDMS {
-                degree: _,
-                minute: _,
-                second: _,
-                fract: _,
-            } => write!(f, "invalid DMS"),
-            ErrorImpl::OutOfRangeDegree {
-                degree: _,
-                low,
-                high,
-            } => write!(
+            ErrorImpl::OutOfRangeDMS { .. } => write!(f, "invalid DMS"),
+            ErrorImpl::OutOfRangeDegree { low, high, .. } => write!(
                 f,
                 "invalid degree: must satisfiy {low:?} <= and <= {high:?}"
             ),

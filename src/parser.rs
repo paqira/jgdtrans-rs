@@ -1,81 +1,91 @@
 use std::collections::BTreeMap;
+use std::ops::Range;
 
 use crate::error;
 use crate::transformer::Parameter;
 use crate::{mesh::MeshUnit, Error, Result, Transformer};
 
-struct Slice {
-    start: usize,
-    end: usize,
-}
-
 fn parser(
     text: &str,
-    header: &usize,
-    mesh_code: &Option<Slice>,
-    latitude: &Option<Slice>,
-    longitude: &Option<Slice>,
-    altitude: &Option<Slice>,
+    header: usize,
+    mesh_code: Option<Range<usize>>,
+    latitude: Option<Range<usize>>,
+    longitude: Option<Range<usize>>,
+    altitude: Option<Range<usize>>,
     unit: MeshUnit,
 ) -> Result<Transformer> {
-    let description = text.lines().take(*header).collect::<Vec<_>>().join("\n");
+    let mut iter = text.lines().enumerate();
 
-    macro_rules! make_error {
-        ($slice:expr, $lineno:ident, $error:expr) => {
-            Error {
-                err: Box::new(error::ErrorImpl::ParseParError {
-                    kind: $error,
-                    lineno: $lineno,
-                    start: $slice.start,
-                    end: $slice.end,
-                }),
-            }
+    let description = iter
+        .by_ref()
+        .take(header)
+        .map(|(_, s)| s)
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let mut parameter: BTreeMap<u32, Parameter> = BTreeMap::new();
+    for (lineno, line) in iter {
+        let mesh_code: u32 = match mesh_code {
+            None => 0,
+            Some(ref range) => line
+                .get(range.clone())
+                .and_then(|s| s.trim().parse().ok())
+                .ok_or(Error::new_parse_par(
+                    range.start,
+                    range.end,
+                    lineno + 1,
+                    error::ParseParErrorImpl::Meshcode,
+                ))?,
         };
+
+        let latitude: f64 = match latitude {
+            None => 0.0,
+            Some(ref range) => line
+                .get(range.clone())
+                .and_then(|s| s.trim().parse().ok())
+                .ok_or(Error::new_parse_par(
+                    range.start,
+                    range.end,
+                    lineno + 1,
+                    error::ParseParErrorImpl::Latitude,
+                ))?,
+        };
+
+        let longitude: f64 = match longitude {
+            None => 0.0,
+            Some(ref range) => line
+                .get(range.clone())
+                .and_then(|s| s.trim().parse().ok())
+                .ok_or(Error::new_parse_par(
+                    range.start,
+                    range.end,
+                    lineno + 1,
+                    error::ParseParErrorImpl::Longitude,
+                ))?,
+        };
+
+        let altitude: f64 = match altitude {
+            None => 0.0,
+            Some(ref range) => line
+                .get(range.clone())
+                .and_then(|s| s.trim().parse().ok())
+                .ok_or(Error::new_parse_par(
+                    range.start,
+                    range.end,
+                    lineno + 1,
+                    error::ParseParErrorImpl::Altitude,
+                ))?,
+        };
+
+        parameter.insert(
+            mesh_code,
+            Parameter {
+                latitude,
+                longitude,
+                altitude,
+            },
+        );
     }
-
-    let parameter: BTreeMap<u32, Parameter> =
-        text.lines()
-            .enumerate()
-            .skip(*header)
-            .map(|(lineno, line)| {
-                let mesh_code: u32 = match mesh_code {
-                    Some(slice) => line[slice.start..slice.end].trim().parse().map_err(|_| {
-                        make_error!(slice, lineno, error::ParseParErrorImpl::Meshcode)
-                    })?,
-                    None => u32::default(),
-                };
-
-                let latitude: f64 = match latitude {
-                    Some(slice) => line[slice.start..slice.end].trim().parse().map_err(|_| {
-                        make_error!(slice, lineno, error::ParseParErrorImpl::Latitude)
-                    })?,
-                    None => f64::default(),
-                };
-
-                let longitude: f64 = match longitude {
-                    Some(slice) => line[slice.start..slice.end].trim().parse().map_err(|_| {
-                        make_error!(slice, lineno, error::ParseParErrorImpl::Longitude)
-                    })?,
-                    None => f64::default(),
-                };
-
-                let altitude: f64 = match altitude {
-                    Some(slice) => line[slice.start..slice.end].trim().parse().map_err(|_| {
-                        make_error!(slice, lineno, error::ParseParErrorImpl::Altitude)
-                    })?,
-                    None => f64::default(),
-                };
-
-                Ok((
-                    mesh_code,
-                    Parameter {
-                        latitude,
-                        longitude,
-                        altitude,
-                    },
-                ))
-            })
-            .collect::<Result<_>>()?;
 
     Ok(Transformer {
         unit,
@@ -253,11 +263,11 @@ pub mod TKY2JGD {
     pub fn from_str(s: &str) -> Result<Transformer> {
         parser(
             s,
-            &2,
-            &Some(Slice { start: 0, end: 8 }),
-            &Some(Slice { start: 9, end: 18 }),
-            &Some(Slice { start: 19, end: 28 }),
-            &None,
+            2,
+            Some(0..8),
+            Some(9..18),
+            Some(19..28),
+            None,
             MeshUnit::One,
         )
     }
@@ -341,11 +351,11 @@ pub mod PatchJGD {
     pub fn from_str(s: &str) -> Result<Transformer> {
         parser(
             s,
-            &16,
-            &Some(Slice { start: 0, end: 8 }),
-            &Some(Slice { start: 9, end: 18 }),
-            &Some(Slice { start: 19, end: 28 }),
-            &None,
+            16,
+            Some(0..8),
+            Some(9..18),
+            Some(19..28),
+            None,
             MeshUnit::One,
         )
     }
@@ -428,15 +438,7 @@ pub mod PatchJGD_H {
     /// # Ok(())}
     /// ```
     pub fn from_str(s: &str) -> Result<Transformer> {
-        parser(
-            s,
-            &16,
-            &Some(Slice { start: 0, end: 8 }),
-            &None,
-            &None,
-            &Some(Slice { start: 9, end: 18 }),
-            MeshUnit::One,
-        )
+        parser(s, 16, Some(0..8), None, None, Some(9..18), MeshUnit::One)
     }
 }
 
@@ -531,11 +533,11 @@ pub mod PatchJGD_HV {
     pub fn from_str(s: &str) -> Result<Transformer> {
         parser(
             s,
-            &16,
-            &Some(Slice { start: 0, end: 8 }),
-            &Some(Slice { start: 9, end: 18 }),
-            &Some(Slice { start: 19, end: 28 }),
-            &Some(Slice { start: 29, end: 38 }),
+            16,
+            Some(0..8),
+            Some(9..18),
+            Some(19..28),
+            Some(29..38),
             MeshUnit::One,
         )
     }
@@ -617,15 +619,7 @@ pub mod HyokoRev {
     /// # Ok(())}
     /// ```
     pub fn from_str(s: &str) -> Result<Transformer> {
-        parser(
-            s,
-            &16,
-            &Some(Slice { start: 0, end: 8 }),
-            &None,
-            &None,
-            &Some(Slice { start: 12, end: 21 }),
-            MeshUnit::One,
-        )
+        parser(s, 16, Some(0..8), None, None, Some(12..21), MeshUnit::One)
     }
 }
 
@@ -705,11 +699,11 @@ pub mod SemiDynaEXE {
     pub fn from_str(s: &str) -> Result<Transformer> {
         parser(
             s,
-            &16,
-            &Some(Slice { start: 0, end: 8 }),
-            &Some(Slice { start: 9, end: 18 }),
-            &Some(Slice { start: 19, end: 28 }),
-            &Some(Slice { start: 29, end: 38 }),
+            16,
+            Some(0..8),
+            Some(9..18),
+            Some(19..28),
+            Some(29..38),
             MeshUnit::Five,
         )
     }
@@ -792,11 +786,11 @@ pub mod geonetF3 {
     pub fn from_str(s: &str) -> Result<Transformer> {
         parser(
             s,
-            &18,
-            &Some(Slice { start: 0, end: 8 }),
-            &Some(Slice { start: 12, end: 21 }),
-            &Some(Slice { start: 22, end: 31 }),
-            &Some(Slice { start: 32, end: 41 }),
+            18,
+            Some(0..8),
+            Some(12..21),
+            Some(22..31),
+            Some(32..41),
             MeshUnit::Five,
         )
     }
@@ -879,11 +873,11 @@ pub mod ITRF2014 {
     pub fn from_str(s: &str) -> Result<Transformer> {
         parser(
             s,
-            &18,
-            &Some(Slice { start: 0, end: 8 }),
-            &Some(Slice { start: 12, end: 21 }),
-            &Some(Slice { start: 22, end: 31 }),
-            &Some(Slice { start: 32, end: 41 }),
+            18,
+            Some(0..8),
+            Some(12..21),
+            Some(22..31),
+            Some(32..41),
             MeshUnit::Five,
         )
     }

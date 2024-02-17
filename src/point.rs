@@ -7,7 +7,6 @@ use crate::{
     error::{self, Error, Result},
     mesh::{MeshCell, MeshNode, MeshUnit},
     transformer::Correction,
-    utils,
 };
 
 /// Represents a position on the Earth, a triplet latitude, longitude and altitude.
@@ -23,12 +22,6 @@ use crate::{
 /// # fn main() -> Result<()> {
 /// // Construct
 /// let point = Point::try_new(35.0, 145.0, 5.0)?;
-/// assert_eq!(point.latitude(), &35.0);
-/// assert_eq!(point.longitude(), &145.0);
-/// assert_eq!(point.altitude(), &5.0);
-///
-/// // Construct with "rounding" angles
-/// let point = Point::new(145.0, -215.0, 5.0);
 /// assert_eq!(point.latitude(), &35.0);
 /// assert_eq!(point.longitude(), &145.0);
 /// assert_eq!(point.altitude(), &5.0);
@@ -106,14 +99,7 @@ impl Sub<Correction> for Point {
 }
 
 impl Point {
-    /// Makes a [`Point`] with "rounding".
-    ///
-    /// This "rounds" `latitude` into -90.0 <= and <= 90.0
-    /// and does `longitude` into -180.0 <= and <= 180.0.
-    /// "Rounding" may be interesting (the Earth is round).
-    ///
-    /// We note that `latitude` and `longitude` is DD notation,
-    /// use [`utils::DMS`] ([`utils::to_dms`] and [`utils::from_dms`]) for converting to/from DMS notation.
+    /// Makes a [`Point`].
     ///
     /// # Example
     ///
@@ -124,18 +110,12 @@ impl Point {
     /// assert_eq!(point.latitude(), &35.0);
     /// assert_eq!(point.longitude(), &145.0);
     /// assert_eq!(point.altitude(), &5.0);
-    ///
-    /// // "Rounding"
-    /// let point = Point::new(90.0 + 20.0, 180.0 + 20.0, 0.0);
-    /// assert_eq!(point.latitude(), &70.0);
-    /// assert_eq!(point.longitude(), &-160.0);
-    /// assert_eq!(point.altitude(), &0.0);
     /// # Ok(())}
     /// ```
     pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
-            latitude: utils::round_latitude(&latitude),
-            longitude: utils::round_longitude(&longitude),
+            latitude,
+            longitude,
             altitude,
         }
     }
@@ -175,7 +155,9 @@ impl Point {
                     high: 90.,
                 }),
             });
-        } else if longitude.lt(&-180.) || 180.0.lt(&longitude) {
+        };
+
+        if longitude.lt(&-180.) || 180.0.lt(&longitude) {
             return Err(Error {
                 err: Box::new(error::ErrorImpl::OutOfRangePosition {
                     kind: error::OutOfRangePositionKind::Longitude,
@@ -183,7 +165,7 @@ impl Point {
                     high: 180.,
                 }),
             });
-        }
+        };
 
         Ok(Self {
             latitude,

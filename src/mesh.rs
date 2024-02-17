@@ -255,7 +255,8 @@ impl MeshCoord {
                     high: 99,
                 }),
             });
-        } else if second.gt(&7) {
+        };
+        if second.gt(&7) {
             return Err(Error {
                 err: Box::new(error::ErrorImpl::OutOfRangeMeshCoordDigit {
                     kind: error::OutOfRangeMeshCoordDigitKind::Second,
@@ -263,7 +264,8 @@ impl MeshCoord {
                     high: 7,
                 }),
             });
-        } else if third.gt(&9) {
+        };
+        if third.gt(&9) {
             return Err(Error {
                 err: Box::new(error::ErrorImpl::OutOfRangeMeshCoordDigit {
                     kind: error::OutOfRangeMeshCoordDigitKind::Third,
@@ -508,7 +510,7 @@ impl MeshCoord {
     /// # Ok(())}
     /// ```
     pub fn try_next_up(&self, unit: &MeshUnit) -> Result<Self> {
-        if unit.eq(&MeshUnit::Five) && !self.third.eq(&0) && !self.third.eq(&5) {
+        if unit.eq(&MeshUnit::Five) && self.third.ne(&0) && self.third.ne(&5) {
             return Err(Error {
                 err: Box::new(error::ErrorImpl::IncosistentMeshUnit {
                     coord: *self,
@@ -579,7 +581,7 @@ impl MeshCoord {
     /// # Ok(())}
     /// ```
     pub fn try_next_down(&self, unit: &MeshUnit) -> Result<Self> {
-        if unit.eq(&MeshUnit::Five) && !self.third.eq(&0) && !self.third.eq(&5) {
+        if unit.eq(&MeshUnit::Five) && self.third.ne(&0) && self.third.ne(&5) {
             return Err(Error {
                 err: Box::new(error::ErrorImpl::IncosistentMeshUnit {
                     coord: *self,
@@ -796,16 +798,8 @@ impl MeshNode {
     /// # Ok(())}
     /// ```
     pub fn try_from_meshcode(code: &u32) -> Result<Self> {
-        macro_rules! make_error {
-            ($code:expr) => {
-                Error {
-                    err: Box::new(error::ErrorImpl::OutOfRangeMeshcode { value: $code }),
-                }
-            };
-        }
-
         if code.gt(&99_99_99_99) {
-            return Err(make_error!(*code));
+            return Err(Error::new_out_of_range_meshcode(*code));
         }
 
         macro_rules! div_rem {
@@ -827,11 +821,11 @@ impl MeshNode {
         let (lat_third, lng_third) = div_rem!(rest, 10_u32);
 
         let latitude = MeshCoord::try_new(lat_first as u8, lat_second as u8, lat_third as u8)
-            .map_err(|_| make_error!(*code))?;
+            .map_err(|_| Error::new_out_of_range_meshcode(*code))?;
         let longitude = MeshCoord::try_new(lng_first as u8, lng_second as u8, lng_third as u8)
-            .map_err(|_| make_error!(*code))?;
+            .map_err(|_| Error::new_out_of_range_meshcode(*code))?;
 
-        Self::try_new(latitude, longitude).map_err(|_| make_error!(*code))
+        Self::try_new(latitude, longitude).map_err(|_| Error::new_out_of_range_meshcode(*code))
     }
 
     /// Returns a meshcode represents `self`.
@@ -927,45 +921,41 @@ impl MeshCell {
         if unit.eq(&MeshUnit::Five) {
             macro_rules! is_consisntet {
                 ($coord:expr) => {
-                    !$coord.third.eq(&0) && !$coord.third.eq(&5)
-                };
-            }
-
-            macro_rules! make_error {
-                ($unit:ident, $coord:expr) => {
-                    Error {
-                        err: Box::new(error::ErrorImpl::IncosistentMeshUnit {
-                            unit: $unit,
-                            coord: $coord,
-                        }),
-                    }
+                    $coord.third.ne(&0) && $coord.third.ne(&5)
                 };
             }
 
             // sw
             if is_consisntet!(sw.latitude) {
-                return Err(make_error!(unit, sw.latitude));
-            } else if is_consisntet!(sw.longitude) {
-                return Err(make_error!(unit, sw.longitude));
+                return Err(Error::new_incosistent_mesh_unit(sw.latitude, unit));
+            };
+            if is_consisntet!(sw.longitude) {
+                return Err(Error::new_incosistent_mesh_unit(sw.longitude, unit));
+            };
             // se
-            } else if is_consisntet!(se.latitude) {
-                return Err(make_error!(unit, se.latitude));
-            } else if is_consisntet!(se.longitude) {
-                return Err(make_error!(unit, se.longitude));
+            if is_consisntet!(se.latitude) {
+                return Err(Error::new_incosistent_mesh_unit(se.latitude, unit));
+            };
+            if is_consisntet!(se.longitude) {
+                return Err(Error::new_incosistent_mesh_unit(se.longitude, unit));
+            };
             // nw
-            } else if is_consisntet!(nw.latitude) {
-                return Err(make_error!(unit, nw.latitude));
-            } else if is_consisntet!(nw.longitude) {
-                return Err(make_error!(unit, nw.longitude));
+            if is_consisntet!(nw.latitude) {
+                return Err(Error::new_incosistent_mesh_unit(nw.latitude, unit));
+            };
+            if is_consisntet!(nw.longitude) {
+                return Err(Error::new_incosistent_mesh_unit(nw.longitude, unit));
+            };
             // ne
-            } else if is_consisntet!(ne.latitude) {
-                return Err(make_error!(unit, ne.latitude));
-            } else if is_consisntet!(ne.longitude) {
-                return Err(make_error!(unit, ne.longitude));
+            if is_consisntet!(ne.latitude) {
+                return Err(Error::new_incosistent_mesh_unit(ne.latitude, unit));
+            };
+            if is_consisntet!(ne.longitude) {
+                return Err(Error::new_incosistent_mesh_unit(ne.longitude, unit));
             }
         }
 
-        // consistentcy on the nodes
+        // for readability
         macro_rules! new_node {
             ($latitude:expr, $longitude:expr) => {
                 MeshNode {
@@ -975,27 +965,17 @@ impl MeshCell {
             };
         }
 
-        macro_rules! make_error {
-            ($unit:ident, $a:ident, $b:ident) => {
-                Error {
-                    err: Box::new(error::ErrorImpl::IncosistentMeshCell {
-                        a: $a,
-                        b: $b,
-                        unit: $unit,
-                    }),
-                }
-            };
-        }
-
         let lat_next = sw.latitude.try_next_up(&unit)?;
         let lng_next = sw.longitude.try_next_up(&unit)?;
 
-        if !new_node!(lat_next, sw.longitude).eq(&nw) {
-            return Err(make_error!(unit, sw, nw));
-        } else if !new_node!(sw.latitude, lng_next).eq(&se) {
-            return Err(make_error!(unit, sw, se));
-        } else if !new_node!(lat_next, lng_next).eq(&ne) {
-            return Err(make_error!(unit, sw, ne));
+        if new_node!(lat_next, sw.longitude).ne(&nw) {
+            return Err(Error::new_incosistent_mesh_cell(sw, nw, unit));
+        };
+        if new_node!(sw.latitude, lng_next).ne(&se) {
+            return Err(Error::new_incosistent_mesh_cell(sw, se, unit));
+        };
+        if new_node!(lat_next, lng_next).ne(&ne) {
+            return Err(Error::new_incosistent_mesh_cell(sw, ne, unit));
         }
 
         Ok(Self {

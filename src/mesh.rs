@@ -15,18 +15,43 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "serde")]
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use crate::error::{self, Error, Result};
+use crate::error::{
+    self, Error, MeshCellErrorKind, MeshCoordErrorKind, MeshNodeErrorKind, ParseMeshCoordErrorKind,
+    ParseMeshNodeErrorKind, Result,
+};
 use crate::point::Point;
 
 /// The mesh unit (unit shortly), or approximate length of cell's edge.
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize_repr, Deserialize_repr))]
 #[repr(u8)]
 pub enum MeshUnit {
-    /// 1 \[km\]
+    /// for 1 \[km\]
     One = 1,
-    /// 5 \[km\]
+    /// for 5 \[km\]
     Five = 5,
+}
+
+impl From<MeshUnit> for u8 {
+    fn from(value: MeshUnit) -> Self {
+        (&value).into()
+    }
+}
+
+impl From<&MeshUnit> for u8 {
+    fn from(value: &MeshUnit) -> Self {
+        match value {
+            MeshUnit::One => 1,
+            MeshUnit::Five => 5,
+        }
+    }
+}
+
+impl MeshUnit {
+    #[inline]
+    fn is_five(&self) -> bool {
+        matches!(self, Self::Five)
+    }
 }
 
 /// Represents mech coordinate, namely, discrete latitude and/or longitude.
@@ -62,7 +87,7 @@ pub enum MeshUnit {
 /// assert!(coord.try_next_up(&MeshUnit::Five).is_err());
 /// # Ok(())}
 /// ```
-#[derive(Debug, PartialEq, PartialOrd, Eq, Ord, Clone, Copy)]
+#[derive(Debug, PartialEq, PartialOrd, Eq, Hash, Ord, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MeshCoord {
     /// takes 0 to 99 inclusive
@@ -73,99 +98,6 @@ pub struct MeshCoord {
     pub(crate) third: u8,
 }
 
-/// Represents mesh node (node shortly), a pair of [`MeshCoord`]s.
-///
-/// We note that this supports non-negative latitude and longitude only.
-///
-/// # Example
-///
-/// ```
-/// # use jgdtrans::*;
-/// # use jgdtrans::mesh::*;
-/// # fn main() -> Result<()> {
-/// // Construct from latitude and longitude, altitude ignores
-/// let point = Point::try_new(36.10377479, 140.087855041, 0.0)?;
-/// let node = MeshNode::try_from_point(&point, &MeshUnit::One)?;
-/// assert_eq!(node.to_meshcode(), 54401027);
-/// // The result depends on the selection of the mesh unit
-/// let node = MeshNode::try_from_point(&point, &MeshUnit::Five)?;
-/// assert_eq!(node.to_meshcode(), 54401005);
-///
-/// // Construct from meshcode
-/// let node: MeshNode = 54401027.try_into()?;
-/// // The position where the MeshNode locates
-/// assert_eq!(node.to_point(), Point::try_new(36.1, 140.0875, 0.0)?);
-/// # Ok(())}
-/// ```
-#[derive(Debug, PartialEq, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct MeshNode {
-    /// The mesh coord of latitude
-    pub(crate) latitude: MeshCoord,
-    /// The mesh coord of longitude
-    ///
-    /// This must satisfy `MeshCoord {first: 0, second: 0, third: 0}` <= and <= `MeshCoord {first: 80, second: 0, third: 0}`
-    pub(crate) longitude: MeshCoord,
-}
-
-/// Represents unit mesh cell (mesh cell or cell shortly), a quadruplet of [`MeshNode`]s (and [`MeshUnit`]).
-///
-/// This has no other [`MeshNode`]s inside `self` in the unit.
-///
-/// The cell is, roughly, a square with `unit` \[km\] length edges.
-///
-/// # Example
-///
-/// ```
-/// # use jgdtrans::*;
-/// # use jgdtrans::mesh::*;
-/// # fn main() -> Result<()> {
-/// // Construct from latitude and longitude, altitude ignores
-/// // (The result depends on the selection of the mesh unit)
-/// let point = Point::try_new(36.10377479, 140.087855041, 0.0)?;
-/// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
-/// assert_eq!(cell.sw(), &MeshNode::try_from_meshcode(&54401027)?);
-/// assert_eq!(cell.se(), &MeshNode::try_from_meshcode(&54401028)?);
-/// assert_eq!(cell.nw(), &MeshNode::try_from_meshcode(&54401037)?);
-/// assert_eq!(cell.ne(), &MeshNode::try_from_meshcode(&54401038)?);
-///
-/// // Construct from node
-/// let node: MeshNode = 54401027.try_into()?;
-/// assert_eq!(MeshCell::try_from_node(node, MeshUnit::One)?, cell);
-/// // Construct from meshcode
-/// assert_eq!(MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?, cell);
-///
-/// // Find the position within cell, from 0.0 to 1.0
-/// // (Again, the result depends on the selection of the mesh unit)
-/// let (latitude, longitude) = cell.position(&point);
-/// assert_eq!(latitude, 0.4529748000001632);
-/// assert_eq!(longitude, 0.028403280000475206);
-///
-/// // the south-west node of the cell is (0, 0), origin
-/// let (latitude, longitude) = cell.position(&cell.sw().to_point());
-/// assert!((0.0 - latitude).abs() < 1e-12);
-/// assert!((0.0 - longitude).abs() < 1e-12);
-/// // the north-east node is (1, 1)
-/// let (latitude, longitude) = cell.position(&cell.ne().to_point());
-/// assert!((1.0 - latitude).abs() < 1e-12);
-/// assert!((1.0 - longitude).abs() < 1e-12);
-/// # Ok(())}
-/// ```
-#[derive(Debug, PartialEq, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct MeshCell {
-    /// The south-west node of the cell
-    pub(crate) sw: MeshNode,
-    /// The south-east node of the cell
-    pub(crate) se: MeshNode,
-    /// The north-west node of the cell
-    pub(crate) nw: MeshNode,
-    /// The north-east node of the cell
-    pub(crate) ne: MeshNode,
-    /// The mesh unit which is consistent with nodes
-    pub(crate) unit: MeshUnit,
-}
-
 impl TryFrom<(u8, u8, u8)> for MeshCoord {
     type Error = Error;
     /// Makes a [`MeshCoord`] from a digits triplet
@@ -174,53 +106,10 @@ impl TryFrom<(u8, u8, u8)> for MeshCoord {
     }
 }
 
-impl TryFrom<((u8, u8, u8), (u8, u8, u8))> for MeshNode {
-    type Error = Error;
-
-    /// Makes a [`MeshNode`] from a doublet of digits triplets
-    fn try_from(value: ((u8, u8, u8), (u8, u8, u8))) -> Result<Self> {
-        let latitude: MeshCoord = value.0.try_into()?;
-        let longitude: MeshCoord = value.1.try_into()?;
-        let node = Self::try_new(latitude, longitude)?;
-
-        Ok(node)
-    }
-}
-
-impl TryFrom<(MeshCoord, MeshCoord)> for MeshNode {
-    type Error = Error;
-
-    /// Makes a [`MeshNode`] from a [`MeshCoord`] doublet
-    fn try_from(value: (MeshCoord, MeshCoord)) -> Result<Self> {
-        Self::try_new(value.0, value.1)
-    }
-}
-
-impl TryFrom<u32> for MeshNode {
-    type Error = Error;
-
-    /// Makes a [`MeshNode`] from a meshcode
-    fn try_from(value: u32) -> Result<Self> {
-        Self::try_from_meshcode(&value)
-    }
-}
-
-impl FromStr for MeshNode {
-    type Err = Error;
-
-    /// Makes a [`MeshNode`] from a meshcode
-    fn from_str(s: &str) -> Result<Self> {
-        let i = s.parse::<u32>().map_err(|_| Error {
-            err: Box::new(error::ErrorImpl::ParseMeshcodeError { s: s.to_string() }),
-        })?;
-        Self::try_from_meshcode(&i)
-    }
-}
-
-impl From<MeshNode> for u32 {
-    /// Makes a meshcode of [`MeshNode`]
-    fn from(value: MeshNode) -> Self {
-        value.to_meshcode()
+impl MeshCoord {
+    #[inline]
+    fn is_multiple_5(&self) -> bool {
+        matches!(self.third, 0 | 5)
     }
 }
 
@@ -247,33 +136,9 @@ impl MeshCoord {
     /// # Ok(())}
     /// ```
     pub fn try_new(first: u8, second: u8, third: u8) -> Result<Self> {
-        if first.gt(&99) {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::OutOfRangeMeshCoordDigit {
-                    kind: error::OutOfRangeMeshCoordDigitKind::First,
-                    low: 0,
-                    high: 99,
-                }),
-            });
+        if first.gt(&99) || second.gt(&7) || third.gt(&9) {
+            return Err(Error::new_mesh_coord(MeshCoordErrorKind::Overflow));
         };
-        if second.gt(&7) {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::OutOfRangeMeshCoordDigit {
-                    kind: error::OutOfRangeMeshCoordDigitKind::Second,
-                    low: 0,
-                    high: 7,
-                }),
-            });
-        };
-        if third.gt(&9) {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::OutOfRangeMeshCoordDigit {
-                    kind: error::OutOfRangeMeshCoordDigitKind::Third,
-                    low: 0,
-                    high: 9,
-                }),
-            });
-        }
 
         Ok(Self {
             first,
@@ -282,7 +147,7 @@ impl MeshCoord {
         })
     }
 
-    /// Returns the first digit of `self`.
+    /// Returns the first digit of `self` (`0..100`).
     ///
     /// # Example
     ///
@@ -298,7 +163,7 @@ impl MeshCoord {
         &self.first
     }
 
-    /// Returns the second digit of `self`.
+    /// Returns the second digit of `self` (`0..8`).
     ///
     /// # Example
     ///
@@ -314,7 +179,7 @@ impl MeshCoord {
         &self.second
     }
 
-    /// Returns the third digit of `self`.
+    /// Returns the third digit of `self` (`0..10`).
     ///
     /// # Example
     ///
@@ -385,15 +250,18 @@ impl MeshCoord {
     /// ```
     pub fn try_from_latitude(v: &f64, unit: &MeshUnit) -> Result<Self> {
         let value = (3.0 * v / 2.0).next_up();
-        if value.is_nan() || value.lt(&0.0) || value.ge(&100.0) {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::OutOfRangePosition {
-                    kind: error::OutOfRangePositionKind::Latitude,
-                    low: 0.0,
-                    high: 2. * 100. / 3.,
-                }),
-            });
-        }
+        if value.is_nan() {
+            return Err(Error::new_parse_mesh_coord(
+                ParseMeshCoordErrorKind::NAN,
+                error::ErrorAxis::Latitude,
+            ));
+        };
+        if value.lt(&0.0) || value.ge(&100.0) {
+            return Err(Error::new_parse_mesh_coord(
+                ParseMeshCoordErrorKind::Overflow,
+                error::ErrorAxis::Latitude,
+            ));
+        };
 
         Ok(Self::from_value(&value, unit))
     }
@@ -426,20 +294,23 @@ impl MeshCoord {
     /// # fn main() {try_main().unwrap()}
     /// ```
     pub fn try_from_longitude(v: &f64, unit: &MeshUnit) -> Result<Self> {
-        if v.is_nan() || v.lt(&100.0) || v.gt(&180.0) {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::OutOfRangePosition {
-                    kind: error::OutOfRangePositionKind::Longitude,
-                    low: 100.0,
-                    high: 180.,
-                }),
-            });
-        }
+        if v.is_nan() {
+            return Err(Error::new_parse_mesh_coord(
+                ParseMeshCoordErrorKind::NAN,
+                error::ErrorAxis::Longitude,
+            ));
+        };
+        if v.lt(&100.0) || v.gt(&180.0) {
+            return Err(Error::new_parse_mesh_coord(
+                ParseMeshCoordErrorKind::Overflow,
+                error::ErrorAxis::Longitude,
+            ));
+        };
 
         Ok(Self::from_value(v, unit))
     }
 
-    fn to_value(self) -> f64 {
+    fn to_value(&self) -> f64 {
         self.first as f64 + self.second as f64 / 8. + self.third as f64 / 80.
     }
 
@@ -510,27 +381,18 @@ impl MeshCoord {
     /// # Ok(())}
     /// ```
     pub fn try_next_up(&self, unit: &MeshUnit) -> Result<Self> {
-        if unit.eq(&MeshUnit::Five) && self.third.ne(&0) && self.third.ne(&5) {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::IncosistentMeshUnit {
-                    coord: *self,
-                    unit: *unit,
-                }),
-            });
+        if unit.is_five() && !self.is_multiple_5() {
+            return Err(Error::new_mesh_coord(MeshCoordErrorKind::MeshUnit));
         }
 
-        let mesh_unit: u8 = match unit {
-            MeshUnit::One => 1,
-            MeshUnit::Five => 5,
-        };
+        let mesh_unit: u8 = unit.into();
+        // 9 for MeshUnit::One and 5 for MeshUnit::Five
         let bound = 10 - mesh_unit;
 
         if self.third.eq(&bound) {
             if self.second.eq(&7) {
                 if self.first.eq(&99) {
-                    Err(Error {
-                        err: Box::new(error::ErrorImpl::MeshCoordOverFlow),
-                    })
+                    Err(Error::new_mesh_coord(MeshCoordErrorKind::PosOverflow))
                 } else {
                     // `first` is not 99
                     Ok(Self {
@@ -581,27 +443,18 @@ impl MeshCoord {
     /// # Ok(())}
     /// ```
     pub fn try_next_down(&self, unit: &MeshUnit) -> Result<Self> {
-        if unit.eq(&MeshUnit::Five) && self.third.ne(&0) && self.third.ne(&5) {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::IncosistentMeshUnit {
-                    coord: *self,
-                    unit: *unit,
-                }),
-            });
+        if unit.is_five() && !self.is_multiple_5() {
+            return Err(Error::new_mesh_coord(MeshCoordErrorKind::MeshUnit));
         }
 
-        let mesh_unit: u8 = match unit {
-            MeshUnit::One => 1,
-            MeshUnit::Five => 5,
-        };
+        let mesh_unit: u8 = unit.into();
+        // 9 for MeshUnit::One and 5 for MeshUnit::Five
         let bound = 10 - mesh_unit;
 
         if self.third.eq(&0) {
             if self.second.eq(&0) {
                 if self.first.eq(&0) {
-                    Err(Error {
-                        err: Box::new(error::ErrorImpl::MeshCoordOverFlow),
-                    })
+                    Err(Error::new_mesh_coord(MeshCoordErrorKind::NegOverflow))
                 } else {
                     // `first` is not 0
                     Ok(Self {
@@ -629,6 +482,91 @@ impl MeshCoord {
     }
 }
 
+/// Represents mesh node (node shortly), a pair of [`MeshCoord`]s.
+///
+/// We note that this supports non-negative latitude and longitude only.
+///
+/// # Example
+///
+/// ```
+/// # use jgdtrans::*;
+/// # use jgdtrans::mesh::*;
+/// # fn main() -> Result<()> {
+/// // Construct from latitude and longitude, altitude ignores
+/// let point = Point::try_new(36.10377479, 140.087855041, 0.0)?;
+/// let node = MeshNode::try_from_point(&point, &MeshUnit::One)?;
+/// assert_eq!(node.to_meshcode(), 54401027);
+/// // The result depends on the selection of the mesh unit
+/// let node = MeshNode::try_from_point(&point, &MeshUnit::Five)?;
+/// assert_eq!(node.to_meshcode(), 54401005);
+///
+/// // Construct from meshcode
+/// let node: MeshNode = 54401027.try_into()?;
+/// // The position where the MeshNode locates
+/// assert_eq!(node.to_point(), Point::try_new(36.1, 140.0875, 0.0)?);
+/// # Ok(())}
+/// ```
+#[derive(Debug, PartialEq, PartialOrd, Eq, Hash, Ord, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct MeshNode {
+    /// The mesh coord of latitude
+    pub(crate) latitude: MeshCoord,
+    /// The mesh coord of longitude
+    ///
+    /// This must satisfy `MeshCoord {first: 0, second: 0, third: 0}` <= and <= `MeshCoord {first: 80, second: 0, third: 0}`
+    pub(crate) longitude: MeshCoord,
+}
+
+impl TryFrom<((u8, u8, u8), (u8, u8, u8))> for MeshNode {
+    type Error = Error;
+
+    /// Makes a [`MeshNode`] from a doublet of digits triplets
+    fn try_from(value: ((u8, u8, u8), (u8, u8, u8))) -> Result<Self> {
+        let latitude: MeshCoord = value.0.try_into()?;
+        let longitude: MeshCoord = value.1.try_into()?;
+        let node = Self::try_new(latitude, longitude)?;
+
+        Ok(node)
+    }
+}
+
+impl TryFrom<(MeshCoord, MeshCoord)> for MeshNode {
+    type Error = Error;
+
+    /// Makes a [`MeshNode`] from a [`MeshCoord`] doublet
+    fn try_from(value: (MeshCoord, MeshCoord)) -> Result<Self> {
+        Self::try_new(value.0, value.1)
+    }
+}
+
+impl TryFrom<u32> for MeshNode {
+    type Error = Error;
+
+    /// Makes a [`MeshNode`] from a meshcode
+    fn try_from(value: u32) -> Result<Self> {
+        Self::try_from_meshcode(&value)
+    }
+}
+
+impl FromStr for MeshNode {
+    type Err = Error;
+
+    /// Makes a [`MeshNode`] from a meshcode
+    fn from_str(s: &str) -> Result<Self> {
+        let i = s
+            .parse::<u32>()
+            .map_err(|err| Error::new_parse_mesh_node(ParseMeshNodeErrorKind::Parse(err)))?;
+        Self::try_from_meshcode(&i)
+    }
+}
+
+impl From<MeshNode> for u32 {
+    /// Makes a meshcode of [`MeshNode`]
+    fn from(value: MeshNode) -> Self {
+        value.to_meshcode()
+    }
+}
+
 impl MeshNode {
     /// Makes a [`MeshNode`].
     ///
@@ -648,7 +586,7 @@ impl MeshNode {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
-    /// let node = MeshNode::try_new(latitude, longitude)?;
+    /// let node = MeshNode::try_new(latitude.clone(), longitude.clone())?;
     /// assert_eq!(node.latitude(), &latitude);
     /// assert_eq!(node.longitude(), &longitude);
     /// # Ok(())}
@@ -659,21 +597,7 @@ impl MeshNode {
             second: 0,
             third: 0,
         }) {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::OutOfRangeMeshCorrd {
-                    value: longitude,
-                    low: MeshCoord {
-                        first: 0,
-                        second: 0,
-                        third: 0,
-                    },
-                    high: MeshCoord {
-                        first: 80,
-                        second: 0,
-                        third: 0,
-                    },
-                }),
-            });
+            return Err(Error::new_mesh_node(MeshNodeErrorKind::Overflow));
         };
 
         Ok(Self {
@@ -693,7 +617,7 @@ impl MeshNode {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
-    /// let node = MeshNode::try_new(latitude, longitude)?;
+    /// let node = MeshNode::try_new(latitude.clone(), longitude)?;
     /// assert_eq!(node.latitude(), &latitude);
     /// # Ok(())}
     /// ```
@@ -712,7 +636,7 @@ impl MeshNode {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
-    /// let node = MeshNode::try_new(latitude, longitude)?;
+    /// let node = MeshNode::try_new(latitude, longitude.clone())?;
     /// assert_eq!(node.longitude(), &longitude);
     /// # Ok(())}
     /// ```
@@ -754,19 +678,12 @@ impl MeshNode {
     /// # Ok(())}
     /// ```
     pub fn try_from_point(point: &Point, unit: &MeshUnit) -> Result<Self> {
-        let latitude = MeshCoord::try_from_latitude(&point.latitude, unit)?;
-        let longitude = MeshCoord::try_from_longitude(&point.longitude, unit)?;
-
-        debug_assert!(longitude.ge(&MeshCoord {
-            first: 0,
-            second: 0,
-            third: 0
-        }));
-        debug_assert!(longitude.le(&MeshCoord {
-            first: 99,
-            second: 7,
-            third: 9
-        }));
+        let latitude = MeshCoord::try_from_latitude(&point.latitude, unit).map_err(|err| {
+            Error::new_parse_mesh_node(ParseMeshNodeErrorKind::Overflow(Some(err)))
+        })?;
+        let longitude = MeshCoord::try_from_longitude(&point.longitude, unit).map_err(|err| {
+            Error::new_parse_mesh_node(ParseMeshNodeErrorKind::Overflow(Some(err)))
+        })?;
 
         Ok(Self {
             latitude,
@@ -797,9 +714,11 @@ impl MeshNode {
     /// );
     /// # Ok(())}
     /// ```
-    pub fn try_from_meshcode(code: &u32) -> Result<Self> {
-        if code.gt(&99_99_99_99) {
-            return Err(Error::new_out_of_range_meshcode(*code));
+    pub fn try_from_meshcode(meshcode: &u32) -> Result<Self> {
+        if meshcode.gt(&99_99_99_99) {
+            return Err(Error::new_parse_mesh_node(
+                ParseMeshNodeErrorKind::Overflow(None),
+            ));
         }
 
         macro_rules! div_rem {
@@ -808,9 +727,9 @@ impl MeshNode {
             };
         }
 
-        // code <= 99_99_99_99
+        // code <= 99_99_9_9_9_9
         // lat_first, lng_first <= 99
-        let (lat_first, rest) = div_rem!(code, 1_000_000_u32);
+        let (lat_first, rest) = div_rem!(meshcode, 1_000_000_u32);
         let (lng_first, rest) = div_rem!(rest, 10_000_u32);
 
         // lat_second, lng_second <= 9
@@ -821,11 +740,16 @@ impl MeshNode {
         let (lat_third, lng_third) = div_rem!(rest, 10_u32);
 
         let latitude = MeshCoord::try_new(lat_first as u8, lat_second as u8, lat_third as u8)
-            .map_err(|_| Error::new_out_of_range_meshcode(*code))?;
+            .map_err(|err| {
+                Error::new_parse_mesh_node(ParseMeshNodeErrorKind::Overflow(Some(err)))
+            })?;
         let longitude = MeshCoord::try_new(lng_first as u8, lng_second as u8, lng_third as u8)
-            .map_err(|_| Error::new_out_of_range_meshcode(*code))?;
+            .map_err(|err| {
+                Error::new_parse_mesh_node(ParseMeshNodeErrorKind::Overflow(Some(err)))
+            })?;
 
-        Self::try_new(latitude, longitude).map_err(|_| Error::new_out_of_range_meshcode(*code))
+        Self::try_new(latitude, longitude)
+            .map_err(|err| Error::new_parse_mesh_node(ParseMeshNodeErrorKind::Overflow(Some(err))))
     }
 
     /// Returns a meshcode represents `self`.
@@ -881,6 +805,64 @@ impl MeshNode {
     }
 }
 
+/// Represents unit mesh cell (mesh cell or cell shortly), a quadruplet of [`MeshNode`]s (and [`MeshUnit`]).
+///
+/// This has no other [`MeshNode`]s inside `self` in the unit.
+///
+/// The cell is, roughly, a square with `unit` \[km\] length edges.
+///
+/// # Example
+///
+/// ```
+/// # use jgdtrans::*;
+/// # use jgdtrans::mesh::*;
+/// # fn main() -> Result<()> {
+/// // Construct from latitude and longitude, altitude ignores
+/// // (The result depends on the selection of the mesh unit)
+/// let point = Point::try_new(36.10377479, 140.087855041, 0.0)?;
+/// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
+/// assert_eq!(cell.sw(), &MeshNode::try_from_meshcode(&54401027)?);
+/// assert_eq!(cell.se(), &MeshNode::try_from_meshcode(&54401028)?);
+/// assert_eq!(cell.nw(), &MeshNode::try_from_meshcode(&54401037)?);
+/// assert_eq!(cell.ne(), &MeshNode::try_from_meshcode(&54401038)?);
+///
+/// // Construct from node
+/// let node: MeshNode = 54401027.try_into()?;
+/// assert_eq!(MeshCell::try_from_sw_node(node, MeshUnit::One)?, cell);
+/// // Construct from meshcode
+/// assert_eq!(MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?, cell);
+///
+/// // Find the position within cell, from 0.0 to 1.0
+/// // (Again, the result depends on the selection of the mesh unit)
+/// let (latitude, longitude) = cell.position(&point);
+/// assert_eq!(latitude, 0.4529748000001632);
+/// assert_eq!(longitude, 0.028403280000475206);
+///
+/// // the south-west node of the cell is (0, 0), origin
+/// let (latitude, longitude) = cell.position(&cell.sw().to_point());
+/// assert!((0.0 - latitude).abs() < 1e-12);
+/// assert!((0.0 - longitude).abs() < 1e-12);
+/// // the north-east node is (1, 1)
+/// let (latitude, longitude) = cell.position(&cell.ne().to_point());
+/// assert!((1.0 - latitude).abs() < 1e-12);
+/// assert!((1.0 - longitude).abs() < 1e-12);
+/// # Ok(())}
+/// ```
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct MeshCell {
+    /// The south-west node of the cell
+    pub(crate) sw: MeshNode,
+    /// The south-east node of the cell
+    pub(crate) se: MeshNode,
+    /// The north-west node of the cell
+    pub(crate) nw: MeshNode,
+    /// The north-east node of the cell
+    pub(crate) ne: MeshNode,
+    /// The mesh unit which is consistent with nodes
+    pub(crate) unit: MeshUnit,
+}
+
 impl MeshCell {
     /// Makes a [`MeshCell`].
     ///
@@ -901,7 +883,7 @@ impl MeshCell {
     /// let se = MeshNode::try_from_meshcode(&54401028)?;
     /// let nw = MeshNode::try_from_meshcode(&54401037)?;
     /// let ne = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(sw, se, nw, ne, MeshUnit::One)?;
+    /// let cell = MeshCell::try_new(sw.clone(), se.clone(), nw.clone(), ne.clone(), MeshUnit::One)?;
     ///
     /// assert_eq!(cell.sw(), &sw);
     /// assert_eq!(cell.se(), &se);
@@ -918,64 +900,35 @@ impl MeshCell {
         unit: MeshUnit,
     ) -> Result<Self> {
         // consistentcy on unit v.s. the third
-        if unit.eq(&MeshUnit::Five) {
-            macro_rules! is_consisntet {
-                ($coord:expr) => {
-                    $coord.third.ne(&0) && $coord.third.ne(&5)
-                };
-            }
-
-            // sw
-            if is_consisntet!(sw.latitude) {
-                return Err(Error::new_incosistent_mesh_unit(sw.latitude, unit));
-            };
-            if is_consisntet!(sw.longitude) {
-                return Err(Error::new_incosistent_mesh_unit(sw.longitude, unit));
-            };
-            // se
-            if is_consisntet!(se.latitude) {
-                return Err(Error::new_incosistent_mesh_unit(se.latitude, unit));
-            };
-            if is_consisntet!(se.longitude) {
-                return Err(Error::new_incosistent_mesh_unit(se.longitude, unit));
-            };
-            // nw
-            if is_consisntet!(nw.latitude) {
-                return Err(Error::new_incosistent_mesh_unit(nw.latitude, unit));
-            };
-            if is_consisntet!(nw.longitude) {
-                return Err(Error::new_incosistent_mesh_unit(nw.longitude, unit));
-            };
-            // ne
-            if is_consisntet!(ne.latitude) {
-                return Err(Error::new_incosistent_mesh_unit(ne.latitude, unit));
-            };
-            if is_consisntet!(ne.longitude) {
-                return Err(Error::new_incosistent_mesh_unit(ne.longitude, unit));
-            }
-        }
-
-        // for readability
-        macro_rules! new_node {
-            ($latitude:expr, $longitude:expr) => {
-                MeshNode {
-                    latitude: $latitude,
-                    longitude: $longitude,
-                }
+        macro_rules! is_unit_five {
+            ($coord:expr) => {
+                !$coord.latitude.is_multiple_5() || !$coord.longitude.is_multiple_5()
             };
         }
 
-        let lat_next = sw.latitude.try_next_up(&unit)?;
-        let lng_next = sw.longitude.try_next_up(&unit)?;
+        if unit.is_five()
+            && (is_unit_five!(sw) || is_unit_five!(se) || is_unit_five!(nw) || is_unit_five!(ne))
+        {
+            return Err(Error::new_mesh_cell(MeshCellErrorKind::MeshUnit));
+        };
 
-        if new_node!(lat_next, sw.longitude).ne(&nw) {
-            return Err(Error::new_incosistent_mesh_cell(sw, nw, unit));
-        };
-        if new_node!(sw.latitude, lng_next).ne(&se) {
-            return Err(Error::new_incosistent_mesh_cell(sw, se, unit));
-        };
-        if new_node!(lat_next, lng_next).ne(&ne) {
-            return Err(Error::new_incosistent_mesh_cell(sw, ne, unit));
+        let lat_next = sw
+            .latitude
+            .try_next_up(&unit)
+            .map_err(|_| Error::new_mesh_cell(MeshCellErrorKind::Overflow))?;
+        let lng_next = sw
+            .longitude
+            .try_next_up(&unit)
+            .map_err(|_| Error::new_mesh_cell(MeshCellErrorKind::Overflow))?;
+
+        if lat_next.ne(&nw.latitude) || sw.longitude.ne(&nw.longitude) {
+            return Err(Error::new_mesh_cell(MeshCellErrorKind::NortthWestNode));
+        }
+        if sw.latitude.ne(&se.latitude) || lng_next.ne(&se.longitude) {
+            return Err(Error::new_mesh_cell(MeshCellErrorKind::SouthEastNode));
+        }
+        if lat_next.ne(&ne.latitude) || lng_next.ne(&ne.longitude) {
+            return Err(Error::new_mesh_cell(MeshCellErrorKind::NouthEastNode));
         }
 
         Ok(Self {
@@ -999,7 +952,7 @@ impl MeshCell {
     /// let se = MeshNode::try_from_meshcode(&54401028)?;
     /// let nw = MeshNode::try_from_meshcode(&54401037)?;
     /// let ne = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(sw, se, nw, ne, MeshUnit::One)?;
+    /// let cell = MeshCell::try_new(sw.clone(), se, nw, ne, MeshUnit::One)?;
     ///
     /// assert_eq!(cell.sw(), &sw);
     /// # Ok(())}
@@ -1020,7 +973,7 @@ impl MeshCell {
     /// let se = MeshNode::try_from_meshcode(&54401028)?;
     /// let nw = MeshNode::try_from_meshcode(&54401037)?;
     /// let ne = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(sw, se, nw, ne, MeshUnit::One)?;
+    /// let cell = MeshCell::try_new(sw, se.clone(), nw, ne, MeshUnit::One)?;
     ///
     /// assert_eq!(cell.se(), &se);
     /// # Ok(())}
@@ -1041,7 +994,7 @@ impl MeshCell {
     /// let se = MeshNode::try_from_meshcode(&54401028)?;
     /// let nw = MeshNode::try_from_meshcode(&54401037)?;
     /// let ne = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(sw, se, nw, ne, MeshUnit::One)?;
+    /// let cell = MeshCell::try_new(sw, se, nw.clone(), ne, MeshUnit::One)?;
     ///
     /// assert_eq!(cell.nw(), &nw);
     /// # Ok(())}
@@ -1062,7 +1015,7 @@ impl MeshCell {
     /// let se = MeshNode::try_from_meshcode(&54401028)?;
     /// let nw = MeshNode::try_from_meshcode(&54401037)?;
     /// let ne = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(sw, se, nw, ne, MeshUnit::One)?;
+    /// let cell = MeshCell::try_new(sw, se, nw, ne.clone(), MeshUnit::One)?;
     ///
     /// assert_eq!(cell.ne(), &ne);
     /// # Ok(())}
@@ -1123,9 +1076,9 @@ impl MeshCell {
     /// );
     /// # Ok(())}
     /// ```
-    pub fn try_from_meshcode(code: &u32, unit: MeshUnit) -> Result<Self> {
-        let sw = MeshNode::try_from_meshcode(code)?;
-        Self::try_from_node(sw, unit)
+    pub fn try_from_meshcode(meshcode: &u32, unit: MeshUnit) -> Result<Self> {
+        let sw = MeshNode::try_from_meshcode(meshcode).map_err(Error::new_parse_mesh_cell)?;
+        Self::try_from_sw_node(sw, unit).map_err(Error::new_parse_mesh_cell)
     }
 
     /// Makes a [`MeshCell`] that has `node` as a south-west node.
@@ -1145,20 +1098,35 @@ impl MeshCell {
     /// let node = MeshNode::try_from_meshcode(&54401027)?;
     ///
     /// assert_eq!(
-    ///     MeshCell::try_from_node(node, MeshUnit::One)?,
+    ///     MeshCell::try_from_sw_node(node, MeshUnit::One)?,
     ///     MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?
     /// );
     /// # Ok(())}
     /// ```
-    pub fn try_from_node(node: MeshNode, unit: MeshUnit) -> Result<Self> {
-        let next_lat = node.latitude.try_next_up(&unit)?;
-        let next_lng = node.longitude.try_next_up(&unit)?;
+    pub fn try_from_sw_node(node: MeshNode, unit: MeshUnit) -> Result<Self> {
+        let next_lat_coord = node
+            .latitude
+            .try_next_up(&unit)
+            .map_err(Error::new_parse_mesh_cell)?;
+        let next_lng_coord = node
+            .longitude
+            .try_next_up(&unit)
+            .map_err(Error::new_parse_mesh_cell)?;
+
+        // Call MeshNode::try_new
+        // to check next_coord_lat
+        let se = MeshNode::try_new(node.latitude.clone(), next_lng_coord.clone())
+            .map_err(Error::new_parse_mesh_cell)?;
+        let nw = MeshNode::try_new(next_lat_coord.clone(), node.longitude.clone())
+            .map_err(Error::new_parse_mesh_cell)?;
+        let ne = MeshNode::try_new(next_lat_coord, next_lng_coord)
+            .map_err(Error::new_parse_mesh_cell)?;
 
         Ok(Self {
             sw: node,
-            se: MeshNode::try_new(node.latitude, next_lng)?,
-            nw: MeshNode::try_new(next_lat, node.longitude)?,
-            ne: MeshNode::try_new(next_lat, next_lng)?,
+            se,
+            nw,
+            ne,
             unit,
         })
     }
@@ -1204,8 +1172,8 @@ impl MeshCell {
     /// # Ok(())}
     /// ```
     pub fn try_from_point(point: &Point, unit: MeshUnit) -> Result<Self> {
-        let node = MeshNode::try_from_point(point, &unit)?;
-        Self::try_from_node(node, unit)
+        let node = MeshNode::try_from_point(point, &unit).map_err(Error::new_parse_mesh_cell)?;
+        Self::try_from_sw_node(node, unit).map_err(Error::new_parse_mesh_cell)
     }
 
     /// Return the position in the cell.
@@ -1214,7 +1182,7 @@ impl MeshCell {
     /// if `point` is inside of `self`.
     ///
     /// We note that the result is a (latitude, longitude) pair,
-    /// not a (right-handed) (x, y) pair.
+    /// not a (right-handed) (y, x) pair.
     ///
     /// ```
     /// # use jgdtrans::*;
@@ -1558,13 +1526,13 @@ mod tests {
             let mut coord = MeshCoord::try_new(0, 0, 0).unwrap();
 
             while coord.le(&MeshCoord::try_new(80, 0, 0).unwrap()) {
-                let temp = MeshNode::try_new(MeshCoord::try_new(0, 0, 0).unwrap(), coord);
+                let temp = MeshNode::try_new(MeshCoord::try_new(0, 0, 0).unwrap(), coord.clone());
                 assert!(temp.is_ok());
                 coord = coord.try_next_up(&MeshUnit::One).unwrap();
             }
 
             while coord.lt(&MeshCoord::try_new(99, 7, 9).unwrap()) {
-                let temp = MeshNode::try_new(MeshCoord::try_new(0, 0, 0).unwrap(), coord);
+                let temp = MeshNode::try_new(MeshCoord::try_new(0, 0, 0).unwrap(), coord.clone());
                 assert!(temp.is_err());
                 coord = coord.try_next_up(&MeshUnit::One).unwrap();
             }
@@ -1874,9 +1842,9 @@ mod tests {
         }
 
         #[test]
-        fn test_try_from_node() {
+        fn test_try_from_sw_node() {
             assert_eq!(
-                MeshCell::try_from_node(
+                MeshCell::try_from_sw_node(
                     MeshNode::try_from_meshcode(&54401027).unwrap(),
                     MeshUnit::One
                 )
@@ -1891,7 +1859,7 @@ mod tests {
                 .unwrap()
             );
             assert_eq!(
-                MeshCell::try_from_node(
+                MeshCell::try_from_sw_node(
                     MeshNode::try_from_meshcode(&54401005).unwrap(),
                     MeshUnit::Five
                 )
@@ -1907,7 +1875,7 @@ mod tests {
             );
 
             // error
-            assert!(MeshCell::try_from_node(
+            assert!(MeshCell::try_from_sw_node(
                 MeshNode::try_from_meshcode(&54401027).unwrap(),
                 MeshUnit::Five
             )

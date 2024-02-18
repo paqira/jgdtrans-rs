@@ -86,20 +86,6 @@
 //! # Ok(())}
 //! ```
 //!
-//! [`from_str`] and [`Transformer::from_str`] are deserializer also,
-//! but switch format of the target par file by the argument `format`.
-//!
-//! ```no_run
-//! use std::fs;
-//! # use std::error::Error;
-//! use jgdtrans::Format;
-//!
-//! # fn main() -> Result<(), Box<dyn Error>> {
-//! let s = fs::read_to_string("SemiDyna2023.par").expect("file not found 'SemiDyna2023.par'");
-//! let tf = jgdtrans::from_str(&s, Format::SemiDynaEXE)?;
-//! # Ok(())}
-//! ```
-//!
 //! In addition, it supports (de)serialization by [`serde` crate](https://crates.io/crates/serde)
 //! for all `struct` including [`Transformer`] (deserialized object of par-formatted data)
 //! only if the feature `serde` is enable.
@@ -168,7 +154,7 @@ pub use parser::*;
 #[doc(inline)]
 pub use point::Point;
 #[doc(inline)]
-pub use transformer::Transformer;
+pub use transformer::{Format, Transformer};
 
 pub mod error;
 pub mod mesh;

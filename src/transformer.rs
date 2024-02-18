@@ -3,17 +3,16 @@ use std::collections::BTreeMap;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::error;
-use crate::error::{Error, Result};
+use crate::error::{Error, MeshCellCorner, Result, TransformErrorKind};
 use crate::mesh::{MeshCell, MeshUnit};
-use crate::{Format, Point};
+use crate::Point;
 
 #[inline]
 fn bilinear_interpolation(sw: &f64, se: &f64, nw: &f64, ne: &f64, lat: &f64, lng: &f64) -> f64 {
     sw * (1. - lng) * (1. - lat) + se * lng * (1. - lat) + nw * (1. - lng) * lat + ne * lng * lat
 }
 
-/// improved Kahan–Babuška algorithm
+/// Improved Kahan–Babuška algorithm
 ///
 /// see: https://en.wikipedia.org/wiki/Kahan_summation_algorithm#Further_enhancements
 fn ksum(vs: &[f64]) -> f64 {
@@ -29,6 +28,25 @@ fn ksum(vs: &[f64]) -> f64 {
         sum = t
     }
     sum + c
+}
+
+/// Represents format of par-formatted text.
+#[derive(Debug)]
+pub enum Format {
+    TKY2JGD,
+    PatchJGD,
+    #[allow(non_camel_case_types)]
+    PatchJGD_H,
+    /// Notes, GIAJ does not distribute such file,
+    /// see  [`parser::PatchJGD_HV`] for detail.
+    #[allow(non_camel_case_types)]
+    PatchJGD_HV,
+    HyokoRev,
+    #[allow(non_camel_case_types)]
+    SemiDynaEXE,
+    #[allow(non_camel_case_types)]
+    geonetF3,
+    ITRF2014,
 }
 
 /// The parameter triplet.
@@ -86,63 +104,26 @@ impl Parameter {
 
     /// Returns $\\sqrt{\\text{latitude}^2 + \\text{longitude}^2 + \\text{altitude}^2}$.
     pub fn intensity(&self) -> f64 {
+        // TODO: I think this is not optimal code.
         f64::hypot(self.horizontal(), self.altitude)
     }
 }
 
-/// The coordinate Transformer, and represents a deserializing result of par-formatted data.
+/// The transformation correction.
 ///
-/// If the parameters is zero, such as the unsupported components,
-/// the transformations are identity transformation on such components.
-/// For example, the transformation by the TKY2JGD and the PatchJGD par is
-/// identity transformation on altitude, and by the PatchJGD(H) par is
-/// so on latitude and longitude.
+/// We emphasize that the unit is \[deg\], not \[sec\]
+/// for latitude and longitude.
 ///
-/// There is a builder, see [`TransformerBuilder`].
+/// It should fill with 0.0 instead of [`NAN`](f64::NAN).
 ///
 /// # Example
 ///
 /// ```
-/// # use jgdtrans::*;
-/// # use jgdtrans::mesh::MeshUnit;
-/// # use jgdtrans::transformer::{Parameter, Statistics};
-/// # fn main() -> Result<()> {
-/// // from SemiDynaEXE2023.par
-/// let tf = Transformer::new(
-///     MeshUnit::Five,
-///     [
-///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-///     ].into()
-/// );
-///
-/// // forward transformation
-/// let origin = Point::new(36.10377479, 140.087855041, 2.34);
-/// let result = tf.forward(&origin)?;
-/// assert_eq!(
-///     result,
-///     Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103)
-/// );
-/// # Ok(())}
-/// ```
-#[derive(Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Transformer {
-    /// The mesh unit.
-    pub unit: MeshUnit,
-    /// The transformation parameter.
-    ///
-    /// The entry represents single line of par-formatted file's parameter section,
-    /// the key is meshcode, and the value parameter.
-    pub parameter: BTreeMap<u32, Parameter>,
-    /// The description, or the header of par-formattet data.
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
-    pub description: Option<String>,
-}
-
-/// The transformation correction.
+/// # use jgdtrans::transformer::Correction;
+/// let correction = Correction::new(1., 2., 3.);
+/// assert_eq!(correction.latitude, 1.);
+/// assert_eq!(correction.longitude, 2.);
+/// assert_eq!(correction.altitude, 3.);
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Correction {
@@ -171,6 +152,7 @@ impl Correction {
 
     /// Returns $\\sqrt{\\text{latitude}^2 + \\text{longitude}^2 + \\text{altitude}^2}$.
     pub fn intensity(&self) -> f64 {
+        // TODO: I think this is not optimal code.
         f64::hypot(self.horizontal(), self.altitude)
     }
 }
@@ -196,18 +178,6 @@ pub struct Statistics {
 }
 
 impl Statistics {
-    /// Makes a [`Statistics`].
-    pub fn new(count: usize, mean: f64, std: f64, abs: f64, min: f64, max: f64) -> Self {
-        Self {
-            count: count.into(),
-            mean: mean.into(),
-            std: std.into(),
-            abs: abs.into(),
-            min: min.into(),
-            max: max.into(),
-        }
-    }
-
     fn from_arr(vs: &[f64]) -> Self {
         if vs.is_empty() {
             return Self {
@@ -237,12 +207,12 @@ impl Statistics {
         }
 
         Self {
-            count: vs.len().into(),
-            mean: (sum / length).into(),
-            std: (ksum(&std) / length).sqrt().into(),
-            abs: (ksum(&abs) / length).into(),
-            min: min.into(),
-            max: max.into(),
+            count: Some(vs.len()),
+            mean: Some(sum / length),
+            std: Some((ksum(&std) / length).sqrt()),
+            abs: Some(ksum(&abs) / length),
+            min: Some(min),
+            max: Some(max),
         }
     }
 }
@@ -252,13 +222,64 @@ impl Statistics {
 /// This is a result that [`Transformer::statistics()`] returns.
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct StatisticalSummary {
+pub struct Stats {
     /// The statistics of latitude.
     pub latitude: Statistics,
     /// The statistics of longitude.
     pub longitude: Statistics,
     /// The statistics of altitude.
     pub altitude: Statistics,
+}
+
+/// The coordinate Transformer, and represents a deserializing result of par-formatted data.
+///
+/// If the parameters is zero, such as the unsupported components,
+/// the transformations are identity transformation on such components.
+/// For example, the transformation by the TKY2JGD and the PatchJGD par is
+/// identity transformation on altitude, and by the PatchJGD(H) par is
+/// so on latitude and longitude.
+///
+/// There is a builder, see [`TransformerBuilder`].
+///
+/// # Example
+///
+/// ```
+/// # use jgdtrans::*;
+/// # use jgdtrans::mesh::MeshUnit;
+/// # use jgdtrans::transformer::Parameter;
+/// # fn main() -> Result<()> {
+/// // from SemiDynaEXE2023.par
+/// let tf = Transformer::new(
+///     MeshUnit::Five,
+///     [
+///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+///     ].into()
+/// );
+///
+/// // forward transformation
+/// let origin = Point::try_new(36.10377479, 140.087855041, 2.34)?;
+/// let result = tf.forward(&origin)?;
+/// assert_eq!(result.latitude(), &36.103773017086695);
+/// assert_eq!(result.longitude(), &140.08785924333452);
+/// assert_eq!(result.altitude(), &2.4363138578103);
+/// # Ok(())}
+/// ```
+#[derive(Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct Transformer {
+    /// The mesh unit.
+    pub unit: MeshUnit,
+    /// The transformation parameter.
+    ///
+    /// The entry represents single line of par-formatted file's parameter section,
+    /// the key is meshcode, and the value parameter.
+    pub parameter: BTreeMap<u32, Parameter>,
+    /// The description, or the header of par-formattet data.
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
+    pub description: Option<String>,
 }
 
 impl Transformer {
@@ -342,7 +363,7 @@ impl Transformer {
     /// ```no_run
     /// # use std::fs;
     /// # use std::error::Error;
-    /// # use jgdtrans::{Transformer, Format};
+    /// # use jgdtrans::{Transformer, Format, Point};
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// // deserialize SemiDynaEXE par file, e.g. SemiDyna2023.par
     /// let s = fs::read_to_string("SemiDyna2023.par")?;
@@ -356,7 +377,8 @@ impl Transformer {
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
-    /// let result = tf.forward(&(35.0, 135.0).into());
+    /// let point: Point = (35.0, 135.0).try_into()?;
+    /// let result = tf.forward(&point);
     /// # Ok(())}
     /// ```
     ///
@@ -368,8 +390,7 @@ impl Transformer {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::parser::Format;
-    /// # use jgdtrans::transformer::Parameter;
+    /// # use jgdtrans::transformer::{Format, Parameter};
     /// # fn main() -> Result<()> {
     /// let s = r"<15 lines>
     /// # ...
@@ -395,8 +416,18 @@ impl Transformer {
     /// );
     /// # Ok(())}
     /// ```
-    pub fn from_str(s: &str, format: Format) -> Result<Transformer> {
-        crate::parser::from_str(s, format)
+    pub fn from_str(s: &str, format: Format) -> Result<Self> {
+        use crate::parser::*;
+        match format {
+            Format::TKY2JGD => TKY2JGD::from_str(s),
+            Format::PatchJGD => PatchJGD::from_str(s),
+            Format::PatchJGD_H => PatchJGD_H::from_str(s),
+            Format::PatchJGD_HV => PatchJGD_HV::from_str(s),
+            Format::HyokoRev => HyokoRev::from_str(s),
+            Format::SemiDynaEXE => SemiDynaEXE::from_str(s),
+            Format::geonetF3 => geonetF3::from_str(s),
+            Format::ITRF2014 => ITRF2014::from_str(s),
+        }
     }
 
     /// Returns the statistical summary.
@@ -424,7 +455,7 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// let stats = tf.summary();
+    /// let stats = tf.statistics();
     /// assert_eq!(stats.latitude.count, Some(4));
     /// assert_eq!(stats.latitude.mean, Some(-0.0064225));
     /// assert_eq!(stats.latitude.std, Some(0.019268673410486777));
@@ -433,7 +464,7 @@ impl Transformer {
     /// assert_eq!(stats.latitude.max, Some(-0.0062));
     /// # Ok(())}
     /// ```
-    pub fn statistics(&self) -> StatisticalSummary {
+    pub fn statistics(&self) -> Stats {
         macro_rules! extract {
             ($name:ident) => {
                 self.parameter
@@ -455,23 +486,11 @@ impl Transformer {
         let arr: Vec<f64> = extract!(altitude);
         let altitude = Statistics::from_arr(&arr);
 
-        StatisticalSummary {
+        Stats {
             latitude,
             longitude,
             altitude,
         }
-    }
-
-    fn make_result(point: &Point, corr: Correction) -> Point {
-        let latitude = point.latitude + corr.latitude;
-        let longitude = point.longitude + corr.longitude;
-        let altitude = point.altitude + corr.altitude;
-
-        Point::new(
-            crate::utils::normalize_latitude(&latitude),
-            crate::utils::normalize_longitude(&longitude),
-            altitude,
-        )
     }
 
     /// Returns the forward-transformed position from [`point`](Point).
@@ -494,20 +513,19 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// let origin = Point::new(36.10377479, 140.087855041, 2.34);
+    /// let origin = Point::try_new(36.10377479, 140.087855041, 2.34)?;
     /// let result = tf.forward(&origin)?;
-    /// assert_eq!(
-    ///     result,
-    ///     Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103)
-    /// );
+    /// assert_eq!(result.latitude(), &36.103773017086695);
+    /// assert_eq!(result.longitude(), &140.08785924333452);
+    /// assert_eq!(result.altitude(), &2.4363138578103);
     ///
     /// // This is equivalent to adding the result of Transformer::forward_corr
-    /// assert_eq!(result, origin + tf.forward_corr(&origin)?);
+    /// assert_eq!(result, &origin + tf.forward_corr(&origin)?);
     /// # Ok(())}
     /// ```
     pub fn forward(&self, point: &Point) -> Result<Point> {
         let corr = self.forward_corr(point)?;
-        Ok(Self::make_result(point, corr))
+        Ok(point + corr)
     }
 
     /// Returns the backward-transformed position from [`point`](Point).
@@ -538,20 +556,19 @@ impl Transformer {
     /// );
     ///
     /// // origin is forward trans. from 36.10377479, 140.087855041, 2.34
-    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
+    /// let origin = Point::try_new(36.103773017086695, 140.08785924333452, 2.4363138578103)?;
     /// let result = tf.backward(&origin)?;
-    /// assert_eq!(
-    ///     result,
-    ///     Point::new(36.10377479000002, 140.087855041, 2.339999999578243)
-    /// );
+    /// assert_eq!(result.latitude(), &36.10377479000002);
+    /// assert_eq!(result.longitude(), &140.087855041);
+    /// assert_eq!(result.altitude(), &2.339999999578243);
     ///
     /// // This is equivalent to adding the result of Transformer::backward_corr
-    /// assert_eq!(result, origin + tf.backward_corr(&origin)?);
+    /// assert_eq!(result, &origin + tf.backward_corr(&origin)?);
     /// # Ok(())}
     /// ```
     pub fn backward(&self, point: &Point) -> Result<Point> {
         let corr = self.backward_corr(point)?;
-        Ok(Self::make_result(point, corr))
+        Ok(point + corr)
     }
 
     /// Returns the validated backward-transformed position.
@@ -581,20 +598,19 @@ impl Transformer {
     ///
     /// // origin is forward trans. from 36.10377479, 140.087855041, 2.34
     /// // In this case, no error remains on latitude and longitude
-    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
+    /// let origin = Point::try_new(36.103773017086695, 140.08785924333452, 2.4363138578103)?;
     /// let result = tf.backward_safe(&origin)?;
-    /// assert_eq!(
-    ///     result,
-    ///     Point::new(36.10377479, 140.087855041, 2.3399999999970085)
-    /// );
+    /// assert_eq!(result.latitude(), &36.10377479);
+    /// assert_eq!(result.longitude(), &140.087855041);
+    /// assert_eq!(result.altitude(), &2.3399999999970085);
     ///
     /// // This is equivalent to adding the result of Transformer::backward_corr_safe
-    /// assert_eq!(result, origin + tf.backward_corr_safe(&origin)?);
+    /// assert_eq!(result, &origin + tf.backward_corr_safe(&origin)?);
     /// # Ok(())}
     /// ```
     pub fn backward_safe(&self, point: &Point) -> Result<Point> {
         let corr = self.backward_corr_safe(point)?;
-        Ok(Self::make_result(point, corr))
+        Ok(point + corr)
     }
 
     fn parameter_quadruple(
@@ -605,36 +621,44 @@ impl Transformer {
         let sw = self
             .parameter
             .get(&meshcode)
-            .ok_or(Error::new_parameter_not_found(
-                error::ParameterNotFoundKind::SouthWest,
-                meshcode,
+            .ok_or(Error::new_transformation(
+                TransformErrorKind::MissingParameter {
+                    meshcode,
+                    corner: MeshCellCorner::SouthWest,
+                },
             ))?;
 
         let meshcode = cell.se.to_meshcode();
         let se = self
             .parameter
             .get(&meshcode)
-            .ok_or(Error::new_parameter_not_found(
-                error::ParameterNotFoundKind::SouthEast,
-                meshcode,
+            .ok_or(Error::new_transformation(
+                TransformErrorKind::MissingParameter {
+                    meshcode,
+                    corner: MeshCellCorner::SouthEast,
+                },
             ))?;
 
         let meshcode = cell.nw.to_meshcode();
         let nw = self
             .parameter
             .get(&meshcode)
-            .ok_or(Error::new_parameter_not_found(
-                error::ParameterNotFoundKind::NorthWest,
-                meshcode,
+            .ok_or(Error::new_transformation(
+                TransformErrorKind::MissingParameter {
+                    meshcode,
+                    corner: MeshCellCorner::NorthWest,
+                },
             ))?;
 
         let meshcode = cell.ne.to_meshcode();
         let ne = self
             .parameter
             .get(&meshcode)
-            .ok_or(Error::new_parameter_not_found(
-                error::ParameterNotFoundKind::NorthEast,
-                meshcode,
+            .ok_or(Error::new_transformation(
+                TransformErrorKind::MissingParameter {
+                    meshcode,
+                    corner: MeshCellCorner::NorthEast,
+                },
             ))?;
 
         Ok((sw, se, nw, ne))
@@ -660,17 +684,18 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// let origin = Point::new(36.10377479, 140.087855041, 0.0);
+    /// let origin = Point::try_new(36.10377479, 140.087855041, 0.0)?;
     /// let corr = tf.forward_corr(&origin)?;
-    /// assert_eq!(
-    ///     corr,
-    ///     Correction::new(-1.7729133100878255e-6, 4.202334510058886e-6, 0.09631385781030007)
-    /// );
-    /// assert_eq!(origin + corr, tf.forward(&origin)?);
+    /// assert_eq!(corr.latitude, -1.7729133100878255e-6);
+    /// assert_eq!(corr.longitude, 4.202334510058886e-6);
+    /// assert_eq!(corr.altitude, 0.09631385781030007);
+    ///
+    /// assert_eq!(&origin + corr, tf.forward(&origin)?);
     /// # Ok(())}
     /// ```
     pub fn forward_corr(&self, point: &Point) -> Result<Correction> {
-        let cell = MeshCell::try_from_point(point, self.unit)?;
+        let cell = MeshCell::try_from_point(point, self.unit)
+            .map_err(|err| Error::new_transformation(TransformErrorKind::Point(err)))?;
 
         let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
 
@@ -735,27 +760,28 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
+    /// let origin = Point::try_new(36.103773017086695, 140.08785924333452, 0.0)?;
     /// let corr = tf.backward_corr(&origin)?;
-    /// assert_eq!(
-    ///     corr,
-    ///     Correction::new(1.7729133219831587e-6, -4.202334509042613e-6, -0.0963138582320569)
-    /// );
-    /// assert_eq!(origin + corr, tf.backward(&origin)?);
+    /// assert_eq!(corr.latitude, 1.7729133219831587e-6);
+    /// assert_eq!(corr.longitude, -4.202334509042613e-6);
+    /// assert_eq!(corr.altitude, -0.0963138582320569);
+    ///
+    /// assert_eq!(&origin + corr, tf.backward(&origin)?);
     /// # Ok(())}
     /// ```
     pub fn backward_corr(&self, point: &Point) -> Result<Correction> {
         // 12. / 3600.
         const DELTA: f64 = 1. / 300.;
 
-        let temporal = Point::new(point.latitude - DELTA, point.longitude + DELTA, 0.0);
+        let corr = Correction {
+            latitude: -DELTA,
+            longitude: DELTA,
+            altitude: 0.0,
+        };
+        let temporal = point + corr;
 
         let corr = self.forward_corr(&temporal)?;
-        let reference = Point::new(
-            point.latitude - corr.latitude,
-            point.longitude - corr.longitude,
-            point.altitude - corr.altitude,
-        );
+        let reference = point - corr;
 
         // actual correction
         let corr = self.forward_corr(&reference)?;
@@ -788,13 +814,13 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
+    /// let origin = Point::try_new(36.103773017086695, 140.08785924333452, 0.0)?;
     /// let corr = tf.backward_corr_safe(&origin)?;
-    /// assert_eq!(
-    ///     corr,
-    ///     Correction::new(1.772913310099049e-6, -4.202334510033827e-6, -0.0963138578132916)
-    /// );
-    /// assert_eq!(origin + corr, tf.backward_safe(&origin)?);
+    /// assert_eq!(corr.latitude, 1.772913310099049e-6);
+    /// assert_eq!(corr.longitude, -4.202334510033827e-6);
+    /// assert_eq!(corr.altitude, -0.0963138578132916);
+    ///
+    /// assert_eq!(&origin + corr, tf.backward_safe(&origin)?);
     /// # Ok(())}
     /// ```
     pub fn backward_corr_safe(&self, point: &Point) -> Result<Correction> {
@@ -807,17 +833,21 @@ impl Transformer {
         let mut yn = point.latitude;
         let mut xn = point.longitude;
 
-        macro_rules! diff {
+        macro_rules! delta {
             ($x:expr, $xn:ident, $corr:expr) => {
                 $x - ($xn + $corr)
             };
         }
 
         for _ in 0..ITERATION {
-            let cell = MeshCell::try_from_point(point, self.unit)?;
+            let current = Point::new(yn, xn, 0.0);
+
+            let cell = MeshCell::try_from_point(&current, self.unit)
+                .map_err(|err| Error::new_transformation(TransformErrorKind::Point(err)))?;
+
             let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
 
-            let (y, x) = cell.position(&Point::new(yn, xn, 0.0));
+            let (y, x) = cell.position(&current);
 
             let corr_y = bilinear_interpolation(
                 &sw.latitude,
@@ -837,8 +867,8 @@ impl Transformer {
                 &x,
             ) / SCALE;
 
-            let fx = diff!(point.longitude, xn, corr_x);
-            let fy = diff!(point.latitude, yn, corr_y);
+            let fx = delta!(point.longitude, xn, corr_x);
+            let fy = delta!(point.latitude, yn, corr_y);
 
             // for readability
             macro_rules! lng_sub {
@@ -870,25 +900,22 @@ impl Transformer {
 
             let corr = self.forward_corr(&Point::new(yn, xn, 0.0))?;
 
-            let diff_x = diff!(point.longitude, xn, corr.longitude);
-            let diff_y = diff!(point.latitude, yn, corr.latitude);
-            if diff_x.abs().le(&CRITERIA) && diff_y.abs().le(&CRITERIA) {
+            let delta_x = delta!(point.longitude, xn, corr.longitude);
+            let delta_y = delta!(point.latitude, yn, corr.latitude);
+
+            if delta_x.abs().le(&CRITERIA) && delta_y.abs().le(&CRITERIA) {
                 return Ok(Correction {
                     latitude: -corr.latitude,
                     longitude: -corr.longitude,
                     altitude: -corr.altitude,
                 });
             }
+
+            xn = crate::utils::normalize_longitude(&xn);
+            yn = crate::utils::normalize_latitude(&yn);
         }
 
-        Err(Error {
-            err: Box::new(error::ErrorImpl::NotCovergent {
-                latitude: yn,
-                longitude: xn,
-                criteria: CRITERIA,
-                iteration: ITERATION,
-            }),
-        })
+        Err(Error::new_transformation(TransformErrorKind::NotConverged))
     }
 }
 
@@ -899,7 +926,7 @@ impl Transformer {
 /// ```
 /// # use jgdtrans::*;
 /// # use jgdtrans::mesh::MeshUnit;
-/// # use jgdtrans::transformer::{Parameter, Correction, TransformerBuilder};
+/// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
 /// # fn main() -> Result<()> {
 /// // from SemiDynaEXE2023.par
 /// let tf: Transformer = TransformerBuilder::new(MeshUnit::Five)
@@ -936,7 +963,7 @@ impl TransformerBuilder {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Correction, TransformerBuilder};
+    /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
     /// # use std::collections::BTreeMap;
     /// # fn main() -> Result<()> {
     /// let tf = TransformerBuilder::new(MeshUnit::Five).build();
@@ -961,7 +988,7 @@ impl TransformerBuilder {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Correction, TransformerBuilder};
+    /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
     /// # use std::collections::BTreeMap;
     /// # fn main() -> Result<()> {
     /// let tf = TransformerBuilder::new(MeshUnit::Five)
@@ -983,7 +1010,7 @@ impl TransformerBuilder {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Correction, TransformerBuilder};
+    /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
     /// # use std::collections::BTreeMap;
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
@@ -1006,7 +1033,7 @@ impl TransformerBuilder {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Correction, TransformerBuilder};
+    /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
     /// let tf = TransformerBuilder::new(MeshUnit::Five)
@@ -1038,7 +1065,7 @@ impl TransformerBuilder {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Correction, TransformerBuilder};
+    /// # use jgdtrans::transformer::TransformerBuilder;
     /// # fn main() -> Result<()> {
     /// let tf = TransformerBuilder::new(MeshUnit::Five)
     ///   .description("My parameter".to_string())
@@ -1082,36 +1109,36 @@ mod tests {
 
             assert_eq!(
                 stats.latitude,
-                Statistics::new(
-                    4,
-                    -0.0064225,
-                    0.019268673410486777,
-                    0.006422499999999999,
-                    -0.00664,
-                    -0.0062
-                )
+                Statistics {
+                    count: Some(4),
+                    mean: Some(-0.0064225),
+                    std: Some(0.019268673410486777),
+                    abs: Some(0.006422499999999999),
+                    min: Some(-0.00664),
+                    max: Some(-0.0062)
+                }
             );
             assert_eq!(
                 stats.longitude,
-                Statistics::new(
-                    4,
-                    0.0151075,
-                    0.045322702644480496,
-                    0.0151075,
-                    0.01492,
-                    0.01529
-                )
+                Statistics {
+                    count: Some(4),
+                    mean: Some(0.0151075),
+                    std: Some(0.045322702644480496),
+                    abs: Some(0.0151075),
+                    min: Some(0.01492),
+                    max: Some(0.01529)
+                }
             );
             assert_eq!(
                 stats.altitude,
-                Statistics::new(
-                    4,
-                    0.0972325,
-                    0.29174846730531423,
-                    0.0972325,
-                    0.08972,
-                    0.10374
-                )
+                Statistics {
+                    count: Some(4),
+                    mean: Some(0.0972325),
+                    std: Some(0.29174846730531423),
+                    abs: Some(0.0972325),
+                    min: Some(0.08972),
+                    max: Some(0.10374)
+                }
             );
 
             let stats = TransformerBuilder::new(MeshUnit::One).build().statistics();
@@ -1154,8 +1181,28 @@ mod tests {
                 .build()
                 .statistics();
 
-            assert_eq!(stats.latitude, Statistics::new(1, 1.0, 0.0, 1.0, 1.0, 1.0));
-            assert_eq!(stats.longitude, Statistics::new(1, 0.0, 0.0, 0.0, 0.0, 0.0));
+            assert_eq!(
+                stats.latitude,
+                Statistics {
+                    count: Some(1),
+                    mean: Some(1.0),
+                    std: Some(0.0),
+                    abs: Some(1.0),
+                    min: Some(1.0),
+                    max: Some(1.0)
+                }
+            );
+            assert_eq!(
+                stats.longitude,
+                Statistics {
+                    count: Some(1),
+                    mean: Some(0.0),
+                    std: Some(0.0),
+                    abs: Some(0.0),
+                    min: Some(0.0),
+                    max: Some(0.0)
+                }
+            );
             assert_eq!(
                 stats.altitude,
                 Statistics {
@@ -1189,7 +1236,7 @@ mod tests {
                     .build();
 
                 // 国土地理院
-                let origin: Point = (36.103774791666666, 140.08785504166664, 0.0).into();
+                let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
                 let actual = tf.forward(&origin).unwrap();
 
                 assert!((36.106966281 - actual.latitude).abs() < 0.00000001);

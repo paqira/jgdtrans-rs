@@ -1,4 +1,4 @@
-use crate::mesh::{MeshCoord, MeshNode, MeshUnit};
+use std::num::{ParseFloatError, ParseIntError};
 
 /// Alias for a `Result<T, jgdtrans::error::Error>`.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -6,7 +6,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Represents all possible errors that can occur by this crate.
 #[derive(Debug)]
 pub struct Error {
-    pub err: Box<ErrorImpl>,
+    err: Box<ErrorKind>,
 }
 
 impl std::fmt::Display for Error {
@@ -17,274 +17,419 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        None
+        match self.err.as_ref() {
+            ErrorKind::ParseParError { kind, .. } => match kind {
+                ParseParErrorKind::Missing => None,
+                ParseParErrorKind::ParseInt(ref err) => Some(err),
+                ParseParErrorKind::ParseFloat(ref err) => Some(err),
+            },
+            ErrorKind::ParseMeshNodeError { kind } => match kind {
+                ParseMeshNodeErrorKind::Parse(ref err) => Some(err),
+                ParseMeshNodeErrorKind::Overflow(Some(ref err)) => Some(err),
+                ParseMeshNodeErrorKind::Overflow(None) => None,
+            },
+            ErrorKind::TransformError {
+                kind: TransformErrorKind::Point(ref err),
+            } => Some(err),
+            _ => None,
+        }
     }
 }
 
 impl Error {
     /// Returns a error kind.
-    pub fn kind(&self) -> &ErrorImpl {
+    pub fn kind(&self) -> &ErrorKind {
         &self.err
     }
 }
 
 impl Error {
+    pub(crate) fn new(err: ErrorKind) -> Self {
+        Self { err: Box::new(err) }
+    }
+
     pub(crate) fn new_parse_par(
         start: usize,
         end: usize,
         lineno: usize,
-        kind: ParseParErrorImpl,
+        kind: ParseParErrorKind,
+        column: ParColumn,
     ) -> Self {
-        Self {
-            err: Box::new(ErrorImpl::ParseParError {
-                kind,
-                lineno,
-                start,
-                end,
-            }),
-        }
+        Self::new(ErrorKind::ParseParError {
+            kind,
+            column,
+            lineno,
+            start,
+            end,
+        })
+    }
+    pub(crate) fn new_parse_mesh_coord(kind: ParseMeshCoordErrorKind, axis: ErrorAxis) -> Self {
+        Self::new(ErrorKind::ParseMeshCoordError { kind, axis })
+    }
+    pub(crate) fn new_parse_mesh_node(kind: ParseMeshNodeErrorKind) -> Self {
+        Self::new(ErrorKind::ParseMeshNodeError { kind })
+    }
+    pub(crate) fn new_parse_mesh_cell(source: Error) -> Self {
+        Self::new(ErrorKind::ParseMeshCellError(source))
+    }
+    pub(crate) fn new_parse_dms(kind: ParseDMSErrorKind) -> Self {
+        Self::new(ErrorKind::ParseDMSError { kind })
+    }
+    pub(crate) fn new_try_from_dms(kind: TryFromDMSErrorKind) -> Self {
+        Self::new(ErrorKind::TryFromDMSError { kind })
     }
 
-    pub(crate) fn new_out_of_range_meshcode(code: u32) -> Self {
-        Self {
-            err: Box::new(ErrorImpl::OutOfRangeMeshcode { value: code }),
-        }
+    pub(crate) fn new_point(axis: ErrorAxis, kind: PointErrorKind) -> Self {
+        Self::new(ErrorKind::PointError { axis, kind })
     }
-
-    pub(crate) fn new_incosistent_mesh_unit(coord: MeshCoord, unit: MeshUnit) -> Self {
-        Self {
-            err: Box::new(ErrorImpl::IncosistentMeshUnit { unit, coord }),
-        }
+    pub(crate) fn new_transformation(kind: TransformErrorKind) -> Self {
+        Self::new(ErrorKind::TransformError { kind })
     }
-
-    pub(crate) fn new_incosistent_mesh_cell(a: MeshNode, b: MeshNode, unit: MeshUnit) -> Self {
-        Self {
-            err: Box::new(ErrorImpl::IncosistentMeshCell { a, b, unit }),
-        }
+    pub(crate) fn new_mesh_coord(kind: MeshCoordErrorKind) -> Self {
+        Self::new(ErrorKind::MeshCoordError { kind })
     }
-
-    pub(crate) fn new_parameter_not_found(kind: ParameterNotFoundKind, meshcode: u32) -> Self {
-        Self {
-            err: Box::new(ErrorImpl::ParameterNotFound { kind, meshcode }),
-        }
+    pub(crate) fn new_mesh_node(kind: MeshNodeErrorKind) -> Self {
+        Self::new(ErrorKind::MeshNodeError { kind })
     }
-
-    pub(crate) fn new_parse_dms_error(s: String) -> Self {
-        Self {
-            err: Box::new(ErrorImpl::ParseDMSError { s }),
-        }
+    pub(crate) fn new_mesh_cell(kind: MeshCellErrorKind) -> Self {
+        Self::new(ErrorKind::MeshCellError { kind })
+    }
+    pub(crate) fn new_dms(kind: DMSErrorKind) -> Self {
+        Self::new(ErrorKind::DMSError { kind })
     }
 }
 
 #[derive(Debug)]
-pub enum ErrorImpl {
+pub enum ErrorKind {
     /// Invalid data found in par-formatted data.
     ParseParError {
-        /// Kind of component
-        kind: ParseParErrorImpl,
-        /// Line no. of the data
+        /// Error kind
+        kind: ParseParErrorKind,
+        // Error Column
+        column: ParColumn,
+        /// Lineno of the data
         lineno: usize,
         /// Start colum no. of the data
         start: usize,
         /// End colum no. of the data
         end: usize,
     },
+    /// Invalid meshcode.
+    ParseMeshCoordError {
+        kind: ParseMeshCoordErrorKind,
+        axis: ErrorAxis,
+    },
+    ParseMeshNodeError {
+        kind: ParseMeshNodeErrorKind,
+    },
+    ParseMeshCellError(Error),
     /// Invalid DMS.
     ParseDMSError {
-        /// Invalid data
-        s: String,
+        kind: ParseDMSErrorKind,
     },
-    /// Invalid meshcode.
-    ParseMeshcodeError {
-        /// Invalid data
-        s: String,
+    TryFromDMSError {
+        kind: TryFromDMSErrorKind,
     },
-    /// Parameter not found
-    ParameterNotFound {
-        /// The corner of the cell
-        kind: ParameterNotFoundKind,
-        //// The meshcode
-        meshcode: u32,
+    PointError {
+        kind: PointErrorKind,
+        axis: ErrorAxis,
     },
-    /// Error is still high even iteration exhausted
-    NotCovergent {
-        /// Resulting latitude
-        latitude: f64,
-        /// Resulting longitude
-        longitude: f64,
-        /// Error cirteria
-        criteria: f64,
-        /// Max iteration
-        iteration: usize,
+    TransformError {
+        kind: TransformErrorKind,
     },
-    MeshCoordOverFlow,
-    IncosistentMeshUnit {
-        coord: MeshCoord,
-        unit: MeshUnit,
+    MeshCoordError {
+        kind: MeshCoordErrorKind,
     },
-    IncosistentMeshCell {
-        a: MeshNode,
-        b: MeshNode,
-        unit: MeshUnit,
+    MeshNodeError {
+        kind: MeshNodeErrorKind,
     },
-    OutOfRangePosition {
-        kind: OutOfRangePositionKind,
-        low: f64,
-        high: f64,
+    MeshCellError {
+        kind: MeshCellErrorKind,
     },
-    OutOfRangeMeshCoordDigit {
-        kind: OutOfRangeMeshCoordDigitKind,
-        low: u8,
-        high: u8,
-    },
-    OutOfRangeMeshCorrd {
-        value: MeshCoord,
-        low: MeshCoord,
-        high: MeshCoord,
-    },
-    OutOfRangeMeshcode {
-        value: u32,
-    },
-    OutOfRangeDMS {
-        degree: u8,
-        minute: u8,
-        second: u8,
-        fract: f64,
-    },
-    OutOfRangeDegree {
-        degree: f64,
-        low: f64,
-        high: f64,
+    DMSError {
+        kind: DMSErrorKind,
     },
 }
 
+impl std::fmt::Display for ErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::ParseParError {
+                column,
+                lineno,
+                start,
+                end,
+                ..
+            } => write!(
+                f,
+                "failed parsing {} at l{}:{}:{}",
+                column, lineno, start, end
+            ),
+            Self::ParseMeshCoordError { kind, axis } => write!(f, "{} on {}", kind, axis),
+            Self::ParseMeshNodeError { kind } => {
+                write!(f, "ParseMeshNodeError: {}", kind)
+            }
+            Self::ParseMeshCellError(err) => write!(f, "failed conversion to MeshCell, {}", err),
+            Self::ParseDMSError { kind } => write!(f, "{}", kind),
+            Self::TryFromDMSError { kind } => write!(f, "{}", kind),
+            Self::PointError { kind, axis } => write!(f, "{} on {}", kind, axis),
+            Self::TransformError { kind } => write!(f, "{}", kind),
+            Self::MeshCoordError { kind } => write!(f, "{}", kind),
+            Self::MeshNodeError { kind } => write!(f, "{}", kind),
+            Self::MeshCellError { kind } => write!(f, "{}", kind),
+            Self::DMSError { kind } => write!(f, "{}", kind),
+        }
+    }
+}
+
+// common
+
 #[derive(Debug)]
-pub enum ParseParErrorImpl {
+pub enum ParColumn {
     Meshcode,
     Latitude,
     Longitude,
     Altitude,
 }
 
-impl std::fmt::Display for ParseParErrorImpl {
+impl std::fmt::Display for ParColumn {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let s = match self {
-            ParseParErrorImpl::Meshcode => "meshcode",
-            ParseParErrorImpl::Latitude => "latitude",
-            ParseParErrorImpl::Longitude => "longitude",
-            ParseParErrorImpl::Altitude => "altitude",
-        };
-        f.write_str(s)
+        match self {
+            Self::Meshcode => write!(f, "meshcode"),
+            Self::Latitude => write!(f, "latitude"),
+            Self::Longitude => write!(f, "longitude"),
+            Self::Altitude => write!(f, "altitude"),
+        }
     }
 }
 
 #[derive(Debug)]
-pub enum ParameterNotFoundKind {
-    SouthWest,
-    SouthEast,
-    NorthWest,
-    NorthEast,
-}
-
-impl std::fmt::Display for ParameterNotFoundKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            ParameterNotFoundKind::SouthWest => "south-west",
-            ParameterNotFoundKind::SouthEast => "south-east",
-            ParameterNotFoundKind::NorthWest => "north-west",
-            ParameterNotFoundKind::NorthEast => "north-east",
-        };
-        f.write_str(s)
-    }
-}
-
-#[derive(Debug)]
-pub enum OutOfRangePositionKind {
+pub enum ErrorAxis {
     Latitude,
     Longitude,
 }
 
-impl std::fmt::Display for OutOfRangePositionKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            OutOfRangePositionKind::Latitude => "latitude",
-            OutOfRangePositionKind::Longitude => "longitude",
-        };
-        f.write_str(s)
+impl std::fmt::Display for ErrorAxis {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Latitude => write!(f, "latitude"),
+            Self::Longitude => write!(f, "longitude"),
+        }
     }
 }
 
 #[derive(Debug)]
-pub enum OutOfRangeMeshCoordDigitKind {
-    First,
-    Second,
-    Third,
+pub enum MeshCellCorner {
+    NorthWest,
+    NorthEast,
+    SouthWest,
+    SouthEast,
 }
 
-impl std::fmt::Display for OutOfRangeMeshCoordDigitKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            OutOfRangeMeshCoordDigitKind::First => "first",
-            OutOfRangeMeshCoordDigitKind::Second => "second",
-            OutOfRangeMeshCoordDigitKind::Third => "third",
-        };
-        f.write_str(s)
+impl std::fmt::Display for MeshCellCorner {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::NorthWest => write!(f, "north-west"),
+            Self::NorthEast => write!(f, "north-east"),
+            Self::SouthWest => write!(f, "south-west"),
+            Self::SouthEast => write!(f, "south-east"),
+        }
     }
 }
 
-impl std::fmt::Display for ErrorImpl {
+// error kind
+
+#[derive(Debug)]
+pub enum ParseParErrorKind {
+    Missing,
+    ParseInt(ParseIntError),
+    ParseFloat(ParseFloatError),
+}
+
+impl std::fmt::Display for ParseParErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            ErrorImpl::ParseParError {
-                kind,
-                lineno,
-                start,
-                end,
-            } => write!(f, "invalid {kind}: line {lineno:?}, {start:?} to {end:?}",),
-            ErrorImpl::ParseDMSError { s } => write!(f, "invalid DMS: '{s}'",),
-            ErrorImpl::ParseMeshcodeError { s } => write!(f, "invalid meshcode: '{s}'",),
-            ErrorImpl::ParameterNotFound { meshcode, kind } => {
-                write!(f, "parameter not found: {meshcode:?} ({kind:?} corner)",)
+            Self::Missing => write!(f, "column not found"),
+            Self::ParseInt(..) => write!(f, "faild parsing to u32"),
+            Self::ParseFloat(..) => write!(f, "faild parsing to f64"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum ParseMeshCoordErrorKind {
+    Overflow,
+    NAN,
+}
+
+impl std::fmt::Display for ParseMeshCoordErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Overflow => write!(f, "number too large to fit in MeshNode"),
+            Self::NAN => write!(f, "number would be NAN"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum ParseMeshNodeErrorKind {
+    Parse(ParseIntError),
+    Overflow(Option<Error>),
+}
+
+impl std::fmt::Display for ParseMeshNodeErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Parse(..) => write!(f, "failed parsing to u32"),
+            Self::Overflow(..) => write!(f, "number too large to fit in MeshNode"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum ParseDMSErrorKind {
+    InvalidDigit,
+    Overflow,
+    Empty,
+}
+
+impl std::fmt::Display for ParseDMSErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::InvalidDigit => write!(f, "invalid digit found in string"),
+            Self::Overflow => write!(f, "number too large to fit in DMS"),
+            Self::Empty => write!(f, "cannot parse DMS from empty string"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum TryFromDMSErrorKind {
+    Overflow,
+    NAN,
+}
+
+impl std::fmt::Display for TryFromDMSErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Overflow => write!(f, "number too large to fit in DMS"),
+            Self::NAN => write!(f, "number would be NAN"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum PointErrorKind {
+    Overflow,
+    NAN,
+}
+
+impl std::fmt::Display for PointErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Overflow => write!(f, "number too large to fit in Point"),
+            Self::NAN => write!(f, "number would be NAN"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum TransformErrorKind {
+    MissingParameter {
+        meshcode: u32,
+        corner: MeshCellCorner,
+    },
+    Point(Error),
+    NotConverged,
+}
+
+impl std::fmt::Display for TransformErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::MissingParameter { meshcode, corner } => {
+                write!(f, "missing parameter of {} at {}", meshcode, corner)
             }
-            ErrorImpl::NotCovergent {
-                iteration,
-                criteria,
-                ..
-            } => write!(
+            Self::Point(..) => write!(f, "location not supported for transformation"),
+            Self::NotConverged => write!(f, "transformation not converged"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum MeshCoordErrorKind {
+    PosOverflow,
+    NegOverflow,
+    Overflow,
+    MeshUnit,
+}
+
+impl std::fmt::Display for MeshCoordErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::PosOverflow => write!(f, "number too large to fit in MeshCoord"),
+            Self::NegOverflow => write!(f, "number too large to fit in MeshCoord"),
+            Self::Overflow => write!(f, "number too large to fit in the first of MeshCoord"),
+            Self::MeshUnit => write!(f, "inconsistent mesh_unit with coords"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum MeshNodeErrorKind {
+    Overflow,
+}
+
+impl std::fmt::Display for MeshNodeErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Overflow => write!(f, "number too large to fit in MeshNode"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum MeshCellErrorKind {
+    Overflow,
+    MeshUnit,
+    NortthWestNode,
+    SouthEastNode,
+    NouthEastNode,
+}
+
+impl std::fmt::Display for MeshCellErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Overflow => {
+                write!(f, "south-west node too large to find north/east next node")
+            }
+            Self::MeshUnit => write!(f, "inconsistent mesh_unit with nodes"),
+            Self::NortthWestNode => write!(
                 f,
-                "error is still higher than {criteria:?} even exhaust {iteration:?} iterations"
+                "inconsistent nortth-west node with south-west node and mesh_unit"
             ),
-            ErrorImpl::MeshCoordOverFlow => write!(f, "MeshCoord over flow"),
-            ErrorImpl::IncosistentMeshUnit { unit, .. } => {
-                write!(f, "invalid unit: {unit:?} is incosistent with MeshCoord")
-            }
-            ErrorImpl::IncosistentMeshCell { unit, .. } => {
-                write!(
-                    f,
-                    "invalid MeshCell: nodes not construct a unit cell in unit {unit:?}"
-                )
-            }
-            ErrorImpl::OutOfRangePosition { kind, low, high } => {
-                write!(f, "invalid {kind}: must satisfy {low:?} <= and <= {high:?}")
-            }
-            ErrorImpl::OutOfRangeMeshCoordDigit { kind, low, high } => {
-                write!(
-                    f,
-                    "invalid MeshCoord: {kind} digit must satisfy {low:?} <= and <= {high:?}"
-                )
-            }
-            ErrorImpl::OutOfRangeMeshCorrd { low, high, .. } => write!(
+            Self::SouthEastNode => write!(
                 f,
-                "invalid MeshCoord: must satisfy {low:?} <= and <= {high:?}"
+                "inconsistent south-east node with south-west node and mesh_unit"
             ),
-            ErrorImpl::OutOfRangeMeshcode { value } => {
-                write!(f, "invalid meshcode: {}", value)
-            }
-            ErrorImpl::OutOfRangeDMS { .. } => write!(f, "invalid DMS"),
-            ErrorImpl::OutOfRangeDegree { low, high, .. } => write!(
+            Self::NouthEastNode => write!(
                 f,
-                "invalid degree: must satisfiy {low:?} <= and <= {high:?}"
+                "inconsistent north-east node with south-west node and mesh_unit"
             ),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum DMSErrorKind {
+    Overflow,
+    NAN,
+}
+
+impl std::fmt::Display for DMSErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Self::Overflow => write!(f, "number too large to fit in DMS"),
+            Self::NAN => write!(f, "number would be NAN"),
         }
     }
 }

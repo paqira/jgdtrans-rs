@@ -1,7 +1,10 @@
 //! Provides misc utilities.
-use std::{fmt::Display, str::FromStr};
+use std::{fmt::Display, num::IntErrorKind, str::FromStr};
 
-use crate::{error, Error, Result};
+use crate::{
+    error::{DMSErrorKind, ParseDMSErrorKind, TryFromDMSErrorKind},
+    Error, Result,
+};
 
 /// Returns the normalized latitude into -90.0 <= and <= 90.0.
 ///
@@ -19,22 +22,15 @@ use crate::{error, Error, Result};
 /// assert!(normalize_latitude(&f64::NAN).is_nan());
 /// ```
 pub fn normalize_latitude(t: &f64) -> f64 {
-    if t.is_nan() {
-        return *t;
-    };
-
-    let t = t % 360.0;
-    let res = if t.lt(&-270.0) || t.gt(&270.0) {
-        t - f64::copysign(360.0, t)
-    } else if t.lt(&-90.0) || t.gt(&90.0) {
-        f64::copysign(180.0, t) - t
+    if t.is_nan() || t.ge(&-90.) && t.le(&90.0) {
+        *t
     } else {
-        t
-    };
-
-    debug_assert!(res.ge(&-90.) && res.le(&90.));
-
-    res
+        match t % 360.0 {
+            s if s.lt(&-270.0) || s.gt(&270.0) => s - f64::copysign(360.0, s),
+            s if s.lt(&-90.0) || s.gt(&90.0) => f64::copysign(180.0, s) - s,
+            s => s,
+        }
+    }
 }
 
 /// Returns the normalize longitude -180.0 <= and <= 180.0.
@@ -51,23 +47,17 @@ pub fn normalize_latitude(t: &f64) -> f64 {
 /// assert!(normalize_longitude(&f64::NAN).is_nan());
 /// ```
 pub fn normalize_longitude(t: &f64) -> f64 {
-    if t.is_nan() {
-        return *t;
-    };
-
-    let t = t % 360.0;
-    let res = if t.lt(&-180.0) || t.gt(&180.0) {
-        t - f64::copysign(360.0, t)
+    if t.is_nan() || t.ge(&-180.0) && t.le(&180.0) {
+        *t
     } else {
-        t
-    };
-
-    debug_assert!(res.ge(&-180.) && res.le(&180.));
-
-    res
+        match t % 360.0 {
+            s if s.lt(&-180.0) || s.gt(&180.0) => s - f64::copysign(360.0, s),
+            s => s,
+        }
+    }
 }
 
-/// Returns a DMS notation [`&str`] from a DD notation [`f64`].
+/// Returns a DMS notation [`str`] from a DD notation [`f64`].
 ///
 /// This returns [`None`] if conversion failed.
 ///
@@ -75,14 +65,14 @@ pub fn normalize_longitude(t: &f64) -> f64 {
 ///
 /// ```
 /// # use jgdtrans::utils::to_dms;
-/// assert_eq!(to_dms(&36.103774791666666), Some("360613.589250000023299".to_string()));
-/// assert_eq!(to_dms(&140.08785504166664), Some("1400516.278150000016467".to_string()));
+/// assert_eq!(to_dms(&36.103774791666666), Some("360613.589249999997719".to_string()));
+/// assert_eq!(to_dms(&140.08785504166664), Some("1400516.278149999914149".to_string()));
 /// ```
 pub fn to_dms(t: &f64) -> Option<String> {
     DMS::try_from(t).ok().map(|x| x.to_string())
 }
 
-/// Returns a DD notation [`f64`] from a DMS notation [`&str`].
+/// Returns a DD notation [`f64`] from a DMS notation [`str`].
 ///
 /// This returns [`None`] if conversion failed.
 ///
@@ -94,7 +84,7 @@ pub fn to_dms(t: &f64) -> Option<String> {
 /// assert_eq!(from_dms("1400516.27815"), Some(140.08785504166667));
 /// ```
 pub fn from_dms(s: &str) -> Option<f64> {
-    s.parse::<DMS>().ok().map(|x| x.into())
+    s.parse::<DMS>().ok().map(|x| x.to_degree())
 }
 
 /// Signiture of DMS
@@ -120,9 +110,9 @@ pub enum Sign {
 /// let latitude = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
 ///
 /// // prints DMS { sign: Plus, degree: 36, minute: 6, second: 13, fract: 0.58925 }
-/// println!("{latitude:?}");
+/// println!("{:?}", latitude);
 /// // prints "360613.58925"
-/// println!("{latitude}");
+/// println!("{}", latitude);
 ///
 /// // Construct from &str
 /// assert_eq!(latitude, "360613.58925".parse::<DMS>()?);
@@ -131,7 +121,7 @@ pub enum Sign {
 /// assert_eq!(latitude.to_degree(), 36.103774791666666);
 ///
 /// // Construct from DD notation f64
-/// let latitude = DMS::try_from(36.103774791666666)?;
+/// let latitude = DMS::try_from(&36.103774791666666)?;
 /// assert_eq!(latitude.sign(), &Sign::Plus);
 /// assert_eq!(latitude.degree(), &36);
 /// assert_eq!(latitude.minute(), &6);
@@ -149,9 +139,7 @@ pub struct DMS {
 }
 
 impl Display for DMS {
-    /// Returns a DMS notation [`&str`] which represents `self`.
-    ///
-    /// The fraction has 15 digits at most.
+    /// Returns a DMS notation [`str`] which represents `self`.
     ///
     /// # Example
     ///
@@ -166,28 +154,27 @@ impl Display for DMS {
     /// # Ok(())}
     /// ```
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self.sign {
-            Sign::Plus => "",
-            Sign::Minus => "-",
-        };
-
-        let formatted = format!("{:.15}", self.fract);
-        let mut parts = formatted.split('.');
-
-        // drop integer part
-        parts.next();
-
-        // take fraction part
-        let fract = match parts.next().unwrap().trim_end_matches('0') {
-            "" => "0",
-            x => x,
+        match self.sign {
+            Sign::Plus => {}
+            Sign::Minus => write!(f, "-")?,
         };
 
         match (self.degree, self.minute, self.second) {
-            (0, 0, sec) => write!(f, "{}{}.{}", s, sec, fract),
-            (0, min, sec) => write!(f, "{}{}{:02}.{}", s, min, sec, fract),
-            (deg, min, sec) => write!(f, "{}{}{:02}{:02}.{}", s, deg, min, sec, fract),
-        }
+            (0, 0, sec) => write!(f, "{}", sec)?,
+            (0, min, sec) => write!(f, "{}{:02}", min, sec)?,
+            (deg, min, sec) => write!(f, "{}{:02}{:02}", deg, min, sec)?,
+        };
+
+        let s = format!("{:.15}", self.fract);
+        if let Some((_, fract)) = s.trim_end_matches('0').split_once('.') {
+            if fract.is_empty() {
+                write!(f, ".0")?
+            } else {
+                write!(f, ".{}", fract)?
+            }
+        };
+
+        Ok(())
     }
 }
 
@@ -220,12 +207,6 @@ impl FromStr for DMS {
     /// # Ok(())}
     /// ```
     fn from_str(s: &str) -> Result<Self> {
-        // integer-like
-        if let Some(res) = Self::parse_integer(s) {
-            return Self::try_new(res.0, res.1, res.2, res.3, 0.0)
-                .map_err(|_| Error::new_parse_dms_error(s.to_string()));
-        }
-
         // float-like
         let mut parts = s.split('.');
 
@@ -234,118 +215,48 @@ impl FromStr for DMS {
 
         // too many '.'
         if parts.next().is_some() {
-            return Err(Error::new_parse_dms_error(s.to_string()));
+            return Err(Error::new_parse_dms(ParseDMSErrorKind::InvalidDigit));
         };
 
         match (integer, fraction) {
-            //
-            // empty fraction part
-            //
-            // "1"
-            (Some(i), None) => {
-                let res =
-                    Self::parse_integer(i).ok_or(Error::new_parse_dms_error(s.to_string()))?;
-                Self::try_new(res.0, res.1, res.2, res.3, 0.0)
+            // [+-]?\d+[.]?
+            (Some(i), Some("") | None) => {
+                let int = Self::parse_integer(i)?;
+                Self::try_new(int.0, int.1, int.2, int.3, 0.0)
             }
-            // "1."
-            (Some(i), Some("")) => {
-                let res =
-                    Self::parse_integer(i).ok_or(Error::new_parse_dms_error(s.to_string()))?;
-                Self::try_new(res.0, res.1, res.2, res.3, 0.0)
-            }
-            //
-            // empty integer part
-            //
-            // "+.1" or ".1"
-            (Some(i), Some(f)) if i.eq("+") || i.is_empty() => match Self::perse_fraction(f) {
-                Some(fract) => Self::try_new(Sign::Plus, 0, 0, 0, fract),
-                _ => Err(Error::new_parse_dms_error(s.to_string())),
-            },
-            // "-.1"
-            (Some(i), Some(f)) if i.eq("-") => match Self::perse_fraction(f) {
-                Some(fract) => Self::try_new(Sign::Minus, 0, 0, 0, fract),
-                _ => Err(Error::new_parse_dms_error(s.to_string())),
-            },
-            //
-            // formal float
-            //
-            // "1.1"
             (Some(i), Some(f)) => {
-                let res =
-                    Self::parse_integer(i).ok_or(Error::new_parse_dms_error(s.to_string()))?;
-                let fract =
-                    Self::perse_fraction(f).ok_or(Error::new_parse_dms_error(s.to_string()))?;
-                Self::try_new(res.0, res.1, res.2, res.3, fract)
+                // 0 <= fract < 1
+                let fract = Self::parse_fraction(f)?;
+
+                if i.eq("+") || i.is_empty() {
+                    // +?[.]\d+
+                    Ok(Self {
+                        sign: Sign::Plus,
+                        degree: 0,
+                        minute: 0,
+                        second: 0,
+                        fract,
+                    })
+                } else if i.eq("-") {
+                    // -[.]\d+
+                    Ok(Self {
+                        sign: Sign::Minus,
+                        degree: 0,
+                        minute: 0,
+                        second: 0,
+                        fract,
+                    })
+                } else {
+                    // [+-]?\d+[.]\d+
+                    let int = Self::parse_integer(i)?;
+                    Self::try_new(int.0, int.1, int.2, int.3, fract)
+                        .map_err(|_| Error::new_parse_dms(ParseDMSErrorKind::Overflow))
+                }
             }
-            _ => Err(Error::new_parse_dms_error(s.to_string())),
+            (None, None) => Err(Error::new_parse_dms(ParseDMSErrorKind::Empty)),
+            // others
+            (None, _) => unreachable!(),
         }
-    }
-}
-
-impl TryFrom<f64> for DMS {
-    type Error = Error;
-
-    /// Makes a [`DMS`] from DD notation [`f64`]
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
-    /// # fn main() -> Result<()> {
-    /// assert_eq!(
-    ///     DMS::try_from(36.103774791666666)?,
-    ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.5892500000232985)?
-    /// );
-    /// assert_eq!(
-    ///     DMS::try_from(140.08785504166664)?,
-    ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815000001646695)?
-    /// );
-    /// # Ok(())}
-    /// ```
-    fn try_from(value: f64) -> Result<Self> {
-        // FIXME:
-        // Support the identity on full range, -180 to 180
-        if value.is_nan() || value.lt(&-180.0) || value.gt(&180.0) {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::OutOfRangeDegree {
-                    low: -180.,
-                    high: 180.,
-                    degree: value,
-                }),
-            });
-        };
-
-        // FIXME: dirty dirty hack
-        let mm = 60. * value.abs().next_up().fract();
-        let ss = 60. * mm.fract();
-
-        let sign = if value.signum().eq(&1.0) {
-            Sign::Plus
-        } else {
-            Sign::Minus
-        };
-        let degree = value.trunc().abs() as u8;
-        let minute = mm.trunc() as u8;
-        let second = ss.trunc() as u8;
-        let fract = ss.fract();
-
-        // verify
-        if cfg!(debug_assert) && degree.eq(&180) {
-            debug_assert!((minute.eq(&0) && second.eq(&0) && fract.eq(&0.0)));
-        };
-        debug_assert!(second.le(&60), "got {value:?}, expected second <= 60");
-        debug_assert!(minute.le(&60), "got {value:?}, expected minute <= 60");
-        debug_assert!(degree.le(&180), "got {value:?}, expected degree <= 180");
-
-        // handle carry by binary64 rounding error
-        let (carry, second) = (second / 60, second % 60);
-        let minute: u8 = minute + carry;
-
-        let (carry, minute) = (minute / 60, minute % 60);
-        let degree = degree + carry;
-
-        Self::try_new(sign, degree, minute, second, fract)
     }
 }
 
@@ -354,14 +265,11 @@ impl TryFrom<&f64> for DMS {
 
     /// Makes a [`DMS`] from DD notation [`f64`].
     ///
-    /// See [`DMS::try_from<f64>`].
-    fn try_from(value: &f64) -> Result<Self> {
-        Self::try_from(*value)
-    }
-}
-
-impl From<DMS> for f64 {
-    /// Returns a DD notation [`f64`] that `self` converts into.
+    /// `t` is angle which safisfies -180.0 <= and <= 180.0.
+    ///
+    /// # Errors
+    ///
+    /// If `t` is out-of-range.
     ///
     /// # Example
     ///
@@ -369,28 +277,79 @@ impl From<DMS> for f64 {
     /// # use jgdtrans::*;
     /// # use jgdtrans::utils::{DMS, Sign};
     /// # fn main() -> Result<()> {
-    /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
-    /// assert_eq!(f64::from(dms), 36.103774791666666);
-    ///
-    /// let dms = DMS::try_new(Sign::Minus, 36, 6, 13, 0.58925)?;
-    /// assert_eq!(f64::from(dms), -36.103774791666666);
+    /// assert_eq!(
+    ///     DMS::try_from(&36.103774791666666)?,
+    ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.589249999997719)?
+    /// );
+    /// assert_eq!(
+    ///     DMS::try_from(&140.08785504166664)?,
+    ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.2781499999141488)?
+    /// );
     /// # Ok(())}
     /// ```
-    fn from(value: DMS) -> Self {
-        Self::from(&value)
+    fn try_from(value: &f64) -> std::prelude::v1::Result<Self, Self::Error> {
+        if value.is_nan() {
+            return Err(Error::new_try_from_dms(TryFromDMSErrorKind::NAN));
+        };
+        if value.lt(&-180.0) || value.gt(&180.0) {
+            return Err(Error::new_try_from_dms(TryFromDMSErrorKind::Overflow));
+        };
+
+        let mm = 60. * value.fract();
+        let ss = 60. * mm.fract();
+
+        let sign = if value.is_sign_positive() {
+            Sign::Plus
+        } else {
+            Sign::Minus
+        };
+
+        let degree = value.trunc().abs() as u8;
+        let minute = mm.trunc().abs() as u8;
+        let second = ss.trunc().abs() as u8;
+        let fract = ss.fract().abs();
+
+        Self::try_new(sign, degree, minute, second, fract)
+            .map_err(|_| Error::new_try_from_dms(TryFromDMSErrorKind::Overflow))
     }
 }
 
-impl From<&DMS> for f64 {
-    /// Returns a DD notation [`f64`] that `self` converts into.
-    fn from(value: &DMS) -> Self {
-        let mm = value.minute as f64 / 60.;
-        let ss = (value.second as f64 + value.fract) / 3600.0;
-        let res = (value.degree as f64) + mm + ss;
+impl DMS {
+    fn parse_integer(s: &str) -> Result<(Sign, u8, u8, u8)> {
+        let sign = if s.starts_with('-') {
+            Sign::Minus
+        } else {
+            Sign::Plus
+        };
 
-        match value.sign {
-            Sign::Plus => res,
-            Sign::Minus => -res,
+        let i = s
+            .parse::<i64>()
+            .map_err(|err| match err.kind() {
+                IntErrorKind::NegOverflow | IntErrorKind::PosOverflow => {
+                    Error::new_parse_dms(ParseDMSErrorKind::Overflow)
+                }
+                _ => Error::new_parse_dms(ParseDMSErrorKind::InvalidDigit),
+            })?
+            .unsigned_abs();
+        let degree = u8::try_from(i / 10000)
+            .map_err(|_| Error::new_parse_dms(ParseDMSErrorKind::Overflow))?;
+
+        let rest = i % 10000;
+        let minute = u8::try_from(rest / 100)
+            .map_err(|_| Error::new_parse_dms(ParseDMSErrorKind::Overflow))?;
+        let second = u8::try_from(rest % 100)
+            .map_err(|_| Error::new_parse_dms(ParseDMSErrorKind::Overflow))?;
+
+        Ok((sign, degree, minute, second))
+    }
+
+    fn parse_fraction(s: &str) -> Result<f64> {
+        if s.is_empty() {
+            Err(Error::new_parse_dms(ParseDMSErrorKind::InvalidDigit))
+        } else {
+            format!("0.{}", s)
+                .parse::<f64>()
+                .map_err(|_| Error::new_parse_dms(ParseDMSErrorKind::InvalidDigit))
         }
     }
 }
@@ -400,13 +359,7 @@ impl DMS {
     ///
     /// # Errors
     ///
-    /// If all the following conditions does not hold;
-    ///
-    /// - `degree` satisries 0 <= and <= 180,
-    /// - `minute` does 0 <= and < 60,
-    /// - `second` does 0 <= and < 60,
-    /// - and `fract` does 0.0 <= and < 1.0.
-    /// - Additionally, `minute`, `second` and `fract` is zero if `degree` is 180.
+    /// If the input is not in -180°0′0″ to 180°0′0″.
     ///
     /// # Example
     ///
@@ -415,14 +368,13 @@ impl DMS {
     /// # use jgdtrans::utils::{DMS, Sign};
     /// # fn main() -> Result<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
-    /// assert_eq!(dms.sign(), &Sign::Plus);
-    /// assert_eq!(dms.degree(), &36);
-    /// assert_eq!(dms.minute(), &6);
-    /// assert_eq!(dms.second(), &13);
-    /// assert_eq!(dms.fract(), &0.58925);
+    /// assert_eq!(dms.to_string(), "360613.58925");
     /// # Ok(())}
     /// ```
     pub fn try_new(sign: Sign, degree: u8, minute: u8, second: u8, fract: f64) -> Result<Self> {
+        if fract.is_nan() {
+            return Err(Error::new_dms(DMSErrorKind::NAN));
+        }
         if degree.eq(&180) && (minute.gt(&0) || second.gt(&0) || fract.gt(&0.0))
             || degree.gt(&180)
             || minute.ge(&60)
@@ -430,14 +382,7 @@ impl DMS {
             || fract.lt(&0.0)
             || fract.ge(&1.0)
         {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::OutOfRangeDMS {
-                    degree,
-                    minute,
-                    second,
-                    fract,
-                }),
-            });
+            return Err(Error::new_dms(DMSErrorKind::Overflow));
         }
 
         Ok(Self {
@@ -529,58 +474,6 @@ impl DMS {
         &self.fract
     }
 
-    fn parse_integer(s: &str) -> Option<(Sign, u8, u8, u8)> {
-        let sign = if s.starts_with('-') {
-            Sign::Minus
-        } else {
-            Sign::Plus
-        };
-
-        let i = s.parse::<i64>().ok()?.abs();
-        let degree = u8::try_from(i / 10000).ok()?;
-
-        let rest = i % 10000;
-        let minute = u8::try_from(rest / 100).ok()?;
-        let second = u8::try_from(rest % 100).ok()?;
-        Some((sign, degree, minute, second))
-    }
-
-    fn perse_fraction(s: &str) -> Option<f64> {
-        if s.is_empty() {
-            None
-        } else {
-            ("0.".to_string() + s).parse::<f64>().ok()
-        }
-    }
-
-    /// Makes a [`DMS`] from DD notation [`f64`].
-    ///
-    /// `t` is angle which safisfies -180.0 <= and <= 180.0.
-    ///
-    /// # Errors
-    ///
-    /// If `t` is out-of-range.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
-    /// # fn main() -> Result<()> {
-    /// assert_eq!(
-    ///     DMS::try_from_dd(&36.103774791666666)?,
-    ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.5892500000232985)?
-    /// );
-    /// assert_eq!(
-    ///     DMS::try_from_dd(&140.08785504166664)?,
-    ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815000001646695)?
-    /// );
-    /// # Ok(())}
-    /// ```
-    pub fn try_from_dd(t: &f64) -> Result<Self> {
-        t.try_into()
-    }
-
     /// Returns a DD notation [`f64`] that `self` converts into.
     ///
     /// # Example
@@ -603,13 +496,21 @@ impl DMS {
     /// # Ok(())}
     /// ```
     pub fn to_degree(&self) -> f64 {
-        f64::from(self)
+        let res = (self.degree as f64)
+            + self.minute as f64 / 60.
+            + (self.second as f64 + self.fract) / 3600.0;
+
+        match self.sign {
+            Sign::Plus => res,
+            Sign::Minus => -res,
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
     mod tests_dms {
         use super::*;
 
@@ -617,15 +518,23 @@ mod tests {
         fn test_try_new() {
             // error
             assert!(DMS::try_new(Sign::Plus, 0, 0, 0, 0.0_f64.next_down()).is_err());
-            assert!(DMS::try_new(Sign::Plus, 0, 0, 0, 1.0_f64.next_up()).is_err());
+
+            assert!(DMS::try_new(Sign::Plus, 0, 0, 0, 1.0).is_err());
             assert!(DMS::try_new(Sign::Plus, 0, 0, 60, 0.0).is_err());
             assert!(DMS::try_new(Sign::Plus, 0, 60, 0, 0.0).is_err());
-            assert!(DMS::try_new(Sign::Plus, 180, 0, 0, 1.0_f64.next_up()).is_err());
+
+            assert!(DMS::try_new(Sign::Plus, 180, 0, 0, 0.0_f64.next_up()).is_err());
             assert!(DMS::try_new(Sign::Plus, 180, 0, 1, 0.0).is_err());
             assert!(DMS::try_new(Sign::Plus, 180, 1, 0, 0.0).is_err());
 
+            assert!(DMS::try_new(Sign::Minus, 180, 1, 0, 0.0).is_err());
+            assert!(DMS::try_new(Sign::Minus, 180, 0, 1, 0.0).is_err());
+            assert!(DMS::try_new(Sign::Minus, 180, 0, 0, 0.1).is_err());
+
             // healthy
+            assert!(DMS::try_new(Sign::Plus, 0, 0, 0, 0.0).is_ok());
             assert!(DMS::try_new(Sign::Plus, 180, 0, 0, 0.0).is_ok());
+            assert!(DMS::try_new(Sign::Minus, 180, 0, 0, 0.0).is_ok());
         }
 
         #[test]
@@ -675,7 +584,7 @@ mod tests {
                 ("-.78", DMS::try_new(Sign::Minus, 0, 0, 0, 0.78)),
             ];
             for (a, e) in cases {
-                assert_eq!(DMS::from_str(a).unwrap(), e.unwrap());
+                assert_eq!(DMS::from_str(a).expect(a), e.expect(a), "{}", a);
             }
 
             // error
@@ -684,23 +593,23 @@ mod tests {
                 "-0..",
             ];
             for c in cases {
-                assert!(DMS::from_str(c).is_err());
+                assert!(DMS::from_str(c).is_err(), "{}", c);
             }
         }
 
         #[test]
-        fn test_into_f64() {
+        fn test_to_degree() {
             let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap();
-            assert!((36.103774791666666 - f64::from(dms)).abs() < 1e-10);
+            assert!((36.103774791666666 - dms.to_degree()).abs() < 1e-10);
 
             let dms = DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815).unwrap();
-            assert!((140.08785504166664 - f64::from(dms)).abs() < 1e-10);
+            assert!((140.08785504166664 - dms.to_degree()).abs() < 1e-10);
         }
 
         #[test]
-        fn test_from_f64() {
+        fn test_try_from_dd() {
             let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap();
-            let result = DMS::try_from(36.103774791666666).unwrap();
+            let result = DMS::try_from(&36.103774791666666).unwrap();
             assert_eq!(dms.sign, result.sign);
             assert_eq!(dms.degree, result.degree);
             assert_eq!(dms.minute, result.minute);
@@ -708,136 +617,89 @@ mod tests {
             assert!((result.fract - dms.fract).abs() < 3e-10);
 
             let dms = DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815).unwrap();
-            let result = DMS::try_from(140.08785504166664).unwrap();
+            let result = DMS::try_from(&140.08785504166664).unwrap();
             assert_eq!(dms.sign, result.sign);
             assert_eq!(dms.degree, result.degree);
             assert_eq!(dms.minute, result.minute);
             assert_eq!(dms.second, result.second);
             assert!((result.fract - dms.fract).abs() < 3e-10);
 
-            assert!(DMS::try_from(f64::NAN).is_err());
-            assert!(DMS::try_from((-180.0_f64).next_down()).is_err());
-            assert!(DMS::try_from(180.0_f64.next_up()).is_err());
+            // at origin
+            let a = DMS::try_from(&0.0).unwrap();
+            assert_eq!(a.sign, Sign::Plus);
+            assert_eq!(a.degree, 0);
+            assert_eq!(a.second, 0);
+            assert_eq!(a.minute, 0);
+            assert_eq!(a.fract, 0.0);
+
+            let a = DMS::try_from(&-0.0).unwrap();
+            assert_eq!(a.sign, Sign::Minus);
+            assert_eq!(a.degree, 0);
+            assert_eq!(a.second, 0);
+            assert_eq!(a.minute, 0);
+            assert_eq!(a.fract, 0.0);
+
+            // on bounds
+            let a = DMS::try_from(&180.0).unwrap();
+            assert_eq!(a.sign, Sign::Plus);
+            assert_eq!(a.degree, 180);
+            assert_eq!(a.second, 0);
+            assert_eq!(a.minute, 0);
+            assert_eq!(a.fract, 0.0);
+
+            let a = DMS::try_from(&-180.0_f64).unwrap();
+            assert_eq!(a.sign, Sign::Minus);
+            assert_eq!(a.degree, 180);
+            assert_eq!(a.second, 0);
+            assert_eq!(a.minute, 0);
+            assert_eq!(a.fract, 0.0);
+
+            // near bounds
+            let a = DMS::try_from(&180.0_f64.next_down()).unwrap();
+            assert_eq!(a.sign, Sign::Plus);
+            assert_eq!(a.degree, 179);
+            assert_eq!(a.second, 59);
+            assert_eq!(a.minute, 59);
+            // assert!((1.0_f64.next_down() - a.fract).abs() < 1e-10);
+
+            let a = DMS::try_from(&(-180.0_f64).next_up()).unwrap();
+            assert_eq!(a.sign, Sign::Minus);
+            assert_eq!(a.degree, 179);
+            assert_eq!(a.second, 59);
+            assert_eq!(a.minute, 59);
+            // assert!((0.999999999999 - a.fract).abs() < 1e-10);
+
+            // err
+            assert!(DMS::try_from(&f64::NAN).is_err());
+            assert!(DMS::try_from(&(-180.0_f64).next_down()).is_err());
+            assert!(DMS::try_from(&180.0_f64.next_up()).is_err());
         }
 
         #[test]
         fn test_identity_exact() {
-            for deg in 20..161 {
+            for deg in 0..180 {
                 for min in 0..60 {
                     for sec in 0..60 {
-                        // plus
-                        let dms = DMS::try_new(Sign::Plus, deg, min, sec, 0.0).unwrap();
-                        let degree: f64 = (&dms).into();
-                        let result = DMS::try_from(degree).unwrap();
+                        for frac in 0..10 {
+                            let frac = frac as f64 / 10.0;
 
-                        assert_eq!(dms.sign, result.sign, "dms: {dms:?}, result: {result:?}");
-                        assert_eq!(
-                            dms.degree, result.degree,
-                            "dms: {dms:?}, result: {result:?}"
-                        );
-                        assert_eq!(
-                            dms.minute, result.minute,
-                            "dms: {dms:?}, result: {result:?}"
-                        );
-                        assert_eq!(
-                            dms.second, result.second,
-                            "dms: {dms:?}, result: {result:?}"
-                        );
-                        assert!(
-                            (result.fract - dms.fract).abs() < 3e-10,
-                            "dms: {dms:?}, result: {result:?}"
-                        );
-                        assert!((result.to_degree() - degree).abs() < 3e-10);
+                            // plus
+                            let degree = DMS::try_new(Sign::Plus, deg, min, sec, frac)
+                                .unwrap()
+                                .to_degree();
+                            let result = DMS::try_from(&degree).unwrap();
+                            assert!((result.to_degree() - degree).abs() < 3e-15);
 
-                        // minus
-                        let dms = DMS::try_new(Sign::Minus, deg, min, sec, 0.0).unwrap();
-                        let degree: f64 = (&dms).into();
-                        let result = DMS::try_from(degree).unwrap();
-
-                        assert_eq!(dms.sign, result.sign, "dms: {dms:?}, result: {result:?}");
-                        assert_eq!(
-                            dms.degree, result.degree,
-                            "dms: {dms:?}, result: {result:?}"
-                        );
-                        assert_eq!(
-                            dms.minute, result.minute,
-                            "dms: {dms:?}, result: {result:?}"
-                        );
-                        assert_eq!(
-                            dms.second, result.second,
-                            "dms: {dms:?}, result: {result:?}"
-                        );
-                        assert!(
-                            (result.fract - dms.fract).abs() < 3e-10,
-                            "dms: {dms:?}, result: {result:?}"
-                        );
-                        assert!((result.to_degree() - degree).abs() < 3e-10);
+                            // minus
+                            let degree = DMS::try_new(Sign::Minus, deg, min, sec, frac)
+                                .unwrap()
+                                .to_degree();
+                            let result = DMS::try_from(&degree).unwrap();
+                            assert!((result.to_degree() - degree).abs() < 3e-15);
+                        }
                     }
                 }
             }
         }
-
-        // #[test]
-        // fn test_identity_less_than() {
-        //     for deg in 20..161 {
-        //         for min in 0..59 {
-        //             for sec in 0..59 {
-        //                 // plus
-        //                 let dms =
-        //                     DMS::try_new(Sign::Plus, deg, min, sec, 1.0_f64.next_down()).unwrap();
-        //                 let degree: f64 = (&dms).into();
-        //                 let result = DMS::try_from(degree).unwrap();
-
-        //                 let dms = DMS::try_new(Sign::Plus, deg, min, sec + 1, 0.0).unwrap();
-
-        //                 assert_eq!(dms.sign, result.sign, "dms: {dms:?}, result: {result:?}");
-        //                 assert_eq!(
-        //                     dms.degree, result.degree,
-        //                     "dms: {dms:?}, result: {result:?}"
-        //                 );
-        //                 assert_eq!(
-        //                     dms.minute, result.minute,
-        //                     "dms: {dms:?}, result: {result:?}"
-        //                 );
-        //                 assert_eq!(
-        //                     dms.second, result.second,
-        //                     "dms: {dms:?}, result: {result:?}"
-        //                 );
-        //                 assert!(
-        //                     (result.fract - dms.fract).abs() < 3e-11,
-        //                     "dms: {dms:?}, result: {result:?}"
-        //                 );
-        //                 assert!((result.to_degree() - degree).abs() < 3e-11);
-
-        //                 // minus
-        //                 let dms =
-        //                     DMS::try_new(Sign::Minus, deg, min, sec, 1.0_f64.next_down()).unwrap();
-        //                 let degree: f64 = (&dms).into();
-        //                 let result = DMS::try_from(degree).unwrap();
-
-        //                 let dms = DMS::try_new(Sign::Minus, deg, min, sec + 1, 0.0).unwrap();
-
-        //                 assert_eq!(dms.sign, result.sign, "dms: {dms:?}, result: {result:?}");
-        //                 assert_eq!(
-        //                     dms.degree, result.degree,
-        //                     "dms: {dms:?}, result: {result:?}"
-        //                 );
-        //                 assert_eq!(
-        //                     dms.minute, result.minute,
-        //                     "dms: {dms:?}, result: {result:?}"
-        //                 );
-        //                 assert_eq!(
-        //                     dms.second, result.second,
-        //                     "dms: {dms:?}, result: {result:?}"
-        //                 );
-        //                 assert!(
-        //                     (result.fract - dms.fract).abs() < 3e-11,
-        //                     "dms: {dms:?}, result: {result:?}"
-        //                 );
-        //                 assert!((result.to_degree() - degree).abs() < 3e-11);
-        //             }
-        //         }
-        //     }
-        // }
     }
 }

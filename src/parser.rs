@@ -8,7 +8,7 @@ use crate::{mesh::MeshUnit, Error, Result, Transformer};
 fn parser(
     text: &str,
     header: usize,
-    mesh_code: Option<Range<usize>>,
+    meshcode: Option<Range<usize>>,
     latitude: Option<Range<usize>>,
     longitude: Option<Range<usize>>,
     altitude: Option<Range<usize>>,
@@ -25,60 +25,104 @@ fn parser(
 
     let mut parameter: BTreeMap<u32, Parameter> = BTreeMap::new();
     for (lineno, line) in iter {
-        let mesh_code: u32 = match mesh_code {
+        let meshcode: u32 = match meshcode {
             None => 0,
             Some(ref range) => line
                 .get(range.clone())
-                .and_then(|s| s.trim().parse().ok())
                 .ok_or(Error::new_parse_par(
                     range.start,
                     range.end,
                     lineno + 1,
-                    error::ParseParErrorImpl::Meshcode,
-                ))?,
+                    error::ParseParErrorKind::Missing,
+                    error::ParColumn::Meshcode,
+                ))?
+                .trim()
+                .parse()
+                .map_err(|source| {
+                    Error::new_parse_par(
+                        range.start,
+                        range.end,
+                        lineno + 1,
+                        error::ParseParErrorKind::ParseInt(source),
+                        error::ParColumn::Meshcode,
+                    )
+                })?,
         };
 
         let latitude: f64 = match latitude {
             None => 0.0,
             Some(ref range) => line
                 .get(range.clone())
-                .and_then(|s| s.trim().parse().ok())
                 .ok_or(Error::new_parse_par(
                     range.start,
                     range.end,
                     lineno + 1,
-                    error::ParseParErrorImpl::Latitude,
-                ))?,
+                    error::ParseParErrorKind::Missing,
+                    error::ParColumn::Latitude,
+                ))?
+                .trim()
+                .parse()
+                .map_err(|source| {
+                    Error::new_parse_par(
+                        range.start,
+                        range.end,
+                        lineno + 1,
+                        error::ParseParErrorKind::ParseFloat(source),
+                        error::ParColumn::Latitude,
+                    )
+                })?,
         };
 
         let longitude: f64 = match longitude {
             None => 0.0,
             Some(ref range) => line
                 .get(range.clone())
-                .and_then(|s| s.trim().parse().ok())
                 .ok_or(Error::new_parse_par(
                     range.start,
                     range.end,
                     lineno + 1,
-                    error::ParseParErrorImpl::Longitude,
-                ))?,
+                    error::ParseParErrorKind::Missing,
+                    error::ParColumn::Longitude,
+                ))?
+                .trim()
+                .parse()
+                .map_err(|source| {
+                    Error::new_parse_par(
+                        range.start,
+                        range.end,
+                        lineno + 1,
+                        error::ParseParErrorKind::ParseFloat(source),
+                        error::ParColumn::Longitude,
+                    )
+                })?,
         };
 
         let altitude: f64 = match altitude {
             None => 0.0,
             Some(ref range) => line
                 .get(range.clone())
-                .and_then(|s| s.trim().parse().ok())
                 .ok_or(Error::new_parse_par(
                     range.start,
                     range.end,
                     lineno + 1,
-                    error::ParseParErrorImpl::Altitude,
-                ))?,
+                    error::ParseParErrorKind::Missing,
+                    error::ParColumn::Altitude,
+                ))?
+                .trim()
+                .parse()
+                .map_err(|source| {
+                    Error::new_parse_par(
+                        range.start,
+                        range.end,
+                        lineno + 1,
+                        error::ParseParErrorKind::ParseFloat(source),
+                        error::ParColumn::Altitude,
+                    )
+                })?,
         };
 
         parameter.insert(
-            mesh_code,
+            meshcode,
             Parameter {
                 latitude,
                 longitude,
@@ -92,110 +136,6 @@ fn parser(
         parameter,
         description: Some(description),
     })
-}
-
-/// Represents format of par-formatted text.
-pub enum Format {
-    /// for TKY2JGD
-    TKY2JGD,
-    /// for PatchJGD
-    PatchJGD,
-    /// for PatchJGD(H)
-    #[allow(non_camel_case_types)]
-    PatchJGD_H,
-    /// for PatchJGD(HV)
-    ///
-    /// We note that GIAJ does not distribute such file,
-    /// see  [`PatchJGD_HV`] for detail.
-    #[allow(non_camel_case_types)]
-    PatchJGD_HV,
-    /// for HyokoRev
-    HyokoRev,
-    /// for SemiDynaEXE
-    #[allow(non_camel_case_types)]
-    SemiDynaEXE,
-    /// for geonetF3
-    #[allow(non_camel_case_types)]
-    geonetF3,
-    /// for ITRF2014
-    ITRF2014,
-}
-
-/// Deserialize par-formatted [`&str`] into a [`Transformer`].
-///
-/// Use `format` argument to specify the format of `s`.
-///
-/// This fills by 0.0 for altituse parameter when [`Format::TKY2JGD`] or [`Format::PatchJGD`] given,
-/// and for latitude and longitude when [`Format::PatchJGD_H`] or [`Format::HyokoRev`] given.
-///
-/// ```no_run
-/// # use std::fs;
-/// # use std::error::Error;
-/// # use jgdtrans::{from_str, Format};
-/// # fn main() -> Result<(), Box<dyn Error>> {
-/// // deserialize par file, e.g. SemiDyna2023.par
-/// let s = fs::read_to_string("SemiDyna2023.par")?;
-/// let tf = from_str(&s, Format::SemiDynaEXE)?;
-///
-/// // prints first 16 lines
-/// println!("{:?}", tf.description);
-/// // prints MeshUnit::Five (namely, the mesh unit is 5)
-/// println!("{:?}", tf.unit);
-/// // prints all of parameter (be careful, long long display)
-/// println!("{:?}", tf.parameter);
-///
-/// // transform coordinate
-/// let result = tf.forward(&(35.0, 135.0).into());
-/// # Ok(())}
-/// ```
-///
-/// # Errros
-///
-/// If invalid data found.
-///
-/// # Example
-///
-/// ```
-/// # use jgdtrans::*;
-/// # use jgdtrans::parser::Format;
-/// # use jgdtrans::transformer::Parameter;
-/// # fn main() -> Result<()> {
-/// let s = r"<15 lines>
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// MeshCode dB(sec)  dL(sec) dH(m)
-/// 12345678   0.00001   0.00002   0.00003";
-/// let tf = from_str(&s, Format::SemiDynaEXE)?;
-/// assert_eq!(
-///     tf.parameter.get(&12345678),
-///     Some(&Parameter {latitude: 0.00001, longitude: 0.00002, altitude: 0.00003})
-/// );
-/// # Ok(())}
-/// ```
-pub fn from_str(s: &str, format: Format) -> Result<Transformer> {
-    let f = match format {
-        Format::TKY2JGD => TKY2JGD::from_str,
-        Format::PatchJGD => PatchJGD::from_str,
-        Format::PatchJGD_H => PatchJGD_H::from_str,
-        Format::PatchJGD_HV => PatchJGD_HV::from_str,
-        Format::HyokoRev => HyokoRev::from_str,
-        Format::SemiDynaEXE => SemiDynaEXE::from_str,
-        Format::geonetF3 => geonetF3::from_str,
-        Format::ITRF2014 => ITRF2014::from_str,
-    };
-    f(s)
 }
 
 /// Provides deserializer of _TKY2JGD_-formatted [`&str`] into a [`Transformer`].
@@ -218,7 +158,7 @@ pub mod TKY2JGD {
     /// ```no_run
     /// # use std::fs;
     /// # use std::error::Error;
-    /// # use jgdtrans::{from_str, Format, TKY2JGD};
+    /// # use jgdtrans::{Format, TKY2JGD, Point};
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// // deserialize TKY2JGD par file
     /// let s = fs::read_to_string("TKY2JGD.par")?;
@@ -232,7 +172,8 @@ pub mod TKY2JGD {
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
-    /// let result = tf.forward(&(35.0, 135.0).into());
+    /// let point: Point = (35.0, 135.0).try_into()?;
+    /// let result = tf.forward(&point);
     /// # Ok(())}
     /// ```
     ///
@@ -293,7 +234,7 @@ pub mod PatchJGD {
     /// ```no_run
     /// # use std::fs;
     /// # use std::error::Error;
-    /// # use jgdtrans::{from_str, Format, PatchJGD};
+    /// # use jgdtrans::{Format, PatchJGD, Point};
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// // deserialize PatchJGD par file, e.g. touhokutaiheiyouoki2011.par
     /// let s = fs::read_to_string("touhokutaiheiyouoki2011.par")?;
@@ -307,7 +248,8 @@ pub mod PatchJGD {
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
-    /// let result = tf.forward(&(35.0, 135.0).into());
+    /// let point: Point = (35.0, 135.0).try_into()?;
+    /// let result = tf.forward(&point);
     /// # Ok(())}
     /// ```
     ///
@@ -381,7 +323,7 @@ pub mod PatchJGD_H {
     /// ```no_run
     /// # use std::fs;
     /// # use std::error::Error;
-    /// # use jgdtrans::{from_str, Format, PatchJGD_H};
+    /// # use jgdtrans::{Format, PatchJGD_H, Point};
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// // deserialize PatchJGD(H) par file, e.g. touhokutaiheiyouoki2011_h.par
     /// let s = fs::read_to_string("touhokutaiheiyouoki2011_h.par")?;
@@ -395,7 +337,8 @@ pub mod PatchJGD_H {
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
-    /// let result = tf.forward(&(35.0, 135.0).into());
+    /// let point: Point = (35.0, 135.0).try_into()?;
+    /// let result = tf.forward(&point);
     /// # Ok(())}
     /// ```
     ///
@@ -477,7 +420,7 @@ pub mod PatchJGD_HV {
     /// ```no_run
     /// # use std::fs;
     /// # use std::error::Error;
-    /// # use jgdtrans::{from_str, Format, PatchJGD_HV};
+    /// # use jgdtrans::{Format, PatchJGD_HV, Point};
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// // deserialize PatchJGD(HV) par file
     /// let s = fs::read_to_string("touhokutaiheiyouoki2011_hv.par")?;
@@ -491,7 +434,8 @@ pub mod PatchJGD_HV {
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
-    /// let result = tf.forward(&(35.0, 135.0).into());
+    /// let point: Point = (35.0, 135.0).try_into()?;
+    /// let result = tf.forward(&point);
     /// # Ok(())}
     /// ```
     ///
@@ -565,7 +509,7 @@ pub mod HyokoRev {
     /// ```no_run
     /// # use std::fs;
     /// # use std::error::Error;
-    /// # use jgdtrans::{from_str, Format, HyokoRev};
+    /// # use jgdtrans::{Format, HyokoRev, Point};
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// // deserialize HyokoRev par file, e.g. hyokorev2014_geoid2011_h.par
     /// let s = fs::read_to_string("hyokorev2014_geoid2011_h.par")?;
@@ -579,7 +523,8 @@ pub mod HyokoRev {
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
-    /// let result = tf.forward(&(35.0, 135.0).into());
+    /// let point: Point = (35.0, 135.0).try_into()?;
+    /// let result = tf.forward(&point);
     /// # Ok(())}
     /// ```
     ///
@@ -643,7 +588,7 @@ pub mod SemiDynaEXE {
     /// ```no_run
     /// # use std::fs;
     /// # use std::error::Error;
-    /// # use jgdtrans::{from_str, Format, SemiDynaEXE};
+    /// # use jgdtrans::{Format, SemiDynaEXE, Point};
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// // deserialize SemiDynaEXE par file, e.g. SemiDyna2023.par
     /// let s = fs::read_to_string("SemiDyna2023.par")?;
@@ -657,7 +602,8 @@ pub mod SemiDynaEXE {
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
-    /// let result = tf.forward(&(35.0, 135.0).into());
+    /// let point: Point = (35.0, 135.0).try_into()?;
+    /// let result = tf.forward(&point);
     /// # Ok(())}
     /// ```
     ///
@@ -729,7 +675,7 @@ pub mod geonetF3 {
     /// ```no_run
     /// # use std::fs;
     /// # use std::error::Error;
-    /// # use jgdtrans::{from_str, Format, geonetF3};
+    /// # use jgdtrans::{Format, geonetF3, Point};
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// // deserialize geonetF3 par file, e.g. pos2jgd_202101_geonetF3.par
     /// let s = fs::read_to_string("pos2jgd_202101_geonetF3.par")?;
@@ -743,7 +689,8 @@ pub mod geonetF3 {
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
-    /// let result = tf.forward(&(35.0, 135.0).into());
+    /// let point: Point = (35.0, 135.0).try_into()?;
+    /// let result = tf.forward(&point);
     /// # Ok(())}
     /// ```
     ///
@@ -816,7 +763,7 @@ pub mod ITRF2014 {
     /// ```no_run
     /// # use std::fs;
     /// # use std::error::Error;
-    /// # use jgdtrans::{from_str, Format, ITRF2014};
+    /// # use jgdtrans::{Format, ITRF2014, Point};
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// // deserialize ITRF2014 par file, e.g. pos2jgd_202307_ITRF2014.par
     /// let s = fs::read_to_string("pos2jgd_202307_ITRF2014.par")?;
@@ -830,7 +777,8 @@ pub mod ITRF2014 {
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
-    /// let result = tf.forward(&(35.0, 135.0).into());
+    /// let point: Point = (35.0, 135.0).try_into()?;
+    /// let result = tf.forward(&point);
     /// # Ok(())}
     /// ```
     ///

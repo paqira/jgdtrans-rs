@@ -1,10 +1,10 @@
-use std::ops::{Add, Sub};
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error::{self, Error, Result},
+    error::{Error, Result},
     mesh::{MeshCell, MeshNode, MeshUnit},
     transformer::Correction,
 };
@@ -27,13 +27,13 @@ use crate::{
 /// assert_eq!(point.altitude(), &5.0);
 ///
 /// // Add/sub Correction
-/// let result = point + Correction::new(1.0, 1.0, 1.0);
+/// let result = &point + Correction::new(1.0, 1.0, 1.0);
 /// assert_eq!(result, Point::try_new(36.0, 146.0, 6.0)?);
-/// let result = result - Correction::new(1.0, 1.0, 1.0);
+/// let result = &result - Correction::new(1.0, 1.0, 1.0);
 /// assert_eq!(result, point);
 /// # Ok(())}
 /// ```
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Point {
     /// The latitude \[deg\] of the point which satisfies -90.0 <= and <= 90.0.
@@ -44,17 +44,21 @@ pub struct Point {
     pub(crate) altitude: f64,
 }
 
-impl From<(f64, f64)> for Point {
-    /// see [`Point::new()`], defaulting 0.0 for altitude
-    fn from(rhs: (f64, f64)) -> Self {
-        Self::new(rhs.0, rhs.1, 0.0)
+impl TryFrom<(f64, f64)> for Point {
+    type Error = Error;
+
+    /// see [`Point::try_new()`], defaulting 0.0 for altitude
+    fn try_from(rhs: (f64, f64)) -> Result<Self> {
+        Self::try_new(rhs.0, rhs.1, 0.0)
     }
 }
 
-impl From<(f64, f64, f64)> for Point {
-    /// see [`Point::new()`]
-    fn from(rhs: (f64, f64, f64)) -> Self {
-        Self::new(rhs.0, rhs.1, rhs.2)
+impl TryFrom<(f64, f64, f64)> for Point {
+    type Error = Error;
+
+    /// see [`Point::try_new()`]
+    fn try_from(rhs: (f64, f64, f64)) -> Result<Self> {
+        Self::try_new(rhs.0, rhs.1, rhs.2)
     }
 }
 
@@ -78,11 +82,85 @@ impl Add<Correction> for Point {
     type Output = Point;
 
     fn add(self, rhs: Correction) -> Self::Output {
-        Self::new(
-            self.latitude + rhs.latitude,
-            self.longitude + rhs.longitude,
-            self.altitude + rhs.altitude,
+        let latitude = self.latitude + rhs.latitude;
+        let longitude = self.longitude + rhs.longitude;
+        let altitude = self.altitude + rhs.altitude;
+
+        Self::Output::new(
+            crate::utils::normalize_latitude(&latitude),
+            crate::utils::normalize_longitude(&longitude),
+            altitude,
         )
+    }
+}
+
+impl Add<&Correction> for Point {
+    type Output = Self;
+
+    fn add(self, rhs: &Correction) -> Self::Output {
+        let latitude = self.latitude + rhs.latitude;
+        let longitude = self.longitude + rhs.longitude;
+        let altitude = self.altitude + rhs.altitude;
+
+        Self::Output::new(
+            crate::utils::normalize_latitude(&latitude),
+            crate::utils::normalize_longitude(&longitude),
+            altitude,
+        )
+    }
+}
+
+impl Add<Correction> for &Point {
+    type Output = Point;
+
+    fn add(self, rhs: Correction) -> Self::Output {
+        let latitude = self.latitude + rhs.latitude;
+        let longitude = self.longitude + rhs.longitude;
+        let altitude = self.altitude + rhs.altitude;
+
+        Self::Output::new(
+            crate::utils::normalize_latitude(&latitude),
+            crate::utils::normalize_longitude(&longitude),
+            altitude,
+        )
+    }
+}
+
+impl Add<&Correction> for &Point {
+    type Output = Point;
+
+    fn add(self, rhs: &Correction) -> Self::Output {
+        let latitude = self.latitude + rhs.latitude;
+        let longitude = self.longitude + rhs.longitude;
+        let altitude = self.altitude + rhs.altitude;
+
+        Self::Output::new(
+            crate::utils::normalize_latitude(&latitude),
+            crate::utils::normalize_longitude(&longitude),
+            altitude,
+        )
+    }
+}
+
+impl AddAssign<Correction> for Point {
+    fn add_assign(&mut self, rhs: Correction) {
+        let latitude = self.latitude + rhs.latitude;
+        let longitude = self.longitude + rhs.longitude;
+
+        self.latitude = crate::utils::normalize_latitude(&latitude);
+        self.longitude = crate::utils::normalize_longitude(&longitude);
+        self.altitude += rhs.altitude;
+    }
+}
+
+impl AddAssign<&Correction> for Point {
+    fn add_assign(&mut self, rhs: &Correction) {
+        let latitude = self.latitude + rhs.latitude;
+        let longitude = self.longitude + rhs.longitude;
+
+        self.latitude = crate::utils::normalize_latitude(&latitude);
+        self.longitude = crate::utils::normalize_longitude(&longitude);
+        self.altitude += rhs.altitude;
     }
 }
 
@@ -90,29 +168,107 @@ impl Sub<Correction> for Point {
     type Output = Point;
 
     fn sub(self, rhs: Correction) -> Self::Output {
-        Self::new(
-            self.latitude - rhs.latitude,
-            self.longitude - rhs.longitude,
-            self.altitude - rhs.altitude,
+        let latitude = self.latitude - rhs.latitude;
+        let longitude = self.longitude - rhs.longitude;
+        let altitude = self.altitude - rhs.altitude;
+
+        Self::Output::new(
+            crate::utils::normalize_latitude(&latitude),
+            crate::utils::normalize_longitude(&longitude),
+            altitude,
         )
+    }
+}
+
+impl Sub<&Correction> for Point {
+    type Output = Self;
+
+    fn sub(self, rhs: &Correction) -> Self::Output {
+        let latitude = self.latitude - rhs.latitude;
+        let longitude = self.longitude - rhs.longitude;
+        let altitude = self.altitude - rhs.altitude;
+
+        Self::Output::new(
+            crate::utils::normalize_latitude(&latitude),
+            crate::utils::normalize_longitude(&longitude),
+            altitude,
+        )
+    }
+}
+
+impl Sub<Correction> for &Point {
+    type Output = Point;
+
+    fn sub(self, rhs: Correction) -> Self::Output {
+        let latitude = self.latitude - rhs.latitude;
+        let longitude = self.longitude - rhs.longitude;
+        let altitude = self.altitude - rhs.altitude;
+
+        Self::Output::new(
+            crate::utils::normalize_latitude(&latitude),
+            crate::utils::normalize_longitude(&longitude),
+            altitude,
+        )
+    }
+}
+
+impl Sub<&Correction> for &Point {
+    type Output = Point;
+
+    fn sub(self, rhs: &Correction) -> Self::Output {
+        let latitude = self.latitude - rhs.latitude;
+        let longitude = self.longitude - rhs.longitude;
+        let altitude = self.altitude - rhs.altitude;
+
+        Self::Output::new(
+            crate::utils::normalize_latitude(&latitude),
+            crate::utils::normalize_longitude(&longitude),
+            altitude,
+        )
+    }
+}
+
+impl SubAssign<Correction> for Point {
+    fn sub_assign(&mut self, rhs: Correction) {
+        let latitude = self.latitude - rhs.latitude;
+        let longitude = self.longitude - rhs.longitude;
+
+        self.latitude = crate::utils::normalize_latitude(&latitude);
+        self.longitude = crate::utils::normalize_longitude(&longitude);
+        self.altitude -= rhs.altitude;
+    }
+}
+
+impl SubAssign<&Correction> for Point {
+    fn sub_assign(&mut self, rhs: &Correction) {
+        let latitude = self.latitude - rhs.latitude;
+        let longitude = self.longitude - rhs.longitude;
+
+        self.latitude = crate::utils::normalize_latitude(&latitude);
+        self.longitude = crate::utils::normalize_longitude(&longitude);
+        self.altitude -= rhs.altitude;
     }
 }
 
 impl Point {
     /// Makes a [`Point`].
     ///
+    /// This does not check the value range.
+    ///
     /// # Example
     ///
     /// ```
     /// # use jgdtrans::*;
     /// # fn main() -> Result<()> {
-    /// let point = Point::new(35.0, 145.0, 5.0);
+    /// let point = Point::try_new(35.0, 145.0, 5.0)?;
     /// assert_eq!(point.latitude(), &35.0);
     /// assert_eq!(point.longitude(), &145.0);
     /// assert_eq!(point.altitude(), &5.0);
     /// # Ok(())}
     /// ```
-    pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
+    // internal uses
+    #[inline]
+    pub(crate) fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
             longitude,
@@ -134,44 +290,48 @@ impl Point {
     /// # use jgdtrans::*;
     /// # fn main() -> Result<()> {
     /// let point = Point::try_new(35.0, 145.0, 5.0)?;
-    /// assert_eq!(
-    ///     point,
-    ///     Point::new(35.0, 145.0, 5.0)
-    /// );
+    /// assert_eq!(point.latitude(), &35.0);
+    /// assert_eq!(point.longitude(), &145.0);
+    /// assert_eq!(point.altitude(), &5.0);
     ///
     /// // If out-of-range, returns Err
     /// let point = Point::try_new(91.0, 145.0, 5.0);
     /// assert!(point.is_err());
     /// let point = Point::try_new(35.0, 181.0, 5.0);
     /// assert!(point.is_err());
+    /// let point = Point::try_new(f64::NAN, 145.0, 5.0);
+    /// assert!(point.is_err());
+    /// let point = Point::try_new(35.0, f64::NAN, 5.0);
+    /// assert!(point.is_err());
     /// # Ok(())}
     /// ```
     pub fn try_new(latitude: f64, longitude: f64, altitude: f64) -> Result<Self> {
+        if latitude.is_nan() {
+            return Err(Error::new_point(
+                crate::error::ErrorAxis::Latitude,
+                crate::error::PointErrorKind::NAN,
+            ));
+        };
         if latitude.lt(&-90.) || 90.0.lt(&latitude) {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::OutOfRangePosition {
-                    kind: error::OutOfRangePositionKind::Latitude,
-                    low: -90.,
-                    high: 90.,
-                }),
-            });
+            return Err(Error::new_point(
+                crate::error::ErrorAxis::Latitude,
+                crate::error::PointErrorKind::Overflow,
+            ));
         };
-
+        if longitude.is_nan() {
+            return Err(Error::new_point(
+                crate::error::ErrorAxis::Longitude,
+                crate::error::PointErrorKind::NAN,
+            ));
+        };
         if longitude.lt(&-180.) || 180.0.lt(&longitude) {
-            return Err(Error {
-                err: Box::new(error::ErrorImpl::OutOfRangePosition {
-                    kind: error::OutOfRangePositionKind::Longitude,
-                    low: -180.,
-                    high: 180.,
-                }),
-            });
+            return Err(Error::new_point(
+                crate::error::ErrorAxis::Longitude,
+                crate::error::PointErrorKind::Overflow,
+            ));
         };
 
-        Ok(Self {
-            latitude,
-            longitude,
-            altitude,
-        })
+        Ok(Self::new(latitude, longitude, altitude))
     }
 
     /// Returns the latitude of `self`.
@@ -235,14 +395,14 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # fn main() -> Result<()> {
-    /// assert_eq!(
-    ///     Point::try_from_meshcode(&54401027)?,
-    ///     Point::new(36.1, 140.0875, 0.0)
-    /// );
+    /// let point = Point::try_from_meshcode(&54401027)?;
+    /// assert_eq!(point.latitude(), &36.1);
+    /// assert_eq!(point.longitude(), &140.0875);
+    /// assert_eq!(point.altitude(), &0.0);
     /// # Ok(())}
     /// ```
-    pub fn try_from_meshcode(code: &u32) -> Result<Self> {
-        let node = &MeshNode::try_from_meshcode(code)?;
+    pub fn try_from_meshcode(meshcode: &u32) -> Result<Self> {
+        let node = &MeshNode::try_from_meshcode(meshcode)?;
         Ok(Self::from_node(node))
     }
 
@@ -257,10 +417,10 @@ impl Point {
     /// # use jgdtrans::mesh::MeshNode;
     /// # fn main() -> Result<()> {
     /// let node = MeshNode::try_from_meshcode(&54401027)?;
-    /// assert_eq!(
-    ///     Point::from_node(&node),
-    ///     Point::new(36.1, 140.0875, 0.0)
-    /// );
+    /// let point = Point::from_node(&node);
+    /// assert_eq!(point.latitude(), &36.1);
+    /// assert_eq!(point.longitude(), &140.0875);
+    /// assert_eq!(point.altitude(), &0.0);
     /// # Ok(())}
     /// ```
     pub fn from_node(node: &MeshNode) -> Self {
@@ -270,11 +430,7 @@ impl Point {
         debug_assert!(latitude.ge(&-90.0) && latitude.le(&90.0));
         debug_assert!(longitude.ge(&-180.0) && longitude.le(&180.0));
 
-        Self {
-            latitude,
-            longitude,
-            altitude: 0.,
-        }
+        Self::new(latitude, longitude, 0.)
     }
 
     /// Returns a meshcode represents the nearest south-east mesh node of `self`.
@@ -291,7 +447,7 @@ impl Point {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
     /// # fn main() -> Result<()> {
-    /// let point = Point::new(36.10377479, 140.087855041, 50.0);
+    /// let point = Point::try_new(36.10377479, 140.087855041, 50.0)?;
     ///
     /// assert_eq!(
     ///     point.try_to_meshcode(&MeshUnit::One)?,
@@ -322,7 +478,7 @@ impl Point {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
     /// # fn main() -> Result<()> {
-    /// let point = Point::new(36.10377479, 140.087855041, 5.0);
+    /// let point = Point::try_new(36.10377479, 140.087855041, 5.0)?;
     ///
     /// assert_eq!(
     ///     point.try_to_node(&MeshUnit::One)?,
@@ -351,7 +507,7 @@ impl Point {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshCell, MeshUnit};
     /// # fn main() -> Result<()> {
-    /// let point = Point::new(36.10377479, 140.087855041, 10.0);
+    /// let point = Point::try_new(36.10377479, 140.087855041, 10.0)?;
     ///
     /// assert_eq!(
     ///     point.try_to_cell(MeshUnit::One)?,

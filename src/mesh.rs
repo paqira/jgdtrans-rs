@@ -249,17 +249,26 @@ impl MeshCoord {
     /// # Ok(())}
     /// ```
     pub fn try_from_latitude(v: &f64, unit: &MeshUnit) -> Result<Self> {
-        let value = (3.0 * v / 2.0).next_up();
+        let value = if (v.to_bits() % 2).eq(&1) {
+            // Minimum add-hook trick to ensure the identity,
+            // 1. MeshCoord::try_from_latitude(&coord.to_latitude(), &MeshUnit::One)
+            // 2. MeshCoord::try_from_longitude(&coord.to_longitude(), &MeshUnit::One)
+            (3.0 * v / 2.0).next_up()
+        } else {
+            3.0 * v / 2.0
+        };
+
         if value.is_nan() {
             return Err(Error::new_parse_mesh_coord(
                 ParseMeshCoordErrorKind::NAN,
-                error::ErrorAxis::Latitude,
+                ErrorAxis::Latitude,
             ));
         };
+
         if value.lt(&0.0) || value.ge(&100.0) {
             return Err(Error::new_parse_mesh_coord(
                 ParseMeshCoordErrorKind::Overflow,
-                error::ErrorAxis::Latitude,
+                ErrorAxis::Latitude,
             ));
         };
 
@@ -297,13 +306,14 @@ impl MeshCoord {
         if v.is_nan() {
             return Err(Error::new_parse_mesh_coord(
                 ParseMeshCoordErrorKind::NAN,
-                error::ErrorAxis::Longitude,
+                ErrorAxis::Longitude,
             ));
         };
+
         if v.lt(&100.0) || v.gt(&180.0) {
             return Err(Error::new_parse_mesh_coord(
                 ParseMeshCoordErrorKind::Overflow,
-                error::ErrorAxis::Longitude,
+                ErrorAxis::Longitude,
             ));
         };
 

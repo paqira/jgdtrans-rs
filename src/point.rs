@@ -3,11 +3,56 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    error::{Error, Result},
-    mesh::{MeshCell, MeshNode, MeshUnit},
-    transformer::Correction,
-};
+use crate::mesh::{MeshCell, MeshNode, MeshUnit};
+use crate::transformer::Correction;
+use crate::{Error, Result};
+
+/// Returns the normalized latitude into -90.0 <= and <= 90.0.
+///
+/// # Example
+///
+/// ```
+/// # use jgdtrans::point::normalize_latitude;
+/// assert_eq!(normalize_latitude(&35.0), 35.0);
+/// assert_eq!(normalize_latitude(&100.0), 80.0);
+/// assert_eq!(normalize_latitude(&190.0), -10.0);
+/// assert_eq!(normalize_latitude(&-100.0), -80.0);
+/// assert_eq!(normalize_latitude(&-190.0), 10.0);
+/// assert!(normalize_latitude(&f64::NAN).is_nan());
+/// ```
+pub fn normalize_latitude(t: &f64) -> f64 {
+    if t.is_nan() || t.ge(&-90.) && t.le(&90.0) {
+        *t
+    } else {
+        match t % 360.0 {
+            s if s.lt(&-270.0) || s.gt(&270.0) => s - f64::copysign(360.0, s),
+            s if s.lt(&-90.0) || s.gt(&90.0) => f64::copysign(180.0, s) - s,
+            s => s,
+        }
+    }
+}
+
+/// Returns the normalize longitude -180.0 <= and <= 180.0.
+///
+/// # Example
+///
+/// ```
+/// # use jgdtrans::point::normalize_longitude;
+/// assert_eq!(normalize_longitude(&145.0), 145.0);
+/// assert_eq!(normalize_longitude(&190.0), -170.0);
+/// assert_eq!(normalize_longitude(&-190.0), 170.0);
+/// assert!(normalize_longitude(&f64::NAN).is_nan());
+/// ```
+pub fn normalize_longitude(t: &f64) -> f64 {
+    if t.is_nan() || t.ge(&-180.0) && t.le(&180.0) {
+        *t
+    } else {
+        match t % 360.0 {
+            s if s.lt(&-180.0) || s.gt(&180.0) => s - f64::copysign(360.0, s),
+            s => s,
+        }
+    }
+}
 
 /// Represents a position on the Earth, a triplet latitude, longitude and altitude.
 ///
@@ -87,8 +132,8 @@ impl Add<Correction> for Point {
         let altitude = self.altitude + rhs.altitude;
 
         Self::Output::new(
-            crate::utils::normalize_latitude(&latitude),
-            crate::utils::normalize_longitude(&longitude),
+            normalize_latitude(&latitude),
+            normalize_longitude(&longitude),
             altitude,
         )
     }
@@ -103,8 +148,8 @@ impl Add<&Correction> for Point {
         let altitude = self.altitude + rhs.altitude;
 
         Self::Output::new(
-            crate::utils::normalize_latitude(&latitude),
-            crate::utils::normalize_longitude(&longitude),
+            normalize_latitude(&latitude),
+            normalize_longitude(&longitude),
             altitude,
         )
     }
@@ -119,8 +164,8 @@ impl Add<Correction> for &Point {
         let altitude = self.altitude + rhs.altitude;
 
         Self::Output::new(
-            crate::utils::normalize_latitude(&latitude),
-            crate::utils::normalize_longitude(&longitude),
+            normalize_latitude(&latitude),
+            normalize_longitude(&longitude),
             altitude,
         )
     }
@@ -135,8 +180,8 @@ impl Add<&Correction> for &Point {
         let altitude = self.altitude + rhs.altitude;
 
         Self::Output::new(
-            crate::utils::normalize_latitude(&latitude),
-            crate::utils::normalize_longitude(&longitude),
+            normalize_latitude(&latitude),
+            normalize_longitude(&longitude),
             altitude,
         )
     }
@@ -147,8 +192,8 @@ impl AddAssign<Correction> for Point {
         let latitude = self.latitude + rhs.latitude;
         let longitude = self.longitude + rhs.longitude;
 
-        self.latitude = crate::utils::normalize_latitude(&latitude);
-        self.longitude = crate::utils::normalize_longitude(&longitude);
+        self.latitude = normalize_latitude(&latitude);
+        self.longitude = normalize_longitude(&longitude);
         self.altitude += rhs.altitude;
     }
 }
@@ -158,8 +203,8 @@ impl AddAssign<&Correction> for Point {
         let latitude = self.latitude + rhs.latitude;
         let longitude = self.longitude + rhs.longitude;
 
-        self.latitude = crate::utils::normalize_latitude(&latitude);
-        self.longitude = crate::utils::normalize_longitude(&longitude);
+        self.latitude = normalize_latitude(&latitude);
+        self.longitude = normalize_longitude(&longitude);
         self.altitude += rhs.altitude;
     }
 }
@@ -173,8 +218,8 @@ impl Sub<Correction> for Point {
         let altitude = self.altitude - rhs.altitude;
 
         Self::Output::new(
-            crate::utils::normalize_latitude(&latitude),
-            crate::utils::normalize_longitude(&longitude),
+            normalize_latitude(&latitude),
+            normalize_longitude(&longitude),
             altitude,
         )
     }
@@ -189,8 +234,8 @@ impl Sub<&Correction> for Point {
         let altitude = self.altitude - rhs.altitude;
 
         Self::Output::new(
-            crate::utils::normalize_latitude(&latitude),
-            crate::utils::normalize_longitude(&longitude),
+            normalize_latitude(&latitude),
+            normalize_longitude(&longitude),
             altitude,
         )
     }
@@ -205,8 +250,8 @@ impl Sub<Correction> for &Point {
         let altitude = self.altitude - rhs.altitude;
 
         Self::Output::new(
-            crate::utils::normalize_latitude(&latitude),
-            crate::utils::normalize_longitude(&longitude),
+            normalize_latitude(&latitude),
+            normalize_longitude(&longitude),
             altitude,
         )
     }
@@ -221,8 +266,8 @@ impl Sub<&Correction> for &Point {
         let altitude = self.altitude - rhs.altitude;
 
         Self::Output::new(
-            crate::utils::normalize_latitude(&latitude),
-            crate::utils::normalize_longitude(&longitude),
+            normalize_latitude(&latitude),
+            normalize_longitude(&longitude),
             altitude,
         )
     }
@@ -233,8 +278,8 @@ impl SubAssign<Correction> for Point {
         let latitude = self.latitude - rhs.latitude;
         let longitude = self.longitude - rhs.longitude;
 
-        self.latitude = crate::utils::normalize_latitude(&latitude);
-        self.longitude = crate::utils::normalize_longitude(&longitude);
+        self.latitude = normalize_latitude(&latitude);
+        self.longitude = normalize_longitude(&longitude);
         self.altitude -= rhs.altitude;
     }
 }
@@ -244,8 +289,8 @@ impl SubAssign<&Correction> for Point {
         let latitude = self.latitude - rhs.latitude;
         let longitude = self.longitude - rhs.longitude;
 
-        self.latitude = crate::utils::normalize_latitude(&latitude);
-        self.longitude = crate::utils::normalize_longitude(&longitude);
+        self.latitude = normalize_latitude(&latitude);
+        self.longitude = normalize_longitude(&longitude);
         self.altitude -= rhs.altitude;
     }
 }

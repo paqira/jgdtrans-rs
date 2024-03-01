@@ -156,9 +156,9 @@ pub use point::Point;
 #[doc(inline)]
 pub use transformer::{Format, Transformer};
 
+pub mod dms;
 pub mod error;
 pub mod mesh;
 pub mod parser;
 pub mod point;
 pub mod transformer;
-pub mod utils;

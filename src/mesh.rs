@@ -16,10 +16,10 @@ use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::error::{
-    self, Error, MeshCellErrorKind, MeshCoordErrorKind, MeshNodeErrorKind, ParseMeshCoordErrorKind,
-    ParseMeshNodeErrorKind, Result,
+    ErrorAxis, MeshCellErrorKind, MeshCoordErrorKind, MeshNodeErrorKind, ParseMeshCoordErrorKind,
+    ParseMeshNodeErrorKind,
 };
-use crate::point::Point;
+use crate::{Error, Point, Result};
 
 /// The mesh unit (unit shortly), or approximate length of cell's edge.
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]

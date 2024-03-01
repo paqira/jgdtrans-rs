@@ -3,9 +3,9 @@ use std::collections::BTreeMap;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::error::{Error, MeshCellCorner, Result, TransformErrorKind};
+use crate::error::{MeshCellCorner, TransformErrorKind};
 use crate::mesh::{MeshCell, MeshUnit};
-use crate::Point;
+use crate::{Error, Point, Result};
 
 #[inline]
 fn bilinear_interpolation(sw: &f64, se: &f64, nw: &f64, ne: &f64, lat: &f64, lng: &f64) -> f64 {
@@ -38,7 +38,7 @@ pub enum Format {
     #[allow(non_camel_case_types)]
     PatchJGD_H,
     /// Notes, GIAJ does not distribute such file,
-    /// see  [`parser::PatchJGD_HV`] for detail.
+    /// see  [`PatchJGD_HV`](crate::PatchJGD_HV) for detail.
     #[allow(non_camel_case_types)]
     PatchJGD_HV,
     HyokoRev,
@@ -101,12 +101,6 @@ impl Parameter {
     pub fn horizontal(&self) -> f64 {
         f64::hypot(self.latitude, self.longitude)
     }
-
-    /// Returns $\\sqrt{\\text{latitude}^2 + \\text{longitude}^2 + \\text{altitude}^2}$.
-    pub fn intensity(&self) -> f64 {
-        // TODO: I think this is not optimal code.
-        f64::hypot(self.horizontal(), self.altitude)
-    }
 }
 
 /// The transformation correction.
@@ -148,12 +142,6 @@ impl Correction {
     /// Returns $\\sqrt{\\text{latitude}^2 + \\text{longitude}^2}$.
     pub fn horizontal(&self) -> f64 {
         f64::hypot(self.latitude, self.longitude)
-    }
-
-    /// Returns $\\sqrt{\\text{latitude}^2 + \\text{longitude}^2 + \\text{altitude}^2}$.
-    pub fn intensity(&self) -> f64 {
-        // TODO: I think this is not optimal code.
-        f64::hypot(self.horizontal(), self.altitude)
     }
 }
 
@@ -911,8 +899,8 @@ impl Transformer {
                 });
             }
 
-            xn = crate::utils::normalize_longitude(&xn);
-            yn = crate::utils::normalize_latitude(&yn);
+            xn = crate::point::normalize_longitude(&xn);
+            yn = crate::point::normalize_latitude(&yn);
         }
 
         Err(Error::new_transformation(TransformErrorKind::NotConverged))

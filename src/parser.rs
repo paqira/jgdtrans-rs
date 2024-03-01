@@ -1,9 +1,10 @@
 use std::collections::BTreeMap;
 use std::ops::Range;
 
-use crate::error;
+use crate::error::{ParColumn, ParseParErrorKind};
+use crate::mesh::MeshUnit;
 use crate::transformer::Parameter;
-use crate::{mesh::MeshUnit, Error, Result, Transformer};
+use crate::{Error, Result, Transformer};
 
 fn parser(
     text: &str,
@@ -33,18 +34,18 @@ fn parser(
                     range.start,
                     range.end,
                     lineno + 1,
-                    error::ParseParErrorKind::Missing,
-                    error::ParColumn::Meshcode,
+                    ParseParErrorKind::Missing,
+                    ParColumn::Meshcode,
                 ))?
                 .trim()
                 .parse()
-                .map_err(|source| {
+                .map_err(|err| {
                     Error::new_parse_par(
                         range.start,
                         range.end,
                         lineno + 1,
-                        error::ParseParErrorKind::ParseInt(source),
-                        error::ParColumn::Meshcode,
+                        ParseParErrorKind::ParseInt(err),
+                        ParColumn::Meshcode,
                     )
                 })?,
         };
@@ -57,18 +58,18 @@ fn parser(
                     range.start,
                     range.end,
                     lineno + 1,
-                    error::ParseParErrorKind::Missing,
-                    error::ParColumn::Latitude,
+                    ParseParErrorKind::Missing,
+                    ParColumn::Latitude,
                 ))?
                 .trim()
                 .parse()
-                .map_err(|source| {
+                .map_err(|err| {
                     Error::new_parse_par(
                         range.start,
                         range.end,
                         lineno + 1,
-                        error::ParseParErrorKind::ParseFloat(source),
-                        error::ParColumn::Latitude,
+                        ParseParErrorKind::ParseFloat(err),
+                        ParColumn::Latitude,
                     )
                 })?,
         };
@@ -81,18 +82,18 @@ fn parser(
                     range.start,
                     range.end,
                     lineno + 1,
-                    error::ParseParErrorKind::Missing,
-                    error::ParColumn::Longitude,
+                    ParseParErrorKind::Missing,
+                    ParColumn::Longitude,
                 ))?
                 .trim()
                 .parse()
-                .map_err(|source| {
+                .map_err(|err| {
                     Error::new_parse_par(
                         range.start,
                         range.end,
                         lineno + 1,
-                        error::ParseParErrorKind::ParseFloat(source),
-                        error::ParColumn::Longitude,
+                        ParseParErrorKind::ParseFloat(err),
+                        ParColumn::Longitude,
                     )
                 })?,
         };
@@ -105,18 +106,18 @@ fn parser(
                     range.start,
                     range.end,
                     lineno + 1,
-                    error::ParseParErrorKind::Missing,
-                    error::ParColumn::Altitude,
+                    ParseParErrorKind::Missing,
+                    ParColumn::Altitude,
                 ))?
                 .trim()
                 .parse()
-                .map_err(|source| {
+                .map_err(|err| {
                     Error::new_parse_par(
                         range.start,
                         range.end,
                         lineno + 1,
-                        error::ParseParErrorKind::ParseFloat(source),
-                        error::ParColumn::Altitude,
+                        ParseParErrorKind::ParseFloat(err),
+                        ParColumn::Altitude,
                     )
                 })?,
         };

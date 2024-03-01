@@ -1,61 +1,10 @@
-//! Provides misc utilities.
-use std::{fmt::Display, num::IntErrorKind, str::FromStr};
+//! Provides utilities for DMS notation degree.
+use std::fmt::Display;
+use std::num::IntErrorKind;
+use std::str::FromStr;
 
-use crate::{
-    error::{DMSErrorKind, ParseDMSErrorKind, TryFromDMSErrorKind},
-    Error, Result,
-};
-
-/// Returns the normalized latitude into -90.0 <= and <= 90.0.
-///
-/// We note that it may be interesting (the Earth is round).
-///
-/// # Example
-///
-/// ```
-/// # use jgdtrans::utils::normalize_latitude;
-/// assert_eq!(normalize_latitude(&35.0), 35.0);
-/// assert_eq!(normalize_latitude(&100.0), 80.0);
-/// assert_eq!(normalize_latitude(&190.0), -10.0);
-/// assert_eq!(normalize_latitude(&-100.0), -80.0);
-/// assert_eq!(normalize_latitude(&-190.0), 10.0);
-/// assert!(normalize_latitude(&f64::NAN).is_nan());
-/// ```
-pub fn normalize_latitude(t: &f64) -> f64 {
-    if t.is_nan() || t.ge(&-90.) && t.le(&90.0) {
-        *t
-    } else {
-        match t % 360.0 {
-            s if s.lt(&-270.0) || s.gt(&270.0) => s - f64::copysign(360.0, s),
-            s if s.lt(&-90.0) || s.gt(&90.0) => f64::copysign(180.0, s) - s,
-            s => s,
-        }
-    }
-}
-
-/// Returns the normalize longitude -180.0 <= and <= 180.0.
-///
-/// We note that it may be interesting (the Earth is round).
-///
-/// # Example
-///
-/// ```
-/// # use jgdtrans::utils::normalize_longitude;
-/// assert_eq!(normalize_longitude(&145.0), 145.0);
-/// assert_eq!(normalize_longitude(&190.0), -170.0);
-/// assert_eq!(normalize_longitude(&-190.0), 170.0);
-/// assert!(normalize_longitude(&f64::NAN).is_nan());
-/// ```
-pub fn normalize_longitude(t: &f64) -> f64 {
-    if t.is_nan() || t.ge(&-180.0) && t.le(&180.0) {
-        *t
-    } else {
-        match t % 360.0 {
-            s if s.lt(&-180.0) || s.gt(&180.0) => s - f64::copysign(360.0, s),
-            s => s,
-        }
-    }
-}
+use crate::error::{DMSErrorKind, ParseDMSErrorKind, TryFromDMSErrorKind};
+use crate::{Error, Result};
 
 /// Returns a DMS notation [`str`] from a DD notation [`f64`].
 ///
@@ -64,7 +13,7 @@ pub fn normalize_longitude(t: &f64) -> f64 {
 /// # Example
 ///
 /// ```
-/// # use jgdtrans::utils::to_dms;
+/// # use jgdtrans::dms::to_dms;
 /// assert_eq!(to_dms(&36.103774791666666), Some("360613.589249999997719".to_string()));
 /// assert_eq!(to_dms(&140.08785504166664), Some("1400516.278149999914149".to_string()));
 /// ```
@@ -79,7 +28,7 @@ pub fn to_dms(t: &f64) -> Option<String> {
 /// # Example
 ///
 /// ```
-/// # use jgdtrans::utils::from_dms;
+/// # use jgdtrans::dms::from_dms;
 /// assert_eq!(from_dms("360613.58925"), Some(36.103774791666666));
 /// assert_eq!(from_dms("1400516.27815"), Some(140.08785504166667));
 /// ```
@@ -104,7 +53,7 @@ pub enum Sign {
 ///
 /// ```
 /// # use jgdtrans::*;
-/// use jgdtrans::utils::{DMS, Sign};
+/// use jgdtrans::dms::{DMS, Sign};
 /// # fn main() -> Result<()> {
 ///
 /// let latitude = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
@@ -145,7 +94,7 @@ impl Display for DMS {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
+    /// # use jgdtrans::dms::{DMS, Sign};
     /// # fn main() -> Result<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.to_string(), "360613.58925");
@@ -194,7 +143,7 @@ impl FromStr for DMS {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
+    /// # use jgdtrans::dms::{DMS, Sign};
     /// # fn main() -> Result<()> {
     /// assert_eq!(
     ///     "360613.58925".parse::<DMS>()?,
@@ -275,7 +224,7 @@ impl TryFrom<&f64> for DMS {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
+    /// # use jgdtrans::dms::{DMS, Sign};
     /// # fn main() -> Result<()> {
     /// assert_eq!(
     ///     DMS::try_from(&36.103774791666666)?,
@@ -365,7 +314,7 @@ impl DMS {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
+    /// # use jgdtrans::dms::{DMS, Sign};
     /// # fn main() -> Result<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.to_string(), "360613.58925");
@@ -400,7 +349,7 @@ impl DMS {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
+    /// # use jgdtrans::dms::{DMS, Sign};
     /// # fn main() -> Result<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.sign(), &Sign::Plus);
@@ -416,7 +365,7 @@ impl DMS {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
+    /// # use jgdtrans::dms::{DMS, Sign};
     /// # fn main() -> Result<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.degree(), &36);
@@ -432,7 +381,7 @@ impl DMS {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
+    /// # use jgdtrans::dms::{DMS, Sign};
     /// # fn main() -> Result<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.minute(), &6);
@@ -448,7 +397,7 @@ impl DMS {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
+    /// # use jgdtrans::dms::{DMS, Sign};
     /// # fn main() -> Result<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.second(), &13);
@@ -464,7 +413,7 @@ impl DMS {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
+    /// # use jgdtrans::dms::{DMS, Sign};
     /// # fn main() -> Result<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.fract(), &0.58925);
@@ -480,7 +429,7 @@ impl DMS {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::utils::{DMS, Sign};
+    /// # use jgdtrans::dms::{DMS, Sign};
     /// # fn main() -> Result<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(

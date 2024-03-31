@@ -2,6 +2,8 @@
 
 ```rust
 use jgdtrans::{Point, SemiDynaEXE};
+use std::error::Error;
+use std::fs;
 
 fn main -> Result<(), Box<dyn Error>> {
     // Deserialize par-formatted file, e.g. SemiDyna2023.par

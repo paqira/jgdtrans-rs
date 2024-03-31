@@ -249,13 +249,17 @@ impl MeshCoord {
     /// # Ok(())}
     /// ```
     pub fn try_from_latitude(v: &f64, unit: &MeshUnit) -> Result<Self> {
-        let value = if (v.to_bits() % 2).eq(&1) {
+        let value = {
+            let value = 3.0 * v / 2.0;
+
             // Minimum add-hook trick to ensure the identity,
             // 1. MeshCoord::try_from_latitude(&coord.to_latitude(), &MeshUnit::One)
             // 2. MeshCoord::try_from_longitude(&coord.to_longitude(), &MeshUnit::One)
-            (3.0 * v / 2.0).next_up()
-        } else {
-            3.0 * v / 2.0
+            if (v.to_bits() % 2).eq(&1) {
+                value.next_up()
+            } else {
+                value
+            }
         };
 
         if value.is_nan() {

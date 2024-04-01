@@ -50,15 +50,27 @@ Features:
   - 順変換と逆変換の両方をサポート
 - Supports verified backward transformation
   - 精度を保証した逆変換のサポート
-- Supports all TKY2JGD, PatchJGD and PatchJGD(H), HyokoRev, SemiDynaEXE, geonetF3 and ITRF2014 (POS2JGD)
-  - For example, Tokyo Datum to JGD2000 (EPSG:4301 to EPSG:4612)
-    and JGD2000 to JGD2011 (EPSG:4612 to EPSG:6668)
+- Supports all [TKY2JGD], [PatchJGD], [PatchJGD(H)], [HyokoRev], [SemiDynaEXE]
+  and [POS2JGD] (geonetF3 and ITRF2014)
+  - For example, Tokyo Datum to JGD2000 ([EPSG:4301] to [EPSG:4612])
+    and JGD2000 to JGD2011 ([EPSG:4612] to [EPSG:6668])
   - 上記の全てをサポート
 - Clean implementation
   - 保守が容易な実装
 - No dependency
   - It depends on [`serde`][serde] and [`serde_repr`][serde_repr] crates only if `serde` feature on
   - 依存パッケージなし
+
+[TKY2JGD]: https://www.gsi.go.jp/sokuchikijun/tky2jgd.html
+[PatchJGD]: https://vldb.gsi.go.jp/sokuchi/surveycalc/patchjgd/index.html
+[PatchJGD(H)]: https://vldb.gsi.go.jp/sokuchi/surveycalc/patchjgd_h/index.html
+[HyokoRev]: https://vldb.gsi.go.jp/sokuchi/surveycalc/hyokorev/hyokorev.html
+[SemiDynaEXE]: https://vldb.gsi.go.jp/sokuchi/surveycalc/semidyna/web/index.html
+[POS2JGD]: https://positions.gsi.go.jp/cdcs
+
+[EPSG:4301]: https://epsg.io/4301
+[EPSG:4612]: https://epsg.io/4612
+[EPSG:6668]: https://epsg.io/6668
 
 [serde]: https://crates.io/crates/serde
 [serde_repr]: https://crates.io/crates/serde_repr

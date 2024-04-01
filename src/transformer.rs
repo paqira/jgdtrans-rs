@@ -265,7 +265,7 @@ pub struct Transformer {
     /// The entry represents single line of par-formatted file's parameter section,
     /// the key is meshcode, and the value parameter.
     pub parameter: BTreeMap<u32, Parameter>,
-    /// The description, or the header of par-formattet data.
+    /// The description, or the header of par-formatted data.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub description: Option<String>,
 }
@@ -345,7 +345,7 @@ impl Transformer {
     ///
     /// Use `format` argument to specify the format of `s`.
     ///
-    /// This fills by 0.0 for altituse parameter when [`Format::TKY2JGD`] or [`Format::PatchJGD`] given,
+    /// This fills by 0.0 for altitude parameter when [`Format::TKY2JGD`] or [`Format::PatchJGD`] given,
     /// and for latitude and longitude when [`Format::PatchJGD_H`] or [`Format::HyokoRev`] given.
     ///
     /// ```no_run
@@ -361,7 +361,7 @@ impl Transformer {
     /// println!("{:?}", tf.description);
     /// // prints MeshUnit::Five (namely, the mesh unit is 5)
     /// println!("{:?}", tf.unit);
-    /// // prints all of parameter (be careful, long long display)
+    /// // prints all parameter (be careful, long display)
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
@@ -370,7 +370,7 @@ impl Transformer {
     /// # Ok(())}
     /// ```
     ///
-    /// # Errros
+    /// # Errors
     ///
     /// If invalid data found.
     ///
@@ -564,7 +564,7 @@ impl Transformer {
     /// The result's drafting from the exact solution
     /// is less than error of the GIAJ latitude and longitude parameter,
     /// 2.7e-9 \[deg\], for each latitude and longitude.
-    /// The altitude's drafting is less than 1e-5 wihch is error of the GIAJ altitude parameter.
+    /// The altitude's drafting is less than 1e-5 which is error of the GIAJ altitude parameter.
     ///     
     /// # Example
     ///
@@ -812,7 +812,7 @@ impl Transformer {
     /// # Ok(())}
     /// ```
     pub fn backward_corr_safe(&self, point: &Point) -> Result<Correction> {
-        // Newtown's Method
+        // Newton's Method
 
         const SCALE: f64 = 3600.;
         const CRITERIA: f64 = 2.5e-9;
@@ -1009,8 +1009,8 @@ impl TransformerBuilder {
     /// assert_eq!(tf.parameter, [(54401005, Parameter::new(-0.00622, 0.01516, 0.0946)), ].into());
     /// # Ok(())}
     /// ```
-    pub fn parameter(mut self, key: u32, paramter: Parameter) -> Self {
-        self.parameter.insert(key, paramter);
+    pub fn parameter(mut self, key: u32, parameter: Parameter) -> Self {
+        self.parameter.insert(key, parameter);
         self
     }
 
@@ -1041,9 +1041,9 @@ impl TransformerBuilder {
     /// ].into());
     /// # Ok(())}
     /// ```
-    pub fn parameters(mut self, paramters: impl IntoIterator<Item = (u32, Parameter)>) -> Self {
-        for (key, paramter) in paramters.into_iter() {
-            self.parameter.insert(key, paramter);
+    pub fn parameters(mut self, parameters: impl IntoIterator<Item = (u32, Parameter)>) -> Self {
+        for (key, parameter) in parameters.into_iter() {
+            self.parameter.insert(key, parameter);
         }
         self
     }
@@ -1080,6 +1080,7 @@ impl TransformerBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     mod tests_transformer {
         use super::*;
 

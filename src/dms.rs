@@ -36,7 +36,7 @@ pub fn from_dms(s: &str) -> Option<f64> {
     s.parse::<DMS>().ok().map(|x| x.to_degree())
 }
 
-/// Signiture of DMS
+/// Signature of DMS
 #[derive(Debug, PartialEq)]
 pub enum Sign {
     /// Plus
@@ -45,7 +45,7 @@ pub enum Sign {
     Minus,
 }
 
-/// Represents DMS notation latitude and/or longtiude.
+/// Represents DMS notation latitude and/or longitude.
 ///
 /// This supports -180.0 <= and <= 180.0 angle in degree (DD notation).
 ///
@@ -132,7 +132,7 @@ impl FromStr for DMS {
 
     /// Makes a [`DMS`] from DMS notation [`&str`].
     ///
-    /// This supports all of the common notation,
+    /// This supports all the common notation,
     /// e.g. 1.2, 1, +1., -.2, etc.
     ///
     /// # Errors
@@ -214,7 +214,7 @@ impl TryFrom<&f64> for DMS {
 
     /// Makes a [`DMS`] from DD notation [`f64`].
     ///
-    /// `t` is angle which safisfies -180.0 <= and <= 180.0.
+    /// `t` is angle which satisfies -180.0 <= and <= 180.0.
     ///
     /// # Errors
     ///

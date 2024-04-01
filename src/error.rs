@@ -250,8 +250,8 @@ impl std::fmt::Display for ParseParErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Self::Missing => write!(f, "column not found"),
-            Self::ParseInt(..) => write!(f, "faild parsing to u32"),
-            Self::ParseFloat(..) => write!(f, "faild parsing to f64"),
+            Self::ParseInt(..) => write!(f, "failed parsing to u32"),
+            Self::ParseFloat(..) => write!(f, "failed parsing to f64"),
         }
     }
 }
@@ -391,9 +391,9 @@ impl std::fmt::Display for MeshNodeErrorKind {
 pub enum MeshCellErrorKind {
     Overflow,
     MeshUnit,
-    NortthWestNode,
+    NorthWestNode,
     SouthEastNode,
-    NouthEastNode,
+    NorthEastNode,
 }
 
 impl std::fmt::Display for MeshCellErrorKind {
@@ -403,15 +403,15 @@ impl std::fmt::Display for MeshCellErrorKind {
                 write!(f, "south-west node too large to find north/east next node")
             }
             Self::MeshUnit => write!(f, "inconsistent mesh_unit with nodes"),
-            Self::NortthWestNode => write!(
+            Self::NorthWestNode => write!(
                 f,
-                "inconsistent nortth-west node with south-west node and mesh_unit"
+                "inconsistent north-west node with south-west node and mesh_unit"
             ),
             Self::SouthEastNode => write!(
                 f,
                 "inconsistent south-east node with south-west node and mesh_unit"
             ),
-            Self::NouthEastNode => write!(
+            Self::NorthEastNode => write!(
                 f,
                 "inconsistent north-east node with south-west node and mesh_unit"
             ),

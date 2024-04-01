@@ -88,7 +88,7 @@
 //!
 //! In addition, it supports (de)serialization by [`serde` crate](https://crates.io/crates/serde)
 //! for all `struct` including [`Transformer`] (deserialized object of par-formatted data)
-//! only if the feature `serde` is enable.
+//! only if the feature `serde` is enabled.
 //! We show a (de)serialization example to/from json;
 //!
 //! ```

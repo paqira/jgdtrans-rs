@@ -326,7 +326,7 @@ impl Point {
     /// # Errors
     ///
     /// If `latitude` and/or `longitude` is out-of-range,
-    /// `latitude` must satisfies -90.0 <= and <= 90.0
+    /// `latitude` must satisfy -90.0 <= and <= 90.0
     /// and `longitude` does -180.0 <= and <= 180.0.
     ///
     /// # Example
@@ -480,7 +480,7 @@ impl Point {
 
     /// Returns a meshcode represents the nearest south-east mesh node of `self`.
     ///
-    /// The result does not depends on [`altitude`](Point::altitude).
+    /// The result is independent of [`altitude`](Point::altitude).
     ///
     /// # Errors
     ///
@@ -509,9 +509,9 @@ impl Point {
         Ok(node.to_meshcode())
     }
 
-    /// Returns a nearest south-east [`MeshNode`] of `self`
+    /// Returns the nearest south-east [`MeshNode`] of `self`
     ///
-    /// The result does not depend on [`altitude`](Point::altitude).
+    /// The result is independent of [`altitude`](Point::altitude).
     ///
     /// # Errors
     ///

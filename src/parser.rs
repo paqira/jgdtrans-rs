@@ -169,7 +169,7 @@ pub mod TKY2JGD {
     /// println!("{:?}", tf.description);
     /// // prints MeshUnit::One (namely, the mesh unit is 1)
     /// println!("{:?}", tf.unit);
-    /// // prints all of parameter (be careful, long long display)
+    /// // prints all parameter (be careful, long display)
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
@@ -180,7 +180,7 @@ pub mod TKY2JGD {
     ///
     /// This fill by 0 for the altitude parameter.
     ///
-    /// # Errros
+    /// # Errors
     ///
     /// If invalid data found.
     ///
@@ -245,7 +245,7 @@ pub mod PatchJGD {
     /// println!("{:?}", tf.description);
     /// // prints MeshUnit::One (namely, the mesh unit is 1)
     /// println!("{:?}", tf.unit);
-    /// // prints all of parameter (be careful, long long display)
+    /// // prints all parameter (be careful, long display)
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
@@ -256,7 +256,7 @@ pub mod PatchJGD {
     ///
     /// This fill by 0 for the altitude parameter.
     ///
-    /// # Errros
+    /// # Errors
     ///
     /// If invalid data found.
     ///
@@ -334,7 +334,7 @@ pub mod PatchJGD_H {
     /// println!("{:?}", tf.description);
     /// // prints MeshUnit::One (namely, the mesh unit is 1)
     /// println!("{:?}", tf.unit);
-    /// // prints all of parameter (be careful, long long display)
+    /// // prints all parameter (be careful, long display)
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
@@ -345,7 +345,7 @@ pub mod PatchJGD_H {
     ///
     /// This fill by 0 for the latitude and the longitude parameter.
     ///
-    /// # Errros
+    /// # Errors
     ///
     /// If invalid data found.
     ///
@@ -431,7 +431,7 @@ pub mod PatchJGD_HV {
     /// println!("{:?}", tf.description);
     /// // prints MeshUnit::One (namely, the mesh unit is 1)
     /// println!("{:?}", tf.unit);
-    /// // prints all of parameter (be careful, long long display)
+    /// // prints all parameter (be careful, long display)
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
@@ -440,7 +440,7 @@ pub mod PatchJGD_HV {
     /// # Ok(())}
     /// ```
     ///
-    /// # Errros
+    /// # Errors
     ///
     /// If invalid data found.
     ///
@@ -520,7 +520,7 @@ pub mod HyokoRev {
     /// println!("{:?}", tf.description);
     /// // prints MeshUnit::One (namely, the mesh unit is 1)
     /// println!("{:?}", tf.unit);
-    /// // prints all of parameter (be careful, long long display)
+    /// // prints all parameter (be careful, long display)
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
@@ -529,7 +529,7 @@ pub mod HyokoRev {
     /// # Ok(())}
     /// ```
     ///
-    /// # Errros
+    /// # Errors
     ///
     /// If invalid data found.
     ///
@@ -599,7 +599,7 @@ pub mod SemiDynaEXE {
     /// println!("{:?}", tf.description);
     /// // prints MeshUnit::Five (namely, the mesh unit is 5)
     /// println!("{:?}", tf.unit);
-    /// // prints all of parameter (be careful, long long display)
+    /// // prints all parameter (be careful, long display)
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
@@ -608,7 +608,7 @@ pub mod SemiDynaEXE {
     /// # Ok(())}
     /// ```
     ///
-    /// # Errros
+    /// # Errors
     ///
     /// If invalid data found.
     ///
@@ -686,7 +686,7 @@ pub mod geonetF3 {
     /// println!("{:?}", tf.description);
     /// // prints MeshUnit::Five (namely, the mesh unit is 5)
     /// println!("{:?}", tf.unit);
-    /// // prints all of parameter (be careful, long long display)
+    /// // prints all parameter (be careful, long display)
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
@@ -695,7 +695,7 @@ pub mod geonetF3 {
     /// # Ok(())}
     /// ```
     ///
-    /// # Errros
+    /// # Errors
     ///
     /// If invalid data found.
     ///
@@ -774,7 +774,7 @@ pub mod ITRF2014 {
     /// println!("{:?}", tf.description);
     /// // prints MeshUnit::Five (namely, the mesh unit is 5)
     /// println!("{:?}", tf.unit);
-    /// // prints all of parameter (be careful, long long display)
+    /// // prints all parameter (be careful, long display)
     /// println!("{:?}", tf.parameter);
     ///
     /// // transform coordinate
@@ -783,7 +783,7 @@ pub mod ITRF2014 {
     /// # Ok(())}
     /// ```
     ///
-    /// # Errros
+    /// # Errors
     ///
     /// If invalid data found.
     ///

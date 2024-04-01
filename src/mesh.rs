@@ -54,7 +54,7 @@ impl MeshUnit {
     }
 }
 
-/// Represents mech coordinate, namely, discrete latitude and/or longitude.
+/// Represents mesh coordinate, namely, discrete latitude and/or longitude.
 ///
 /// This supports non-negative latitude and/or longitude only.
 ///
@@ -78,7 +78,7 @@ impl MeshUnit {
 /// let coord = MeshCoord::try_from_latitude(&36.103774791666666, &MeshUnit::Five)?;
 /// assert_eq!(coord, MeshCoord::try_new(54, 1, 0)?);
 ///
-/// // Increment/decrement (not inplace)
+/// // Increment/decrement (not in-place)
 /// let coord: MeshCoord = (54, 1, 2).try_into()?;
 /// assert_eq!(coord.try_next_up(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 3)?);
 /// assert_eq!(coord.try_next_down(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 1)?);
@@ -279,7 +279,7 @@ impl MeshCoord {
         Ok(Self::from_value(&value, unit))
     }
 
-    /// Makes the greatest [`MeshCoord`] less than longitiude `v` with `unit`.
+    /// Makes the greatest [`MeshCoord`] less than longitude `v` with `unit`.
     ///
     /// `v` is longitude which satisfies 100.0 <= and <= 180.0.
     ///
@@ -389,9 +389,9 @@ impl MeshCoord {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
-    /// let corrd = MeshCoord::try_new(0, 0, 0)?;
-    /// assert_eq!(corrd.try_next_up(&MeshUnit::One)?, MeshCoord::try_new(0, 0, 1)?);
-    /// assert_eq!(corrd.try_next_up(&MeshUnit::Five)?, MeshCoord::try_new(0, 0, 5)?);
+    /// let coord = MeshCoord::try_new(0, 0, 0)?;
+    /// assert_eq!(coord.try_next_up(&MeshUnit::One)?, MeshCoord::try_new(0, 0, 1)?);
+    /// assert_eq!(coord.try_next_up(&MeshUnit::Five)?, MeshCoord::try_new(0, 0, 5)?);
     /// # Ok(())}
     /// ```
     pub fn try_next_up(&self, unit: &MeshUnit) -> Result<Self> {
@@ -660,7 +660,7 @@ impl MeshNode {
 
     /// Makes the nearest north-west [`MeshNode`] of `point`.
     ///
-    /// This does not depends on [`point.altitude`](Point::altitude).
+    /// This is independent of [`point.altitude`](Point::altitude).
     ///
     /// # Errors
     ///
@@ -913,7 +913,7 @@ impl MeshCell {
         ne: MeshNode,
         unit: MeshUnit,
     ) -> Result<Self> {
-        // consistentcy on unit v.s. the third
+        // consistently on unit v.s. the third
         macro_rules! is_unit_five {
             ($coord:expr) => {
                 !$coord.latitude.is_multiple_5() || !$coord.longitude.is_multiple_5()
@@ -936,13 +936,13 @@ impl MeshCell {
             .map_err(|_| Error::new_mesh_cell(MeshCellErrorKind::Overflow))?;
 
         if lat_next.ne(&nw.latitude) || sw.longitude.ne(&nw.longitude) {
-            return Err(Error::new_mesh_cell(MeshCellErrorKind::NortthWestNode));
+            return Err(Error::new_mesh_cell(MeshCellErrorKind::NorthWestNode));
         }
         if sw.latitude.ne(&se.latitude) || lng_next.ne(&se.longitude) {
             return Err(Error::new_mesh_cell(MeshCellErrorKind::SouthEastNode));
         }
         if lat_next.ne(&ne.latitude) || lng_next.ne(&ne.longitude) {
-            return Err(Error::new_mesh_cell(MeshCellErrorKind::NouthEastNode));
+            return Err(Error::new_mesh_cell(MeshCellErrorKind::NorthEastNode));
         }
 
         Ok(Self {
@@ -1147,7 +1147,7 @@ impl MeshCell {
 
     /// Makes a [`MeshCell`] which contains a [`Point`].
     ///
-    /// The result does not depends on [`point.altitude`](Point::altitude).
+    /// The result is independent on [`point.altitude`](Point::altitude).
     ///
     /// # Errors
     ///
@@ -1193,7 +1193,7 @@ impl MeshCell {
     /// Return the position in the cell.
     ///
     /// This returns from 0.0 to 1.0 for each latitude and longitude
-    /// if `point` is inside of `self`.
+    /// if `point` is inside `self`.
     ///
     /// We note that the result is a (latitude, longitude) pair,
     /// not a (right-handed) (y, x) pair.
@@ -1239,7 +1239,7 @@ impl MeshCell {
     ///     (0.4529748000001632, 0.028403280000475206)
     /// );
     ///
-    /// // the reuslt depends on unit
+    /// // the result depends on unit
     /// let cell = MeshCell::try_from_point(&point, MeshUnit::Five)?;
     /// assert_eq!(
     ///     cell.position(&point),
@@ -1264,6 +1264,7 @@ impl MeshCell {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     mod tests_mesh_coord {
         use super::*;
 
@@ -1680,7 +1681,7 @@ mod tests {
             );
 
             //
-            // longtitude
+            // longitude
             //
             let bound = MeshNode::try_new(
                 MeshCoord::try_new(0, 0, 0).unwrap(),
@@ -1715,6 +1716,7 @@ mod tests {
 
     mod tests_mesh_cell {
         use super::*;
+
         #[test]
         fn test_try_new() {
             // healty

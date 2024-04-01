@@ -124,7 +124,7 @@ impl TryFrom<u32> for Point {
 }
 
 impl Add<Correction> for Point {
-    type Output = Point;
+    type Output = Self;
 
     fn add(self, rhs: Correction) -> Self::Output {
         let latitude = self.latitude + rhs.latitude;
@@ -210,7 +210,7 @@ impl AddAssign<&Correction> for Point {
 }
 
 impl Sub<Correction> for Point {
-    type Output = Point;
+    type Output = Self;
 
     fn sub(self, rhs: Correction) -> Self::Output {
         let latitude = self.latitude - rhs.latitude;

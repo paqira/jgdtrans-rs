@@ -6,8 +6,9 @@
 //! 国土地理院が公開しているパラメータファイル（par ファイル）による座標変換（順逆変換）を提供します [^1]。
 //!
 //! ```no_run
-//! use std::fs;
 //! use std::error::Error;
+//! use std::fs;
+//!
 //! use jgdtrans::{Point, SemiDynaEXE};
 //!
 //! fn main() -> Result<(), Box<dyn Error>> {

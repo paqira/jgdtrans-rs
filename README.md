@@ -1,11 +1,12 @@
 # jgdtrans
 
 ```rust
-use jgdtrans::{Point, SemiDynaEXE};
 use std::error::Error;
 use std::fs;
 
-fn main -> Result<(), Box<dyn Error>> {
+use jgdtrans::{Point, SemiDynaEXE};
+
+fn main() -> Result<(), Box<dyn Error>> {
     // Deserialize par-formatted file, e.g. SemiDyna2023.par
     let s = fs::read_to_string("SemiDyna2023.par").expect("file not found 'SemiDyna2023.par'");
     let tf = SemiDynaEXE::from_str(&s)?;

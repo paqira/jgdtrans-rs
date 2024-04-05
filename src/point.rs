@@ -127,14 +127,10 @@ impl Add<Correction> for Point {
     type Output = Self;
 
     fn add(self, rhs: Correction) -> Self::Output {
-        let latitude = self.latitude + rhs.latitude;
-        let longitude = self.longitude + rhs.longitude;
-        let altitude = self.altitude + rhs.altitude;
-
         Self::Output::new(
-            normalize_latitude(&latitude),
-            normalize_longitude(&longitude),
-            altitude,
+            self.latitude + rhs.latitude,
+            self.longitude + rhs.longitude,
+            self.altitude + rhs.altitude,
         )
     }
 }
@@ -143,14 +139,10 @@ impl Add<&Correction> for Point {
     type Output = Self;
 
     fn add(self, rhs: &Correction) -> Self::Output {
-        let latitude = self.latitude + rhs.latitude;
-        let longitude = self.longitude + rhs.longitude;
-        let altitude = self.altitude + rhs.altitude;
-
         Self::Output::new(
-            normalize_latitude(&latitude),
-            normalize_longitude(&longitude),
-            altitude,
+            self.latitude + rhs.latitude,
+            self.longitude + rhs.longitude,
+            self.altitude + rhs.altitude,
         )
     }
 }
@@ -159,14 +151,10 @@ impl Add<Correction> for &Point {
     type Output = Point;
 
     fn add(self, rhs: Correction) -> Self::Output {
-        let latitude = self.latitude + rhs.latitude;
-        let longitude = self.longitude + rhs.longitude;
-        let altitude = self.altitude + rhs.altitude;
-
         Self::Output::new(
-            normalize_latitude(&latitude),
-            normalize_longitude(&longitude),
-            altitude,
+            self.latitude + rhs.latitude,
+            self.longitude + rhs.longitude,
+            self.altitude + rhs.altitude,
         )
     }
 }
@@ -175,36 +163,26 @@ impl Add<&Correction> for &Point {
     type Output = Point;
 
     fn add(self, rhs: &Correction) -> Self::Output {
-        let latitude = self.latitude + rhs.latitude;
-        let longitude = self.longitude + rhs.longitude;
-        let altitude = self.altitude + rhs.altitude;
-
         Self::Output::new(
-            normalize_latitude(&latitude),
-            normalize_longitude(&longitude),
-            altitude,
+            self.latitude + rhs.latitude,
+            self.longitude + rhs.longitude,
+            self.altitude + rhs.altitude,
         )
     }
 }
 
 impl AddAssign<Correction> for Point {
     fn add_assign(&mut self, rhs: Correction) {
-        let latitude = self.latitude + rhs.latitude;
-        let longitude = self.longitude + rhs.longitude;
-
-        self.latitude = normalize_latitude(&latitude);
-        self.longitude = normalize_longitude(&longitude);
+        self.latitude += rhs.latitude;
+        self.longitude += rhs.longitude;
         self.altitude += rhs.altitude;
     }
 }
 
 impl AddAssign<&Correction> for Point {
     fn add_assign(&mut self, rhs: &Correction) {
-        let latitude = self.latitude + rhs.latitude;
-        let longitude = self.longitude + rhs.longitude;
-
-        self.latitude = normalize_latitude(&latitude);
-        self.longitude = normalize_longitude(&longitude);
+        self.latitude += rhs.latitude;
+        self.longitude += rhs.longitude;
         self.altitude += rhs.altitude;
     }
 }
@@ -213,14 +191,10 @@ impl Sub<Correction> for Point {
     type Output = Self;
 
     fn sub(self, rhs: Correction) -> Self::Output {
-        let latitude = self.latitude - rhs.latitude;
-        let longitude = self.longitude - rhs.longitude;
-        let altitude = self.altitude - rhs.altitude;
-
         Self::Output::new(
-            normalize_latitude(&latitude),
-            normalize_longitude(&longitude),
-            altitude,
+            self.latitude - rhs.latitude,
+            self.longitude - rhs.longitude,
+            self.altitude - rhs.altitude,
         )
     }
 }
@@ -229,14 +203,10 @@ impl Sub<&Correction> for Point {
     type Output = Self;
 
     fn sub(self, rhs: &Correction) -> Self::Output {
-        let latitude = self.latitude - rhs.latitude;
-        let longitude = self.longitude - rhs.longitude;
-        let altitude = self.altitude - rhs.altitude;
-
         Self::Output::new(
-            normalize_latitude(&latitude),
-            normalize_longitude(&longitude),
-            altitude,
+            self.latitude - rhs.latitude,
+            self.longitude - rhs.longitude,
+            self.altitude - rhs.altitude,
         )
     }
 }
@@ -245,14 +215,10 @@ impl Sub<Correction> for &Point {
     type Output = Point;
 
     fn sub(self, rhs: Correction) -> Self::Output {
-        let latitude = self.latitude - rhs.latitude;
-        let longitude = self.longitude - rhs.longitude;
-        let altitude = self.altitude - rhs.altitude;
-
         Self::Output::new(
-            normalize_latitude(&latitude),
-            normalize_longitude(&longitude),
-            altitude,
+            self.latitude - rhs.latitude,
+            self.longitude - rhs.longitude,
+            self.altitude - rhs.altitude,
         )
     }
 }
@@ -261,36 +227,26 @@ impl Sub<&Correction> for &Point {
     type Output = Point;
 
     fn sub(self, rhs: &Correction) -> Self::Output {
-        let latitude = self.latitude - rhs.latitude;
-        let longitude = self.longitude - rhs.longitude;
-        let altitude = self.altitude - rhs.altitude;
-
         Self::Output::new(
-            normalize_latitude(&latitude),
-            normalize_longitude(&longitude),
-            altitude,
+            self.latitude - rhs.latitude,
+            self.longitude - rhs.longitude,
+            self.altitude - rhs.altitude,
         )
     }
 }
 
 impl SubAssign<Correction> for Point {
     fn sub_assign(&mut self, rhs: Correction) {
-        let latitude = self.latitude - rhs.latitude;
-        let longitude = self.longitude - rhs.longitude;
-
-        self.latitude = normalize_latitude(&latitude);
-        self.longitude = normalize_longitude(&longitude);
+        self.latitude -= rhs.latitude;
+        self.longitude -= rhs.longitude;
         self.altitude -= rhs.altitude;
     }
 }
 
 impl SubAssign<&Correction> for Point {
     fn sub_assign(&mut self, rhs: &Correction) {
-        let latitude = self.latitude - rhs.latitude;
-        let longitude = self.longitude - rhs.longitude;
-
-        self.latitude = normalize_latitude(&latitude);
-        self.longitude = normalize_longitude(&longitude);
+        self.latitude -= rhs.latitude;
+        self.longitude -= rhs.longitude;
         self.altitude -= rhs.altitude;
     }
 }
@@ -423,6 +379,32 @@ impl Point {
     /// ```
     pub fn altitude(&self) -> &f64 {
         &self.altitude
+    }
+
+    /// Makes a normalized [Point] from `self`.
+    ///
+    /// The result has normalized latitude and longitude which value
+    ///  -90.0 <= and <= 90.0, and -180.0 <= and <= 180.0 respectively.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// # fn main() -> Result<()> {
+    /// let point = Point::new(100.0, 200.0, 5.0);
+    ///
+    /// assert_eq!(
+    ///     point.normalize(),
+    ///     Point::new(80.0, -160.0, 5.0)
+    /// );
+    /// # Ok(())}
+    /// ```
+    pub fn normalize(&self) -> Self {
+        Self {
+            latitude: normalize_latitude(&self.latitude),
+            longitude: normalize_longitude(&self.longitude),
+            altitude: self.altitude,
+        }
     }
 
     /// Makes a [`Point`] where a node, represented by meshcode `code`, locates.

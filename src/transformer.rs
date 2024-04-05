@@ -898,9 +898,6 @@ impl Transformer {
                     altitude: -corr.altitude,
                 });
             }
-
-            xn = crate::point::normalize_longitude(&xn);
-            yn = crate::point::normalize_latitude(&yn);
         }
 
         Err(Error::new_transformation(TransformErrorKind::NotConverged))

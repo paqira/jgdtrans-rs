@@ -766,6 +766,7 @@ impl Transformer {
             longitude: DELTA,
             altitude: 0.0,
         };
+
         let temporal = point + corr;
 
         let corr = self.forward_corr(&temporal)?;

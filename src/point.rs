@@ -531,6 +531,7 @@ impl Point {
 mod tests {
     use super::*;
 
+    #[test]
     fn test_normalize_latitude() {
         assert_eq!(normalize_latitude(&35.0), 35.0);
         assert_eq!(normalize_latitude(&100.0), 80.0);
@@ -540,6 +541,7 @@ mod tests {
         assert!(normalize_latitude(&f64::NAN).is_nan());
     }
 
+    #[test]
     fn test_normalize_longitude() {
         assert_eq!(normalize_longitude(&145.0), 145.0);
         assert_eq!(normalize_longitude(&190.0), -170.0);

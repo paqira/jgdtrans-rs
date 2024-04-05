@@ -311,9 +311,7 @@ impl Point {
     /// assert_eq!(point.altitude(), &5.0);
     /// # Ok(())}
     /// ```
-    // internal uses
-    #[inline]
-    pub(crate) fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
+    pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
             longitude,

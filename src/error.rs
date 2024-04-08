@@ -207,6 +207,7 @@ impl std::fmt::Display for ParColumn {
 pub enum ErrorAxis {
     Latitude,
     Longitude,
+    Altitude,
 }
 
 impl std::fmt::Display for ErrorAxis {
@@ -214,6 +215,7 @@ impl std::fmt::Display for ErrorAxis {
         match self {
             Self::Latitude => write!(f, "latitude"),
             Self::Longitude => write!(f, "longitude"),
+            Self::Altitude => write!(f, "altitude"),
         }
     }
 }

@@ -280,6 +280,8 @@ impl Point {
     /// assert!(point.is_err());
     /// let point = Point::try_new(35.0, f64::NAN, 5.0);
     /// assert!(point.is_err());
+    /// let point = Point::try_new(35.0, 145.0, f64::NAN);
+    /// assert!(point.is_err());
     /// # Ok(())}
     /// ```
     pub fn try_new(latitude: f64, longitude: f64, altitude: f64) -> Result<Self> {
@@ -305,6 +307,12 @@ impl Point {
             return Err(Error::new_point(
                 crate::error::ErrorAxis::Longitude,
                 crate::error::PointErrorKind::Overflow,
+            ));
+        };
+        if altitude.is_nan() {
+            return Err(Error::new_point(
+                crate::error::ErrorAxis::Altitude,
+                crate::error::PointErrorKind::NAN,
             ));
         };
 

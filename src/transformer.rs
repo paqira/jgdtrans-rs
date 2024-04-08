@@ -32,6 +32,7 @@ fn ksum(vs: &[f64]) -> f64 {
 
 /// Represents format of par-formatted text.
 #[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Format {
     TKY2JGD,
     PatchJGD,

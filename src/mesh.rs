@@ -195,14 +195,14 @@ impl MeshCoord {
         &self.third
     }
 
-    fn from_value(value: &f64, unit: &MeshUnit) -> Self {
-        debug_assert!(value.ge(&0.) && value.le(&180.));
+    fn from_degree(degree: &f64, unit: &MeshUnit) -> Self {
+        debug_assert!(degree.ge(&0.) && degree.le(&180.));
 
-        let integer = value.floor() as u32;
+        let integer = degree.floor() as u32;
 
         let first = integer % 100;
-        let second = (8. * value).floor() as u32 - 8 * integer;
-        let third = (80. * value).floor() as u32 - 80 * integer - 10 * second;
+        let second = (8. * degree).floor() as u32 - 8 * integer;
+        let third = (80. * degree).floor() as u32 - 80 * integer - 10 * second;
 
         // max of integer is 180
         // therefore first, second and third fit u8
@@ -276,7 +276,7 @@ impl MeshCoord {
             ));
         };
 
-        Ok(Self::from_value(&value, unit))
+        Ok(Self::from_degree(&value, unit))
     }
 
     /// Makes the greatest [`MeshCoord`] less than longitude `v` with `unit`.
@@ -321,10 +321,10 @@ impl MeshCoord {
             ));
         };
 
-        Ok(Self::from_value(v, unit))
+        Ok(Self::from_degree(v, unit))
     }
 
-    fn to_value(&self) -> f64 {
+    fn to_degree(&self) -> f64 {
         self.first as f64 + self.second as f64 / 8. + self.third as f64 / 80.
     }
 
@@ -349,7 +349,7 @@ impl MeshCoord {
     /// # Ok(())}
     /// ```
     pub fn to_latitude(&self) -> f64 {
-        2. * self.to_value() / 3.
+        2. * self.to_degree() / 3.
     }
 
     /// Returns the longitude that `self` converts into.
@@ -373,7 +373,7 @@ impl MeshCoord {
     /// # Ok(())}
     /// ```
     pub fn to_longitude(&self) -> f64 {
-        100. + self.to_value()
+        100. + self.to_degree()
     }
 
     /// Returns the smallest [`MeshCoord`] greater than `self`.
@@ -729,7 +729,8 @@ impl MeshNode {
     /// # Ok(())}
     /// ```
     pub fn try_from_meshcode(meshcode: &u32) -> Result<Self> {
-        if meshcode.gt(&99_99_99_99) {
+        #[allow(clippy::inconsistent_digit_grouping)]
+        if meshcode.gt(&9999_99_99) {
             return Err(Error::new_parse_mesh_node(
                 ParseMeshNodeErrorKind::Overflow(None),
             ));
@@ -741,7 +742,7 @@ impl MeshNode {
             };
         }
 
-        // code <= 99_99_9_9_9_9
+        // code <= 9999_99_99
         // lat_first, lng_first <= 99
         let (lat_first, rest) = div_rem!(meshcode, 1_000_000_u32);
         let (lng_first, rest) = div_rem!(rest, 10_000_u32);
@@ -835,14 +836,14 @@ impl MeshNode {
 /// // (The result depends on the selection of the mesh unit)
 /// let point = Point::try_new(36.10377479, 140.087855041, 0.0)?;
 /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
-/// assert_eq!(cell.sw(), &MeshNode::try_from_meshcode(&54401027)?);
-/// assert_eq!(cell.se(), &MeshNode::try_from_meshcode(&54401028)?);
-/// assert_eq!(cell.nw(), &MeshNode::try_from_meshcode(&54401037)?);
-/// assert_eq!(cell.ne(), &MeshNode::try_from_meshcode(&54401038)?);
+/// assert_eq!(cell.south_west(), &MeshNode::try_from_meshcode(&54401027)?);
+/// assert_eq!(cell.south_east(), &MeshNode::try_from_meshcode(&54401028)?);
+/// assert_eq!(cell.north_west(), &MeshNode::try_from_meshcode(&54401037)?);
+/// assert_eq!(cell.north_east(), &MeshNode::try_from_meshcode(&54401038)?);
 ///
 /// // Construct from node
 /// let node: MeshNode = 54401027.try_into()?;
-/// assert_eq!(MeshCell::try_from_sw_node(node, MeshUnit::One)?, cell);
+/// assert_eq!(MeshCell::try_from_node(node, MeshUnit::One)?, cell);
 /// // Construct from meshcode
 /// assert_eq!(MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?, cell);
 ///
@@ -853,11 +854,11 @@ impl MeshNode {
 /// assert_eq!(longitude, 0.028403280000475206);
 ///
 /// // the south-west node of the cell is (0, 0), origin
-/// let (latitude, longitude) = cell.position(&cell.sw().to_point());
+/// let (latitude, longitude) = cell.position(&cell.south_west().to_point());
 /// assert!((0.0 - latitude).abs() < 1e-12);
 /// assert!((0.0 - longitude).abs() < 1e-12);
 /// // the north-east node is (1, 1)
-/// let (latitude, longitude) = cell.position(&cell.ne().to_point());
+/// let (latitude, longitude) = cell.position(&cell.north_east().to_point());
 /// assert!((1.0 - latitude).abs() < 1e-12);
 /// assert!((1.0 - longitude).abs() < 1e-12);
 /// # Ok(())}
@@ -866,13 +867,13 @@ impl MeshNode {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MeshCell {
     /// The south-west node of the cell
-    pub(crate) sw: MeshNode,
+    pub(crate) south_west: MeshNode,
     /// The south-east node of the cell
-    pub(crate) se: MeshNode,
+    pub(crate) south_east: MeshNode,
     /// The north-west node of the cell
-    pub(crate) nw: MeshNode,
+    pub(crate) north_west: MeshNode,
     /// The north-east node of the cell
-    pub(crate) ne: MeshNode,
+    pub(crate) north_east: MeshNode,
     /// The mesh unit which is consistent with nodes
     pub(crate) unit: MeshUnit,
 }
@@ -899,18 +900,18 @@ impl MeshCell {
     /// let ne = MeshNode::try_from_meshcode(&54401038)?;
     /// let cell = MeshCell::try_new(sw.clone(), se.clone(), nw.clone(), ne.clone(), MeshUnit::One)?;
     ///
-    /// assert_eq!(cell.sw(), &sw);
-    /// assert_eq!(cell.se(), &se);
-    /// assert_eq!(cell.nw(), &nw);
-    /// assert_eq!(cell.ne(), &ne);
+    /// assert_eq!(cell.south_west(), &sw);
+    /// assert_eq!(cell.south_east(), &se);
+    /// assert_eq!(cell.north_west(), &nw);
+    /// assert_eq!(cell.north_east(), &ne);
     /// assert_eq!(cell.unit(), &MeshUnit::One);
     /// # Ok(())}
     /// ```
     pub fn try_new(
-        sw: MeshNode,
-        se: MeshNode,
-        nw: MeshNode,
-        ne: MeshNode,
+        south_west: MeshNode,
+        south_east: MeshNode,
+        north_west: MeshNode,
+        north_east: MeshNode,
         unit: MeshUnit,
     ) -> Result<Self> {
         // consistently on unit v.s. the third
@@ -921,35 +922,38 @@ impl MeshCell {
         }
 
         if unit.is_five()
-            && (is_unit_five!(sw) || is_unit_five!(se) || is_unit_five!(nw) || is_unit_five!(ne))
+            && (is_unit_five!(south_west)
+                || is_unit_five!(south_east)
+                || is_unit_five!(north_west)
+                || is_unit_five!(north_east))
         {
             return Err(Error::new_mesh_cell(MeshCellErrorKind::MeshUnit));
         };
 
-        let lat_next = sw
+        let lat_next = south_west
             .latitude
             .try_next_up(&unit)
             .map_err(|_| Error::new_mesh_cell(MeshCellErrorKind::Overflow))?;
-        let lng_next = sw
+        let lng_next = south_west
             .longitude
             .try_next_up(&unit)
             .map_err(|_| Error::new_mesh_cell(MeshCellErrorKind::Overflow))?;
 
-        if lat_next.ne(&nw.latitude) || sw.longitude.ne(&nw.longitude) {
+        if lat_next.ne(&north_west.latitude) || south_west.longitude.ne(&north_west.longitude) {
             return Err(Error::new_mesh_cell(MeshCellErrorKind::NorthWestNode));
         }
-        if sw.latitude.ne(&se.latitude) || lng_next.ne(&se.longitude) {
+        if south_west.latitude.ne(&south_east.latitude) || lng_next.ne(&south_east.longitude) {
             return Err(Error::new_mesh_cell(MeshCellErrorKind::SouthEastNode));
         }
-        if lat_next.ne(&ne.latitude) || lng_next.ne(&ne.longitude) {
+        if lat_next.ne(&north_east.latitude) || lng_next.ne(&north_east.longitude) {
             return Err(Error::new_mesh_cell(MeshCellErrorKind::NorthEastNode));
         }
 
         Ok(Self {
-            sw,
-            se,
-            nw,
-            ne,
+            south_west,
+            south_east,
+            north_west,
+            north_east,
             unit,
         })
     }
@@ -968,11 +972,11 @@ impl MeshCell {
     /// let ne = MeshNode::try_from_meshcode(&54401038)?;
     /// let cell = MeshCell::try_new(sw.clone(), se, nw, ne, MeshUnit::One)?;
     ///
-    /// assert_eq!(cell.sw(), &sw);
+    /// assert_eq!(cell.south_west(), &sw);
     /// # Ok(())}
     /// ```
-    pub fn sw(&self) -> &MeshNode {
-        &self.sw
+    pub fn south_west(&self) -> &MeshNode {
+        &self.south_west
     }
 
     /// Returns the south-east node of `self`.
@@ -983,17 +987,17 @@ impl MeshCell {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
-    /// let sw = MeshNode::try_from_meshcode(&54401027)?;
-    /// let se = MeshNode::try_from_meshcode(&54401028)?;
-    /// let nw = MeshNode::try_from_meshcode(&54401037)?;
-    /// let ne = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(sw, se.clone(), nw, ne, MeshUnit::One)?;
+    /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
+    /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
+    /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
+    /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
+    /// let cell = MeshCell::try_new(south_west, south_east.clone(), north_west, north_east, MeshUnit::One)?;
     ///
-    /// assert_eq!(cell.se(), &se);
+    /// assert_eq!(cell.south_east(), &south_east);
     /// # Ok(())}
     /// ```
-    pub fn se(&self) -> &MeshNode {
-        &self.se
+    pub fn south_east(&self) -> &MeshNode {
+        &self.south_east
     }
 
     /// Returns the north-west node of `self`.
@@ -1004,17 +1008,17 @@ impl MeshCell {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
-    /// let sw = MeshNode::try_from_meshcode(&54401027)?;
-    /// let se = MeshNode::try_from_meshcode(&54401028)?;
-    /// let nw = MeshNode::try_from_meshcode(&54401037)?;
-    /// let ne = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(sw, se, nw.clone(), ne, MeshUnit::One)?;
+    /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
+    /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
+    /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
+    /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
+    /// let cell = MeshCell::try_new(south_west, south_east, north_west.clone(), north_east, MeshUnit::One)?;
     ///
-    /// assert_eq!(cell.nw(), &nw);
+    /// assert_eq!(cell.north_west(), &north_west);
     /// # Ok(())}
     /// ```
-    pub fn nw(&self) -> &MeshNode {
-        &self.nw
+    pub fn north_west(&self) -> &MeshNode {
+        &self.north_west
     }
 
     /// Returns the north-east node of `self`.
@@ -1025,17 +1029,17 @@ impl MeshCell {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
-    /// let sw = MeshNode::try_from_meshcode(&54401027)?;
-    /// let se = MeshNode::try_from_meshcode(&54401028)?;
-    /// let nw = MeshNode::try_from_meshcode(&54401037)?;
-    /// let ne = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(sw, se, nw, ne.clone(), MeshUnit::One)?;
+    /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
+    /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
+    /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
+    /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
+    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east.clone(), MeshUnit::One)?;
     ///
-    /// assert_eq!(cell.ne(), &ne);
+    /// assert_eq!(cell.north_east(), &north_east);
     /// # Ok(())}
     /// ```
-    pub fn ne(&self) -> &MeshNode {
-        &self.ne
+    pub fn north_east(&self) -> &MeshNode {
+        &self.north_east
     }
 
     /// Returns the unit of `self`.
@@ -1046,11 +1050,11 @@ impl MeshCell {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
-    /// let sw = MeshNode::try_from_meshcode(&54401027)?;
-    /// let se = MeshNode::try_from_meshcode(&54401028)?;
-    /// let nw = MeshNode::try_from_meshcode(&54401037)?;
-    /// let ne = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(sw, se, nw, ne, MeshUnit::One)?;
+    /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
+    /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
+    /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
+    /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
+    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
     /// assert_eq!(cell.unit(), &MeshUnit::One);
     /// # Ok(())}
@@ -1076,13 +1080,13 @@ impl MeshCell {
     /// assert_eq!(
     ///     MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?,
     ///     MeshCell::try_new(
-    ///         // sw
+    ///         // south_west
     ///         MeshNode::try_from_meshcode(&54401027)?,
-    ///         // se
+    ///         // south_east
     ///         MeshNode::try_from_meshcode(&54401028)?,
-    ///         // nw
+    ///         // north_west
     ///         MeshNode::try_from_meshcode(&54401037)?,
-    ///         // ne
+    ///         // north_east
     ///         MeshNode::try_from_meshcode(&54401038)?,
     ///         // unit
     ///         MeshUnit::One
@@ -1092,7 +1096,7 @@ impl MeshCell {
     /// ```
     pub fn try_from_meshcode(meshcode: &u32, unit: MeshUnit) -> Result<Self> {
         let sw = MeshNode::try_from_meshcode(meshcode).map_err(Error::new_parse_mesh_cell)?;
-        Self::try_from_sw_node(sw, unit).map_err(Error::new_parse_mesh_cell)
+        Self::try_from_node(sw, unit).map_err(Error::new_parse_mesh_cell)
     }
 
     /// Makes a [`MeshCell`] that has `node` as a south-west node.
@@ -1109,38 +1113,38 @@ impl MeshCell {
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
     /// let code = 54401027;
-    /// let node = MeshNode::try_from_meshcode(&54401027)?;
+    /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
     ///
     /// assert_eq!(
-    ///     MeshCell::try_from_sw_node(node, MeshUnit::One)?,
+    ///     MeshCell::try_from_node(south_west, MeshUnit::One)?,
     ///     MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?
     /// );
     /// # Ok(())}
     /// ```
-    pub fn try_from_sw_node(node: MeshNode, unit: MeshUnit) -> Result<Self> {
-        let next_lat_coord = node
+    pub fn try_from_node(south_west: MeshNode, unit: MeshUnit) -> Result<Self> {
+        let next_lat_coord = south_west
             .latitude
             .try_next_up(&unit)
             .map_err(Error::new_parse_mesh_cell)?;
-        let next_lng_coord = node
+        let next_lng_coord = south_west
             .longitude
             .try_next_up(&unit)
             .map_err(Error::new_parse_mesh_cell)?;
 
         // Call MeshNode::try_new
         // to check next_coord_lat
-        let se = MeshNode::try_new(node.latitude.clone(), next_lng_coord.clone())
+        let south_east = MeshNode::try_new(south_west.latitude.clone(), next_lng_coord.clone())
             .map_err(Error::new_parse_mesh_cell)?;
-        let nw = MeshNode::try_new(next_lat_coord.clone(), node.longitude.clone())
+        let north_west = MeshNode::try_new(next_lat_coord.clone(), south_west.longitude.clone())
             .map_err(Error::new_parse_mesh_cell)?;
-        let ne = MeshNode::try_new(next_lat_coord, next_lng_coord)
+        let north_east = MeshNode::try_new(next_lat_coord, next_lng_coord)
             .map_err(Error::new_parse_mesh_cell)?;
 
         Ok(Self {
-            sw: node,
-            se,
-            nw,
-            ne,
+            south_west,
+            south_east,
+            north_west,
+            north_east,
             unit,
         })
     }
@@ -1187,7 +1191,7 @@ impl MeshCell {
     /// ```
     pub fn try_from_point(point: &Point, unit: MeshUnit) -> Result<Self> {
         let node = MeshNode::try_from_point(point, &unit).map_err(Error::new_parse_mesh_cell)?;
-        Self::try_from_sw_node(node, unit).map_err(Error::new_parse_mesh_cell)
+        Self::try_from_node(node, unit).map_err(Error::new_parse_mesh_cell)
     }
 
     /// Return the position in the cell.
@@ -1207,19 +1211,19 @@ impl MeshCell {
     ///
     /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
     /// // the south-west of the cell is (0, 0), origin
-    /// let (latitude, longitude) = cell.position(&cell.sw().to_point());
+    /// let (latitude, longitude) = cell.position(&cell.south_west().to_point());
     /// assert!((0.0 - latitude).abs() < 1e-12);
     /// assert!((0.0 - longitude).abs() < 1e-12);
     /// // the south-east is (0, 1)
-    /// let (latitude, longitude) = cell.position(&cell.se().to_point());
+    /// let (latitude, longitude) = cell.position(&cell.south_east().to_point());
     /// assert!((0.0 - latitude).abs() < 1e-12);
     /// assert!((1.0 - longitude).abs() < 1e-12);
     /// // the north-west is (1, 0)
-    /// let (latitude, longitude) = cell.position(&cell.nw().to_point());
+    /// let (latitude, longitude) = cell.position(&cell.north_west().to_point());
     /// assert!((1.0 - latitude).abs() < 1e-12);
     /// assert!((0.0 - longitude).abs() < 1e-12);
     /// // the north-east is (1, 1)
-    /// let (latitude, longitude) = cell.position(&cell.ne().to_point());
+    /// let (latitude, longitude) = cell.position(&cell.north_east().to_point());
     /// assert!((1.0 - latitude).abs() < 1e-12);
     /// assert!((1.0 - longitude).abs() < 1e-12);
     /// # Ok(())}
@@ -1248,8 +1252,8 @@ impl MeshCell {
     /// # Ok(())}
     /// ```
     pub fn position(&self, point: &Point) -> (f64, f64) {
-        let lat = point.latitude - self.sw.latitude.to_latitude();
-        let lng = point.longitude - self.sw.longitude.to_longitude();
+        let lat = point.latitude - self.south_west.latitude.to_latitude();
+        let lng = point.longitude - self.south_west.longitude.to_longitude();
 
         // The cell stretches 1.5 times in the latitude direction
         // compared to the longitude direction,
@@ -1821,10 +1825,22 @@ mod tests {
             )
             .unwrap();
 
-            assert_eq!(cell.sw(), &MeshNode::try_from_meshcode(&54401027).unwrap());
-            assert_eq!(cell.se(), &MeshNode::try_from_meshcode(&54401028).unwrap());
-            assert_eq!(cell.nw(), &MeshNode::try_from_meshcode(&54401037).unwrap());
-            assert_eq!(cell.ne(), &MeshNode::try_from_meshcode(&54401038).unwrap());
+            assert_eq!(
+                cell.south_west(),
+                &MeshNode::try_from_meshcode(&54401027).unwrap()
+            );
+            assert_eq!(
+                cell.south_east(),
+                &MeshNode::try_from_meshcode(&54401028).unwrap()
+            );
+            assert_eq!(
+                cell.north_west(),
+                &MeshNode::try_from_meshcode(&54401037).unwrap()
+            );
+            assert_eq!(
+                cell.north_east(),
+                &MeshNode::try_from_meshcode(&54401038).unwrap()
+            );
             assert_eq!(cell.unit(), &MeshUnit::One);
         }
 
@@ -1860,7 +1876,7 @@ mod tests {
         #[test]
         fn test_try_from_sw_node() {
             assert_eq!(
-                MeshCell::try_from_sw_node(
+                MeshCell::try_from_node(
                     MeshNode::try_from_meshcode(&54401027).unwrap(),
                     MeshUnit::One
                 )
@@ -1875,7 +1891,7 @@ mod tests {
                 .unwrap()
             );
             assert_eq!(
-                MeshCell::try_from_sw_node(
+                MeshCell::try_from_node(
                     MeshNode::try_from_meshcode(&54401005).unwrap(),
                     MeshUnit::Five
                 )
@@ -1891,7 +1907,7 @@ mod tests {
             );
 
             // error
-            assert!(MeshCell::try_from_sw_node(
+            assert!(MeshCell::try_from_node(
                 MeshNode::try_from_meshcode(&54401027).unwrap(),
                 MeshUnit::Five
             )

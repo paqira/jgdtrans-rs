@@ -605,7 +605,7 @@ impl Transformer {
         &self,
         cell: &MeshCell,
     ) -> Result<(&Parameter, &Parameter, &Parameter, &Parameter)> {
-        let meshcode = cell.sw.to_meshcode();
+        let meshcode = cell.south_west.to_meshcode();
         let sw = self
             .parameter
             .get(&meshcode)
@@ -616,7 +616,7 @@ impl Transformer {
                 },
             ))?;
 
-        let meshcode = cell.se.to_meshcode();
+        let meshcode = cell.south_east.to_meshcode();
         let se = self
             .parameter
             .get(&meshcode)
@@ -627,7 +627,7 @@ impl Transformer {
                 },
             ))?;
 
-        let meshcode = cell.nw.to_meshcode();
+        let meshcode = cell.north_west.to_meshcode();
         let nw = self
             .parameter
             .get(&meshcode)
@@ -638,7 +638,7 @@ impl Transformer {
                 },
             ))?;
 
-        let meshcode = cell.ne.to_meshcode();
+        let meshcode = cell.north_east.to_meshcode();
         let ne = self
             .parameter
             .get(&meshcode)

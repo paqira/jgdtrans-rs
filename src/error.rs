@@ -44,10 +44,11 @@ impl Error {
 }
 
 impl Error {
+    #[cold]
     pub(crate) fn new(err: ErrorKind) -> Self {
         Self { err: Box::new(err) }
     }
-
+    #[cold]
     pub(crate) fn new_parse_par(
         start: usize,
         end: usize,
@@ -63,37 +64,47 @@ impl Error {
             end,
         })
     }
+    #[cold]
     pub(crate) fn new_parse_mesh_coord(kind: ParseMeshCoordErrorKind, axis: ErrorAxis) -> Self {
         Self::new(ErrorKind::ParseMeshCoordError { kind, axis })
     }
+    #[cold]
     pub(crate) fn new_parse_mesh_node(kind: ParseMeshNodeErrorKind) -> Self {
         Self::new(ErrorKind::ParseMeshNodeError { kind })
     }
+    #[cold]
     pub(crate) fn new_parse_mesh_cell(source: Error) -> Self {
         Self::new(ErrorKind::ParseMeshCellError(source))
     }
+    #[cold]
     pub(crate) fn new_parse_dms(kind: ParseDMSErrorKind) -> Self {
         Self::new(ErrorKind::ParseDMSError { kind })
     }
+    #[cold]
     pub(crate) fn new_try_from_dms(kind: TryFromDMSErrorKind) -> Self {
         Self::new(ErrorKind::TryFromDMSError { kind })
     }
-
+    #[cold]
     pub(crate) fn new_point(axis: ErrorAxis, kind: PointErrorKind) -> Self {
         Self::new(ErrorKind::PointError { axis, kind })
     }
+    #[cold]
     pub(crate) fn new_transformation(kind: TransformErrorKind) -> Self {
         Self::new(ErrorKind::TransformError { kind })
     }
+    #[cold]
     pub(crate) fn new_mesh_coord(kind: MeshCoordErrorKind) -> Self {
         Self::new(ErrorKind::MeshCoordError { kind })
     }
+    #[cold]
     pub(crate) fn new_mesh_node(kind: MeshNodeErrorKind) -> Self {
         Self::new(ErrorKind::MeshNodeError { kind })
     }
+    #[cold]
     pub(crate) fn new_mesh_cell(kind: MeshCellErrorKind) -> Self {
         Self::new(ErrorKind::MeshCellError { kind })
     }
+    #[cold]
     pub(crate) fn new_dms(kind: DMSErrorKind) -> Self {
         Self::new(ErrorKind::DMSError { kind })
     }

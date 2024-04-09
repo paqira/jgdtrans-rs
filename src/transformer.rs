@@ -1296,7 +1296,6 @@ mod tests {
             assert!((36.103774792 - actual.latitude).abs() < DELTA);
             assert!((140.087855042 - actual.longitude).abs() < DELTA);
             assert!((-0.096 - actual.altitude).abs() < 0.001);
-            println!("{:?}", actual);
         }
 
         #[test]

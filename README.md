@@ -98,4 +98,4 @@ MIT or Apache-2.0
 2. _TKY2JGD for Windows Ver.1.3.79_ (reference implementation): <https://www.gsi.go.jp/sokuchikijun/tky2jgd_download.html>,
    released under [国土地理院コンテンツ利用規約](https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html)
    which compatible to CC BY 4.0.
-3. Python implementation: <https://github.com/paqira/JGDtrans-py>.
+3. Python implementation: <https://github.com/paqira/jgdtrans-py>.

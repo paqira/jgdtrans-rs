@@ -146,7 +146,7 @@
 //!       released under [国土地理院コンテンツ利用規約](https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html)
 //!       which compatible to CC BY 4.0.
 //!
-//! [^4]: Python implementation: <https://github.com/paqira/JGDtrans-py>.
+//! [^4]: Python implementation: <https://github.com/paqira/jgdtrans-py>.
 #![feature(float_next_up_down)]
 
 #[doc(inline)]

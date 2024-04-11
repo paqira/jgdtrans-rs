@@ -540,20 +540,55 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_normalize_latitude() {
-        assert_eq!(normalize_latitude(&35.0), 35.0);
-        assert_eq!(normalize_latitude(&100.0), 80.0);
-        assert_eq!(normalize_latitude(&190.0), -10.0);
-        assert_eq!(normalize_latitude(&-100.0), -80.0);
-        assert_eq!(normalize_latitude(&-190.0), 10.0);
-        assert!(normalize_latitude(&f64::NAN).is_nan());
-    }
+    fn test_normalize() {
+        for (e, v) in [
+            (0., 0.),
+            (-0., -0.),
+            (20.0, 20.0),
+            (-20.0, -20.0),
+            (0.0, 360.0),
+            (-90.0, 270.0),
+            (0.0, 180.0),
+            (90.0, 90.0),
+            (-0.0, -360.0),
+            (90.0, -270.0),
+            (-0.0, -180.0),
+            (-90.0, -90.0),
+            (20.0, 380.),
+            (-70.0, 290.),
+            (-20.0, 200.),
+            (70.0, 110.),
+            (-20.0, -380.),
+            (70.0, -290.),
+            (20.0, -200.),
+            (-70.0, -110.),
+        ] {
+            assert_eq!(Point::new(v, 0.0, 0.0).normalize(), Point::new(e, 0.0, 0.0));
+        }
 
-    #[test]
-    fn test_normalize_longitude() {
-        assert_eq!(normalize_longitude(&145.0), 145.0);
-        assert_eq!(normalize_longitude(&190.0), -170.0);
-        assert_eq!(normalize_longitude(&-190.0), 170.0);
-        assert!(normalize_longitude(&f64::NAN).is_nan())
+        for (e, v) in [
+            (0.0, 0.0),
+            (-0.0, -0.0),
+            (20.0, 20.0),
+            (-20.0, -20.0),
+            (0.0, 360.0),
+            (-90.0, 270.0),
+            (180.0, 180.0),
+            (90.0, 90.0),
+            (-0.0, -360.0),
+            (90.0, -270.0),
+            (-180.0, -180.0),
+            (-90.0, -90.0),
+            (20.0, 380.),
+            (-70.0, 290.),
+            (-160.0, 200.),
+            (110.0, 110.),
+            (-20.0, -380.),
+            (70.0, -290.),
+            (160.0, -200.),
+            (-110.0, -110.),
+        ] {
+            assert_eq!(Point::new(0.0, v, 0.0).normalize(), Point::new(0.0, e, 0.0));
+        }
     }
 }

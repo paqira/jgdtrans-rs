@@ -119,7 +119,7 @@ impl Parameter {
 /// assert_eq!(correction.latitude, 1.);
 /// assert_eq!(correction.longitude, 2.);
 /// assert_eq!(correction.altitude, 3.);
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Correction {
     /// The latitude correction \[deg\].

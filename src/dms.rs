@@ -37,7 +37,7 @@ pub fn from_dms(s: &str) -> Option<f64> {
 }
 
 /// Signature of DMS
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Sign {
     /// Plus
     Plus,
@@ -78,7 +78,7 @@ pub enum Sign {
 /// assert!((0.58925 - latitude.fract()).abs() < 1e-10);
 /// # Ok(())}
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct DMS {
     sign: Sign,
     degree: u8,

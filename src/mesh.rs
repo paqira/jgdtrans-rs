@@ -87,7 +87,7 @@ impl MeshUnit {
 /// assert!(coord.try_next_up(&MeshUnit::Five).is_err());
 /// # Ok(())}
 /// ```
-#[derive(Debug, PartialEq, PartialOrd, Eq, Hash, Ord, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MeshCoord {
     /// takes 0 to 99 inclusive
@@ -520,7 +520,7 @@ impl MeshCoord {
 /// assert_eq!(node.to_point(), Point::try_new(36.1, 140.0875, 0.0)?);
 /// # Ok(())}
 /// ```
-#[derive(Debug, PartialEq, PartialOrd, Eq, Hash, Ord, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MeshNode {
     /// The mesh coord of latitude

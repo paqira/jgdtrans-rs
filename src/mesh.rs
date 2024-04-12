@@ -87,7 +87,7 @@ impl MeshUnit {
 /// assert!(coord.try_next_up(&MeshUnit::Five).is_err());
 /// # Ok(())}
 /// ```
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MeshCoord {
     /// takes 0 to 99 inclusive

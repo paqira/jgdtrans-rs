@@ -3,7 +3,7 @@
 //! Unofficial coordinate transformer by _Gridded Correction Parameter_
 //! which Geospatial Information Authority of Japan (GIAJ) distributing [^1].
 //!
-//! 国土地理院が公開しているパラメータファイル（par ファイル）による座標変換（順逆変換）を提供します [^1]。
+//! <span lang="ja">国土地理院が公開しているパラメータファイル（par ファイル）による座標変換（順逆変換）を提供します [^1]。</span>
 //!
 //! ```no_run
 //! use std::error::Error;
@@ -70,7 +70,7 @@
 //!
 //! This package does not contain parameter files, download it from GIAJ [^7].
 //!
-//! このパッケージはパラメータファイルを提供しません。公式サイトよりダウンロードしてください [^2]。
+//! <span lang="ja">このパッケージはパラメータファイルを提供しません。公式サイトよりダウンロードしてください [^2]。</span>
 //!
 //! We use _TKY2JGD for Windows Ver.1.3.79_ [^3] as a reference.
 //!
@@ -78,7 +78,7 @@
 //!
 //! ## Par File
 //!
-//! We provide API to parse par file, [`Transformer::from_par`] or [`par::from_str`].
+//! We provide APIs to parse par file, [`Transformer::from_par`] and [`par::from_str`].
 //!
 //! ```no_run
 //! use std::fs;
@@ -89,7 +89,7 @@
 //! let s = fs::read_to_string("SemiDyna2023.par").expect("file not found 'SemiDyna2023.par'");
 //! let tf = Transformer::from_par(&s, Format::SemiDynaEXE)?;
 //! // This is equivalent to:
-//! // let tf = jgdtrans::par::from_str(&s, Format::SemiDynaEXE)?;
+//! // let tf = jgdtrans::from_str(&s, Format::SemiDynaEXE)?;
 //! # Ok(())}
 //! ```
 //!
@@ -131,7 +131,7 @@
 //! }
 //! ```
 //!
-//! [^1]: Geospatial Information Authority of Japan (GIAJ, 国土地理院): <https://www.gsi.go.jp/>
+//! [^1]: Geospatial Information Authority of Japan (GIAJ, <span lang="ja">国土地理院</span>): <https://www.gsi.go.jp/>
 //!       (English) <https://www.gsi.go.jp/ENGLISH/>.
 //!
 //! [^2]: TKY2JGD: <https://www.gsi.go.jp/sokuchikijun/tky2jgd_download.html>;
@@ -141,7 +141,7 @@
 //!
 //! [^3]: TKY2JGD for Windows Ver.1.3.79 (reference implementation):
 //!       <https://www.gsi.go.jp/sokuchikijun/tky2jgd_download.html>
-//!       released under [国土地理院コンテンツ利用規約](https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html)
+//!       released under [<span lang="ja">国土地理院コンテンツ利用規約</span>](https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html)
 //!       which compatible to CC BY 4.0.
 //!
 //! [^4]: Python implementation: <https://github.com/paqira/jgdtrans-py>.
@@ -150,7 +150,7 @@
 #[doc(inline)]
 pub use error::{Error, Result};
 #[doc(inline)]
-pub use par::Format;
+pub use par::{from_str, Format};
 #[doc(inline)]
 pub use point::Point;
 #[doc(inline)]

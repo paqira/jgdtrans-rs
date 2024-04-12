@@ -89,7 +89,7 @@ pub fn from_str(s: &str, format: Format) -> Result<Transformer> {
 /// It should fill by zero for the parameters of remaining transformation
 /// in areas where it supports only part of the transformation as a result of composition
 /// in order to support whole area of each parameter,
-/// e.g. altitude of Chubu (中部地方) on the composition of
+/// e.g. altitude of Chubu (<span lang="ja"></span>) on the composition of
 /// `touhokutaiheiyouoki2011.par` and `touhokutaiheiyouoki2011_h.par`.
 ///
 /// The composite data should be in the same format as SemiDynaEXE.

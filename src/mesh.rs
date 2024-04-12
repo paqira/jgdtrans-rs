@@ -507,7 +507,7 @@ impl MeshCoord {
 /// # use jgdtrans::mesh::*;
 /// # fn main() -> Result<()> {
 /// // Construct from latitude and longitude, altitude ignores
-/// let point = Point::try_new(36.10377479, 140.087855041, 0.0)?;
+/// let point = Point::new(36.10377479, 140.087855041, 0.0);
 /// let node = MeshNode::try_from_point(&point, &MeshUnit::One)?;
 /// assert_eq!(node.to_meshcode(), 54401027);
 /// // The result depends on the selection of the mesh unit
@@ -517,7 +517,7 @@ impl MeshCoord {
 /// // Construct from meshcode
 /// let node: MeshNode = 54401027.try_into()?;
 /// // The position where the MeshNode locates
-/// assert_eq!(node.to_point(), Point::try_new(36.1, 140.0875, 0.0)?);
+/// assert_eq!(node.to_point(), Point::new(36.1, 140.0875, 0.0));
 /// # Ok(())}
 /// ```
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
@@ -673,7 +673,7 @@ impl MeshNode {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
-    /// let point = Point::try_new(36.10377479, 140.087855041, 0.0)?;
+    /// let point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// assert_eq!(
     ///     MeshNode::try_from_point(&point, &MeshUnit::One)?,
@@ -808,7 +808,7 @@ impl MeshNode {
     ///     MeshCoord::try_new(40, 0, 7)?
     /// )?;
     ///
-    /// assert_eq!(node.to_point(), Point::try_new(36.1, 140.0875, 0.0)?);
+    /// assert_eq!(node.to_point(), Point::new(36.1, 140.0875, 0.0));
     /// # Ok(())}
     /// ```
     pub fn to_point(&self) -> Point {
@@ -834,7 +834,7 @@ impl MeshNode {
 /// # fn main() -> Result<()> {
 /// // Construct from latitude and longitude, altitude ignores
 /// // (The result depends on the selection of the mesh unit)
-/// let point = Point::try_new(36.10377479, 140.087855041, 0.0)?;
+/// let point = Point::new(36.10377479, 140.087855041, 0.0);
 /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
 /// assert_eq!(cell.south_west(), &MeshNode::try_from_meshcode(&54401027)?);
 /// assert_eq!(cell.south_east(), &MeshNode::try_from_meshcode(&54401028)?);
@@ -1165,7 +1165,7 @@ impl MeshCell {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
-    /// let point: Point = Point::try_new(36.10377479, 140.087855041, 0.0)?;
+    /// let point: Point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// assert_eq!(
     ///     MeshCell::try_from_point(&point, MeshUnit::One)?,
@@ -1207,7 +1207,7 @@ impl MeshCell {
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
     /// // sample latitude and longitude
-    /// let point = Point::try_new(36.10377479, 140.087855041, 0.0)?;
+    /// let point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
     /// // the south-west of the cell is (0, 0), origin
@@ -1235,7 +1235,7 @@ impl MeshCell {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
-    /// let point = Point::try_new(36.10377479, 140.087855041, 0.0)?;
+    /// let point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
     /// assert_eq!(
@@ -1572,7 +1572,7 @@ mod tests {
 
         #[test]
         fn test_try_from_point() {
-            let point = Point::try_new(36.103774791666666, 140.08785504166664, 10.0).unwrap();
+            let point = Point::new(36.103774791666666, 140.08785504166664, 10.0);
 
             assert_eq!(
                 MeshNode::try_from_point(&point, &MeshUnit::One).unwrap(),
@@ -1644,7 +1644,7 @@ mod tests {
                 )
                 .unwrap()
                 .to_point(),
-                Point::try_new(36.1, 140.0875, 0.0).unwrap()
+                Point::new(36.1, 140.0875, 0.0)
             )
         }
 
@@ -1916,7 +1916,7 @@ mod tests {
 
         #[test]
         fn test_try_from_point() {
-            let point = Point::try_new(36.10377479, 140.087855041, 10.0).unwrap();
+            let point = Point::new(36.10377479, 140.087855041, 10.0);
 
             assert_eq!(
                 MeshCell::try_from_point(&point, MeshUnit::One).unwrap(),
@@ -1944,7 +1944,7 @@ mod tests {
 
         #[test]
         fn test_position() {
-            let point = Point::try_new(36.10377479, 140.087855041, 10.0).unwrap();
+            let point = Point::new(36.10377479, 140.087855041, 10.0);
 
             let cell = MeshCell::try_from_point(&point, MeshUnit::One).unwrap();
             assert_eq!(

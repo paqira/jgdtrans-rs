@@ -41,14 +41,14 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// # use jgdtrans::transformer::Correction;
 /// # fn main() -> Result<()> {
 /// // Construct
-/// let point = Point::try_new(35.0, 145.0, 5.0)?;
+/// let point = Point::new(35.0, 145.0, 5.0);
 /// assert_eq!(point.latitude(), &35.0);
 /// assert_eq!(point.longitude(), &145.0);
 /// assert_eq!(point.altitude(), &5.0);
 ///
 /// // Add/sub Correction
 /// let result = &point + Correction::new(1.0, 1.0, 1.0);
-/// assert_eq!(result, Point::try_new(36.0, 146.0, 6.0)?);
+/// assert_eq!(result, Point::new(36.0, 146.0, 6.0));
 /// let result = &result - Correction::new(1.0, 1.0, 1.0);
 /// assert_eq!(result, point);
 /// # Ok(())}
@@ -64,21 +64,17 @@ pub struct Point {
     pub(crate) altitude: f64,
 }
 
-impl TryFrom<(f64, f64)> for Point {
-    type Error = Error;
-
-    /// see [`Point::try_new()`], defaulting 0.0 for altitude
-    fn try_from(rhs: (f64, f64)) -> Result<Self> {
-        Self::try_new(rhs.0, rhs.1, 0.0)
+impl From<(f64, f64)> for Point {
+    /// see [`Point::new()`], defaulting 0.0 for altitude
+    fn from(rhs: (f64, f64)) -> Self {
+        Self::new(rhs.0, rhs.1, 0.0)
     }
 }
 
-impl TryFrom<(f64, f64, f64)> for Point {
-    type Error = Error;
-
-    /// see [`Point::try_new()`]
-    fn try_from(rhs: (f64, f64, f64)) -> Result<Self> {
-        Self::try_new(rhs.0, rhs.1, rhs.2)
+impl From<(f64, f64, f64)> for Point {
+    /// see [`Point::new()`]
+    fn from(rhs: (f64, f64, f64)) -> Self {
+        Self::new(rhs.0, rhs.1, rhs.2)
     }
 }
 
@@ -236,7 +232,7 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # fn main() -> Result<()> {
-    /// let point = Point::try_new(35.0, 145.0, 5.0)?;
+    /// let point = Point::new(35.0, 145.0, 5.0);
     /// assert_eq!(point.latitude(), &35.0);
     /// assert_eq!(point.longitude(), &145.0);
     /// assert_eq!(point.altitude(), &5.0);
@@ -323,7 +319,7 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # fn main() -> Result<()> {
-    /// let point = Point::try_new(35.0, 145.0, 5.0)?;
+    /// let point = Point::new(35.0, 145.0, 5.0);
     ///
     /// assert_eq!(point.latitude(), &35.0);
     /// # Ok(())}
@@ -339,7 +335,7 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # fn main() -> Result<()> {
-    /// let point = Point::try_new(35.0, 145.0, 5.0)?;
+    /// let point = Point::new(35.0, 145.0, 5.0);
     ///
     /// assert_eq!(point.longitude(), &145.0);
     /// # Ok(())}
@@ -355,7 +351,7 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # fn main() -> Result<()> {
-    /// let point = Point::try_new(35.0, 145.0, 5.0)?;
+    /// let point = Point::new(35.0, 145.0, 5.0);
     ///
     /// assert_eq!(point.altitude(), &5.0);
     /// # Ok(())}
@@ -456,7 +452,7 @@ impl Point {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
     /// # fn main() -> Result<()> {
-    /// let point = Point::try_new(36.10377479, 140.087855041, 50.0)?;
+    /// let point = Point::new(36.10377479, 140.087855041, 50.0);
     ///
     /// assert_eq!(
     ///     point.try_to_meshcode(&MeshUnit::One)?,
@@ -487,7 +483,7 @@ impl Point {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
     /// # fn main() -> Result<()> {
-    /// let point = Point::try_new(36.10377479, 140.087855041, 5.0)?;
+    /// let point = Point::new(36.10377479, 140.087855041, 5.0);
     ///
     /// assert_eq!(
     ///     point.try_to_node(&MeshUnit::One)?,
@@ -516,7 +512,7 @@ impl Point {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshCell, MeshUnit};
     /// # fn main() -> Result<()> {
-    /// let point = Point::try_new(36.10377479, 140.087855041, 10.0)?;
+    /// let point = Point::new(36.10377479, 140.087855041, 10.0);
     ///
     /// assert_eq!(
     ///     point.try_to_cell(MeshUnit::One)?,
@@ -588,5 +584,10 @@ mod tests {
         ] {
             assert_eq!(Point::new(0.0, v, 0.0).normalize(), Point::new(0.0, e, 0.0));
         }
+
+        let actual = Point::new(f64::NAN, f64::NAN, f64::NAN).normalize();
+        assert!(actual.latitude().is_nan());
+        assert!(actual.longitude().is_nan());
+        assert!(actual.altitude().is_nan());
     }
 }

@@ -229,7 +229,7 @@ pub struct Stats {
 /// );
 ///
 /// // forward transformation
-/// let origin = Point::try_new(36.10377479, 140.087855041, 2.34)?;
+/// let origin = Point::new(36.10377479, 140.087855041, 2.34);
 /// let result = tf.forward(&origin)?;
 /// assert_eq!(result.latitude(), &36.103773017086695);
 /// assert_eq!(result.longitude(), &140.08785924333452);
@@ -475,7 +475,7 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// let origin = Point::try_new(36.10377479, 140.087855041, 2.34)?;
+    /// let origin = Point::new(36.10377479, 140.087855041, 2.34);
     /// let result = tf.forward(&origin)?;
     /// assert_eq!(result.latitude(), &36.103773017086695);
     /// assert_eq!(result.longitude(), &140.08785924333452);
@@ -518,7 +518,7 @@ impl Transformer {
     /// );
     ///
     /// // origin is forward trans. from 36.10377479, 140.087855041, 2.34
-    /// let origin = Point::try_new(36.103773017086695, 140.08785924333452, 2.4363138578103)?;
+    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
     /// let result = tf.backward(&origin)?;
     /// assert_eq!(result.latitude(), &36.10377479000002);
     /// assert_eq!(result.longitude(), &140.087855041);
@@ -560,7 +560,7 @@ impl Transformer {
     ///
     /// // origin is forward trans. from 36.10377479, 140.087855041, 2.34
     /// // In this case, no error remains on latitude and longitude
-    /// let origin = Point::try_new(36.103773017086695, 140.08785924333452, 2.4363138578103)?;
+    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
     /// let result = tf.backward_safe(&origin)?;
     /// assert_eq!(result.latitude(), &36.10377479);
     /// assert_eq!(result.longitude(), &140.087855041);
@@ -646,7 +646,7 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// let origin = Point::try_new(36.10377479, 140.087855041, 0.0)?;
+    /// let origin = Point::new(36.10377479, 140.087855041, 0.0);
     /// let corr = tf.forward_corr(&origin)?;
     /// assert_eq!(corr.latitude, -1.7729133100878255e-6);
     /// assert_eq!(corr.longitude, 4.202334510058886e-6);
@@ -722,7 +722,7 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// let origin = Point::try_new(36.103773017086695, 140.08785924333452, 0.0)?;
+    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
     /// let corr = tf.backward_corr(&origin)?;
     /// assert_eq!(corr.latitude, 1.7729133219831587e-6);
     /// assert_eq!(corr.longitude, -4.202334509042613e-6);
@@ -777,7 +777,7 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// let origin = Point::try_new(36.103773017086695, 140.08785924333452, 0.0)?;
+    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
     /// let corr = tf.backward_safe_corr(&origin)?;
     /// assert_eq!(corr.latitude, 1.772913310099049e-6);
     /// assert_eq!(corr.longitude, -4.202334510033827e-6);

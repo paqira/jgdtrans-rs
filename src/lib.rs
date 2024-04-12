@@ -9,12 +9,12 @@
 //! use std::error::Error;
 //! use std::fs;
 //!
-//! use jgdtrans::{Point, SemiDynaEXE};
+//! use jgdtrans::{Format, Point, Transformer};
 //!
 //! fn main() -> Result<(), Box<dyn Error>> {
 //!     // Deserialize par-formatted file, e.g. SemiDyna2023.par
 //!     let s = fs::read_to_string("SemiDyna2023.par").expect("file not found 'SemiDyna2023.par'");
-//!     let tf = SemiDynaEXE::from_str(&s)?;
+//!     let tf = Transformer::from_par(&s, Format::SemiDynaEXE)?;
 //!
 //!     // Makes the origin of transformation
 //!     let origin = Point::try_new(35.0, 135.0, 2.34)?;
@@ -76,45 +76,43 @@
 //!
 //! # Serialization and Deserialization
 //!
-//! Use following APIs to deserialize par file,
+//! ## Par File
 //!
-//! - [`TKY2JGD::from_str`],
-//! - [`PatchJGD::from_str`],
-//! - [`PatchJGD_H::from_str`],
-//! - [`PatchJGD_HV::from_str`],
-//! - [`HyokoRev::from_str`],
-//! - [`SemiDynaEXE::from_str`],
-//! - [`geonetF3::from_str`]
-//! - and [`ITRF2014::from_str`],
+//! We provide API to parse par file, [`Transformer::from_par`] or [`par::from_str`].
 //!
 //! ```no_run
 //! use std::fs;
 //! # use std::error::Error;
-//! use jgdtrans::SemiDynaEXE;
+//! use jgdtrans::{Format, Transformer};
 //!
 //! # fn main() -> Result<(), Box<dyn Error>> {
 //! let s = fs::read_to_string("SemiDyna2023.par").expect("file not found 'SemiDyna2023.par'");
-//! let tf = SemiDynaEXE::from_str(&s)?;
+//! let tf = Transformer::from_par(&s, Format::SemiDynaEXE)?;
+//! // This is equivalent to:
+//! // let tf = jgdtrans::par::from_str(&s, Format::SemiDynaEXE)?;
 //! # Ok(())}
 //! ```
 //!
-//! In addition, it supports (de)serialization by [`serde` crate](https://crates.io/crates/serde)
+//! ## Json File
+//!
+//! It supports (de)serialization by [`serde` crate](https://crates.io/crates/serde)
 //! for all `struct` including [`Transformer`] (deserialized object of par-formatted data)
 //! only if the feature `serde` is enabled.
 //! We show a (de)serialization example to/from json;
 //!
 //! ```
 //! use std::error::Error;
-//! use jgdtrans::{
-//!     Transformer,
-//!     transformer::{TransformerBuilder, Parameter},
-//!     mesh::MeshUnit
-//! };
 //! use serde_json;
+//! use jgdtrans::{
+//!     Format,
+//!     Parameter,
+//!     Transformer,
+//!     TransformerBuilder,
+//! };
 //!
 //! fn main() -> serde_json::Result<()> {
 //!     // Construct a Transformer by TransformerBuilder
-//!     let tf = TransformerBuilder::new(MeshUnit::One)
+//!     let tf = TransformerBuilder::new(Format::TKY2JGD)
 //!         .parameter(12345678, Parameter::new(1., 2., 3.))
 //!         .build();
 //!
@@ -122,7 +120,7 @@
 //!     let json = serde_json::to_string(&tf)?;
 //!     assert_eq!(
 //!         json,
-//!         r#"{"unit":1,"parameter":{"12345678":{"latitude":1.0,"longitude":2.0,"altitude":3.0}}}"#
+//!         r#"{"format":"TKY2JGD","parameter":{"12345678":{"latitude":1.0,"longitude":2.0,"altitude":3.0}}}"#
 //!     );
 //!
 //!     // Deserialize from json
@@ -152,15 +150,15 @@
 #[doc(inline)]
 pub use error::{Error, Result};
 #[doc(inline)]
-pub use parser::*;
+pub use par::Format;
 #[doc(inline)]
 pub use point::Point;
 #[doc(inline)]
-pub use transformer::{Format, Transformer};
+pub use transformer::{Parameter, Transformer, TransformerBuilder};
 
 pub mod dms;
 pub mod error;
 pub mod mesh;
-pub mod parser;
+pub mod par;
 pub mod point;
 pub mod transformer;

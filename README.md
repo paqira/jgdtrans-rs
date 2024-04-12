@@ -4,12 +4,12 @@
 use std::error::Error;
 use std::fs;
 
-use jgdtrans::{Point, SemiDynaEXE};
+use jgdtrans::{Point, Transformer, Format};
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Deserialize par-formatted file, e.g. SemiDyna2023.par
     let s = fs::read_to_string("SemiDyna2023.par").expect("file not found 'SemiDyna2023.par'");
-    let tf = SemiDynaEXE::from_str(&s)?;
+    let tf = Transformer::from_par(&s, Format::SemiDynaEXE)?;
 
     // Make the origin of transformation
     let origin = Point::try_new(35.0, 135.0, 2.34)?;

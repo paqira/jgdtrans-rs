@@ -4,8 +4,8 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{MeshCellCorner, TransformErrorKind};
-use crate::mesh::{MeshCell, MeshUnit};
-use crate::{Error, Point, Result};
+use crate::mesh::MeshCell;
+use crate::{Error, Format, Point, Result};
 
 #[inline]
 fn bilinear_interpolation(sw: &f64, se: &f64, nw: &f64, ne: &f64, lat: &f64, lng: &f64) -> f64 {
@@ -28,26 +28,6 @@ fn ksum(vs: &[f64]) -> f64 {
         sum = t
     }
     sum + c
-}
-
-/// Represents format of par-formatted text.
-#[derive(Debug, Eq, PartialEq, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum Format {
-    TKY2JGD,
-    PatchJGD,
-    #[allow(non_camel_case_types)]
-    PatchJGD_H,
-    /// Notes, GIAJ does not distribute such file,
-    /// see  [`PatchJGD_HV`](crate::PatchJGD_HV) for detail.
-    #[allow(non_camel_case_types)]
-    PatchJGD_HV,
-    HyokoRev,
-    #[allow(non_camel_case_types)]
-    SemiDynaEXE,
-    #[allow(non_camel_case_types)]
-    geonetF3,
-    ITRF2014,
 }
 
 /// The parameter triplet.
@@ -239,7 +219,7 @@ pub struct Stats {
 /// # fn main() -> Result<()> {
 /// // from SemiDynaEXE2023.par
 /// let tf = Transformer::new(
-///     MeshUnit::Five,
+///     Format::SemiDynaEXE,
 ///     [
 ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
 ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -259,8 +239,8 @@ pub struct Stats {
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Transformer {
-    /// The mesh unit.
-    pub unit: MeshUnit,
+    /// The format of par file.
+    pub format: Format,
     /// The transformation parameter.
     ///
     /// The entry represents single line of par-formatted file's parameter section,
@@ -285,13 +265,15 @@ impl Transformer {
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     MeshUnit::Five,
+    ///     Format::SemiDynaEXE,
     ///     [
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///     ].into()
     /// );
-    /// assert_eq!(tf.unit, MeshUnit::Five);
+    ///
+    /// assert_eq!(tf.format, Format::SemiDynaEXE);
+    /// assert_eq!(tf.format.unit(), MeshUnit::Five);
     /// assert_eq!(
     ///     tf.parameter,
     ///     [
@@ -302,9 +284,9 @@ impl Transformer {
     /// assert_eq!(tf.description, None);
     /// # Ok(())}
     /// ```
-    pub fn new(unit: MeshUnit, parameter: BTreeMap<u32, Parameter>) -> Self {
+    pub fn new(format: Format, parameter: BTreeMap<u32, Parameter>) -> Self {
         Self {
-            unit,
+            format,
             parameter,
             description: None,
         }
@@ -321,22 +303,23 @@ impl Transformer {
     /// # use std::collections::BTreeMap;
     /// # fn main() -> Result<()> {
     /// let tf = Transformer::new_with_description(
-    ///     MeshUnit::One,
+    ///     Format::TKY2JGD,
     ///     BTreeMap::new(),
     ///     "My Parameter".to_string()
     /// );
-    /// assert_eq!(tf.unit, MeshUnit::One);
+    /// assert_eq!(tf.format, Format::TKY2JGD);
+    /// assert_eq!(tf.format.unit(), MeshUnit::One);
     /// assert_eq!(tf.parameter, BTreeMap::new());
     /// assert_eq!(tf.description, Some("My Parameter".to_string()));
     /// # Ok(())}
     /// ```
     pub fn new_with_description(
-        unit: MeshUnit,
+        format: Format,
         parameter: BTreeMap<u32, Parameter>,
         description: String,
     ) -> Self {
         Self {
-            unit,
+            format,
             parameter,
             description: Some(description),
         }
@@ -356,14 +339,14 @@ impl Transformer {
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// // deserialize SemiDynaEXE par file, e.g. SemiDyna2023.par
     /// let s = fs::read_to_string("SemiDyna2023.par")?;
-    /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
+    /// let tf = Transformer::from_par(&s, Format::SemiDynaEXE)?;
     ///
-    /// // prints first 16 lines
-    /// println!("{:?}", tf.description);
-    /// // prints MeshUnit::Five (namely, the mesh unit is 5)
-    /// println!("{:?}", tf.unit);
+    /// // prints Format::SemiDynaEXE
+    /// println!("{:?}", tf.format);
     /// // prints all parameter (be careful, long display)
     /// println!("{:?}", tf.parameter);
+    /// // prints first 16 lines
+    /// println!("{:?}", tf.description);
     ///
     /// // transform coordinate
     /// let point: Point = (35.0, 135.0).try_into()?;
@@ -379,7 +362,7 @@ impl Transformer {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::transformer::{Format, Parameter};
+    /// # use jgdtrans::transformer::Parameter;
     /// # fn main() -> Result<()> {
     /// let s = r"<15 lines>
     /// # ...
@@ -398,25 +381,15 @@ impl Transformer {
     /// # ...
     /// MeshCode dB(sec)  dL(sec) dH(m)
     /// 12345678   0.00001   0.00002   0.00003";
-    /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
+    /// let tf = Transformer::from_par(&s, Format::SemiDynaEXE)?;
     /// assert_eq!(
     ///     tf.parameter.get(&12345678),
     ///     Some(&Parameter {latitude: 0.00001, longitude: 0.00002, altitude: 0.00003})
     /// );
     /// # Ok(())}
     /// ```
-    pub fn from_str(s: &str, format: Format) -> Result<Self> {
-        use crate::parser::*;
-        match format {
-            Format::TKY2JGD => TKY2JGD::from_str(s),
-            Format::PatchJGD => PatchJGD::from_str(s),
-            Format::PatchJGD_H => PatchJGD_H::from_str(s),
-            Format::PatchJGD_HV => PatchJGD_HV::from_str(s),
-            Format::HyokoRev => HyokoRev::from_str(s),
-            Format::SemiDynaEXE => SemiDynaEXE::from_str(s),
-            Format::geonetF3 => geonetF3::from_str(s),
-            Format::ITRF2014 => ITRF2014::from_str(s),
-        }
+    pub fn from_par(s: &str, format: Format) -> Result<Self> {
+        format.parse(s)
     }
 
     /// Returns the statistical summary.
@@ -435,7 +408,7 @@ impl Transformer {
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     MeshUnit::Five,
+    ///     Format::SemiDynaEXE,
     ///     [
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -493,7 +466,7 @@ impl Transformer {
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     MeshUnit::Five,
+    ///     Format::SemiDynaEXE,
     ///     [
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -535,7 +508,7 @@ impl Transformer {
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     MeshUnit::Five,
+    ///     Format::SemiDynaEXE,
     ///     [
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -576,7 +549,7 @@ impl Transformer {
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     MeshUnit::Five,
+    ///     Format::SemiDynaEXE,
     ///     [
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -664,7 +637,7 @@ impl Transformer {
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     MeshUnit::Five,
+    ///     Format::SemiDynaEXE,
     ///     [
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -683,7 +656,7 @@ impl Transformer {
     /// # Ok(())}
     /// ```
     pub fn forward_corr(&self, point: &Point) -> Result<Correction> {
-        let cell = MeshCell::try_from_point(point, self.unit)
+        let cell = MeshCell::try_from_point(point, self.format.unit())
             .map_err(|err| Error::new_transformation(TransformErrorKind::Point(err)))?;
 
         let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
@@ -740,7 +713,7 @@ impl Transformer {
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     MeshUnit::Five,
+    ///     Format::SemiDynaEXE,
     ///     [
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -795,7 +768,7 @@ impl Transformer {
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     MeshUnit::Five,
+    ///     Format::SemiDynaEXE,
     ///     [
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -832,7 +805,7 @@ impl Transformer {
         for _ in 0..ITERATION {
             let current = Point::new(yn, xn, 0.0);
 
-            let cell = MeshCell::try_from_point(&current, self.unit)
+            let cell = MeshCell::try_from_point(&current, self.format.unit())
                 .map_err(|err| Error::new_transformation(TransformErrorKind::Point(err)))?;
 
             let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
@@ -916,7 +889,7 @@ impl Transformer {
 /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
 /// # fn main() -> Result<()> {
 /// // from SemiDynaEXE2023.par
-/// let tf: Transformer = TransformerBuilder::new(MeshUnit::Five)
+/// let tf: Transformer = TransformerBuilder::new(Format::SemiDynaEXE)
 ///   .parameters([
 ///       (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
 ///       (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -924,7 +897,7 @@ impl Transformer {
 ///   .description("My parameter".to_string())
 ///   .build();
 ///
-/// assert_eq!(tf.unit, MeshUnit::Five);
+/// assert_eq!(tf.format, Format::SemiDynaEXE);
 /// assert_eq!(
 ///     tf.parameter,
 ///     [
@@ -937,7 +910,7 @@ impl Transformer {
 /// ```
 #[derive(Debug, Clone)]
 pub struct TransformerBuilder {
-    unit: MeshUnit,
+    format: Format,
     parameter: BTreeMap<u32, Parameter>,
     description: Option<String>,
 }
@@ -953,40 +926,39 @@ impl TransformerBuilder {
     /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
     /// # use std::collections::BTreeMap;
     /// # fn main() -> Result<()> {
-    /// let tf = TransformerBuilder::new(MeshUnit::Five).build();
+    /// let tf = TransformerBuilder::new(Format::SemiDynaEXE).build();
     ///
-    /// assert_eq!(tf.unit, MeshUnit::Five);
+    /// assert_eq!(tf.format, Format::SemiDynaEXE);
     /// assert_eq!(tf.parameter, BTreeMap::new());
     /// assert_eq!(tf.description, None);
     /// # Ok(())}
     /// ```
-    pub fn new(unit: MeshUnit) -> Self {
+    pub fn new(format: Format) -> Self {
         TransformerBuilder {
-            unit,
+            format,
             parameter: BTreeMap::new(),
             description: None,
         }
     }
 
-    /// Updates by a [`MeshUnit`].
+    /// Updates by a [`Format`].
     ///
     /// # Example
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
+    /// # use jgdtrans::transformer::TransformerBuilder;
     /// # use std::collections::BTreeMap;
     /// # fn main() -> Result<()> {
-    /// let tf = TransformerBuilder::new(MeshUnit::Five)
-    ///     .unit(MeshUnit::One)
+    /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
+    ///     .format(Format::SemiDynaEXE)
     ///     .build();
     ///
-    /// assert_eq!(tf.unit, MeshUnit::One);
+    /// assert_eq!(tf.format, Format::SemiDynaEXE);
     /// # Ok(())}
     /// ```
-    pub fn unit(mut self, unit: MeshUnit) -> Self {
-        self.unit = unit;
+    pub fn format(mut self, format: Format) -> Self {
+        self.format = format;
         self
     }
 
@@ -1001,7 +973,7 @@ impl TransformerBuilder {
     /// # use std::collections::BTreeMap;
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
-    /// let tf = TransformerBuilder::new(MeshUnit::Five)
+    /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
     ///     .parameter(54401005, Parameter::new(-0.00622, 0.01516, 0.0946))
     ///     .build();
     ///
@@ -1023,7 +995,7 @@ impl TransformerBuilder {
     /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
     /// # fn main() -> Result<()> {
     /// // from SemiDynaEXE2023.par
-    /// let tf = TransformerBuilder::new(MeshUnit::Five)
+    /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
     ///   .parameters([
     ///       (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///       (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -1054,7 +1026,7 @@ impl TransformerBuilder {
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::TransformerBuilder;
     /// # fn main() -> Result<()> {
-    /// let tf = TransformerBuilder::new(MeshUnit::Five)
+    /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
     ///   .description("My parameter".to_string())
     ///   .build();
     ///
@@ -1069,7 +1041,7 @@ impl TransformerBuilder {
     /// Builds [`Transformer`].
     pub fn build(self) -> Transformer {
         Transformer {
-            unit: self.unit,
+            format: self.format,
             parameter: self.parameter,
             description: self.description,
         }
@@ -1085,7 +1057,7 @@ mod tests {
 
         #[test]
         fn test_stats() {
-            let stats = TransformerBuilder::new(MeshUnit::Five)
+            let stats = TransformerBuilder::new(Format::SemiDynaEXE)
                 .parameters([
                     (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
                     (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -1129,7 +1101,9 @@ mod tests {
                 }
             );
 
-            let stats = TransformerBuilder::new(MeshUnit::One).build().statistics();
+            let stats = TransformerBuilder::new(Format::TKY2JGD)
+                .build()
+                .statistics();
             assert_eq!(
                 stats.latitude,
                 Statistics {
@@ -1164,7 +1138,7 @@ mod tests {
                 }
             );
 
-            let stats = TransformerBuilder::new(MeshUnit::Five)
+            let stats = TransformerBuilder::new(Format::SemiDynaEXE)
                 .parameters([(54401005, Parameter::new(1., 0.0, f64::NAN))])
                 .build()
                 .statistics();
@@ -1206,7 +1180,7 @@ mod tests {
 
         #[test]
         fn test_on_tky2jgd() {
-            let tf = TransformerBuilder::new(MeshUnit::One)
+            let tf = TransformerBuilder::new(Format::TKY2JGD)
                 .parameters([
                     // forward
                     (54401027, Parameter::new(11.49105, -11.80078, 0.0)),
@@ -1240,7 +1214,7 @@ mod tests {
 
         #[test]
         fn test_on_patch_jgd_hv() {
-            let tf = TransformerBuilder::new(MeshUnit::One)
+            let tf = TransformerBuilder::new(Format::PatchJGD_HV)
                 .parameters([
                     // forward
                     (57413454, Parameter::new(-0.05984, 0.22393, -1.25445)),
@@ -1272,7 +1246,7 @@ mod tests {
 
         #[test]
         fn test_on_semi_nyna_exe() {
-            let tf = TransformerBuilder::new(MeshUnit::Five)
+            let tf = TransformerBuilder::new(Format::SemiDynaEXE)
                 .parameters([
                     (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
                     (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -1300,7 +1274,7 @@ mod tests {
 
         #[test]
         fn test_on_semi_nyna_exe_exact() {
-            let tf = TransformerBuilder::new(MeshUnit::Five)
+            let tf = TransformerBuilder::new(Format::SemiDynaEXE)
                 .parameters([
                     (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
                     (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),

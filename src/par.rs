@@ -66,7 +66,7 @@ use crate::{Error, Result, Transformer};
 /// # ...
 /// MeshCode dB(sec)  dL(sec) dH(m)
 /// 12345678   0.00001   0.00002   0.00003";
-/// let tf = par::from_str(&s, Format::SemiDynaEXE)?;
+/// let tf = from_str(&s, Format::SemiDynaEXE)?;
 /// assert_eq!(
 ///     tf.parameter.get(&12345678),
 ///     Some(&Parameter {latitude: 0.00001, longitude: 0.00002, altitude: 0.00003})
@@ -78,6 +78,21 @@ pub fn from_str(s: &str, format: Format) -> Result<Transformer> {
 }
 
 /// Represents format of par-formatted text.
+///
+/// # Notes
+///
+/// [`Format::PatchJGD_HV`] is for the same event,
+/// e.g. `touhokutaiheiyouoki2011.par` and `touhokutaiheiyouoki2011_h.par`.
+/// We note that transformation works fine with such data,
+/// and GIAJ does not distribute such file.
+///
+/// It should fill by zero for the parameters of remaining transformation
+/// in areas where it supports only part of the transformation as a result of composition
+/// in order to support whole area of each parameter,
+/// e.g. altitude of Chubu (中部地方) on the composition of
+/// `touhokutaiheiyouoki2011.par` and `touhokutaiheiyouoki2011_h.par`.
+///
+/// The composite data should be in the same format as SemiDynaEXE.
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Format {
@@ -86,19 +101,6 @@ pub enum Format {
     #[allow(non_camel_case_types)]
     PatchJGD_H,
     /// The format of composition of PatchJGD and PatchJGD(H) par files.
-    ///
-    /// This is for the same event, e.g. `touhokutaiheiyouoki2011.par`
-    /// and `touhokutaiheiyouoki2011_h.par`.
-    /// We note that transformation works fine with such data,
-    /// and GIAJ does not distribute such file.
-    ///
-    /// It should fill by zero for the parameters of remaining transformation
-    /// in areas where it supports only part of the transformation as a result of composition
-    /// in order to support whole area of each parameter,
-    /// e.g. altitude of Chubu (中部地方) on the composition of
-    /// `touhokutaiheiyouoki2011.par` and `touhokutaiheiyouoki2011_h.par`.
-    ///
-    /// The composite data should be in the same format as SemiDynaEXE.
     #[allow(non_camel_case_types)]
     PatchJGD_HV,
     HyokoRev,

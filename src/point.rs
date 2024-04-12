@@ -34,9 +34,6 @@ fn normalize_longitude(t: &f64) -> f64 {
 
 /// Represents a position on the Earth, a triplet latitude, longitude and altitude.
 ///
-/// Latitude takes values from -90.0 to 90.0,
-/// and longitude does from -180.0 to 180.0.
-///
 /// # Example
 ///
 /// ```
@@ -59,9 +56,9 @@ fn normalize_longitude(t: &f64) -> f64 {
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Point {
-    /// The latitude \[deg\] of the point which satisfies -90.0 <= and <= 90.0.
+    /// The latitude \[deg\] of the point
     pub(crate) latitude: f64,
-    /// The longitude \[deg\] of the point which satisfies -180.0 <= and <= 180.0.
+    /// The longitude \[deg\] of the point
     pub(crate) longitude: f64,
     /// The altitude \[m\] of the point.
     pub(crate) altitude: f64,
@@ -367,10 +364,11 @@ impl Point {
         &self.altitude
     }
 
-    /// Makes a normalized [Point] from `self`.
+    /// Makes a normalized [`Point`] from `self`.
     ///
-    /// The result has normalized latitude and longitude which value
-    ///  -90.0 <= and <= 90.0, and -180.0 <= and <= 180.0 respectively.
+    /// The result has normalized [`latitude`](Point::latitude)
+    /// and [`longitude`](Point::longitude) which value -90.0 <= and <= 90.0,
+    /// and -180.0 <= and <= 180.0 respectively.
     ///
     /// # Example
     ///

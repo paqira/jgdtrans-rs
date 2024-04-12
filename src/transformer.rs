@@ -567,11 +567,11 @@ impl Transformer {
     /// assert_eq!(result.altitude(), &2.3399999999970085);
     ///
     /// // This is equivalent to adding the result of Transformer::backward_corr_safe
-    /// assert_eq!(result, &origin + tf.backward_corr_safe(&origin)?);
+    /// assert_eq!(result, &origin + tf.backward_safe_corr(&origin)?);
     /// # Ok(())}
     /// ```
     pub fn backward_safe(&self, point: &Point) -> Result<Point> {
-        let corr = self.backward_corr_safe(point)?;
+        let corr = self.backward_safe_corr(point)?;
         Ok(point + corr)
     }
 
@@ -778,7 +778,7 @@ impl Transformer {
     /// );
     ///
     /// let origin = Point::try_new(36.103773017086695, 140.08785924333452, 0.0)?;
-    /// let corr = tf.backward_corr_safe(&origin)?;
+    /// let corr = tf.backward_safe_corr(&origin)?;
     /// assert_eq!(corr.latitude, 1.772913310099049e-6);
     /// assert_eq!(corr.longitude, -4.202334510033827e-6);
     /// assert_eq!(corr.altitude, -0.0963138578132916);
@@ -786,7 +786,7 @@ impl Transformer {
     /// assert_eq!(&origin + corr, tf.backward_safe(&origin)?);
     /// # Ok(())}
     /// ```
-    pub fn backward_corr_safe(&self, point: &Point) -> Result<Correction> {
+    pub fn backward_safe_corr(&self, point: &Point) -> Result<Correction> {
         // Newton's Method
 
         const SCALE: f64 = 3600.;

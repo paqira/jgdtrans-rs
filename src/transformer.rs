@@ -32,8 +32,7 @@ fn ksum(vs: &[f64]) -> f64 {
 
 /// The parameter triplet.
 ///
-/// We emphasize that the unit is \[sec\], not \[deg\]
-/// for latitude and longitude.
+/// We emphasize that the unit of latitude and longitude is \[sec\], not \[deg\].
 ///
 /// It should fill with 0.0 instead of [`NAN`](f64::NAN)
 /// if the parameter does not exist, as parsers does.

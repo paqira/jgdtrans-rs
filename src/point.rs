@@ -387,7 +387,7 @@ impl Point {
         }
     }
 
-    /// Makes a [`Point`] where a node, represented by meshcode `code`, locates.
+    /// Makes a [`Point`] where the `meshcode` indicates.
     ///
     /// The resulting altitude is 0.0.
     ///
@@ -499,7 +499,7 @@ impl Point {
         MeshNode::try_from_point(self, unit)
     }
 
-    /// Returns a [`MeshCell`] containing `self` in.
+    /// Returns a [`MeshCell`] containing `self`.
     ///
     /// # Errors
     ///

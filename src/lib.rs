@@ -141,10 +141,14 @@
 //!
 //! [^3]: TKY2JGD for Windows Ver.1.3.79 (reference implementation):
 //!       <https://www.gsi.go.jp/sokuchikijun/tky2jgd_download.html>
-//!       released under [<span lang="ja">国土地理院コンテンツ利用規約</span>](https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html)
-//!       which compatible to CC BY 4.0.
+//!       released under <span lang="ja">[国土地理院コンテンツ利用規約]</span> which compatible to CC BY 4.0.
 //!
-//! [^4]: Python implementation: <https://github.com/paqira/jgdtrans-py>.
+//! [^4]: Other implementation:
+//!       Python <https://github.com/paqira/jgdtrans-py>,
+//!       Java <https://github.com/paqira/jgdtrans-java>,
+//!       JavaScript/TypeScript <https://github.com/paqira/jgdtrans-js>.
+//!
+//! [国土地理院コンテンツ利用規約]: https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
 #![feature(float_next_up_down)]
 
 #[doc(inline)]

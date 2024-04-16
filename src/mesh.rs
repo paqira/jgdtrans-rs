@@ -47,13 +47,6 @@ impl From<&MeshUnit> for u8 {
     }
 }
 
-impl MeshUnit {
-    #[inline]
-    fn is_five(&self) -> bool {
-        matches!(self, Self::Five)
-    }
-}
-
 /// Represents mesh coordinate, namely, discrete latitude and/or longitude.
 ///
 /// This supports non-negative latitude and/or longitude only.
@@ -103,13 +96,6 @@ impl TryFrom<(u8, u8, u8)> for MeshCoord {
     /// Makes a [`MeshCoord`] from a digits triplet
     fn try_from(value: (u8, u8, u8)) -> Result<Self> {
         Self::try_new(value.0, value.1, value.2)
-    }
-}
-
-impl MeshCoord {
-    #[inline]
-    fn is_multiple_5(&self) -> bool {
-        matches!(self.third, 0 | 5)
     }
 }
 
@@ -193,6 +179,28 @@ impl MeshCoord {
     /// ```
     pub fn third(&self) -> &u8 {
         &self.third
+    }
+
+    /// Returns `true` if `self` is compatible to the `unit`.
+    ///
+    /// This always returns `true` if `unit` is [`MeshUnit::One`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::*;
+    /// # fn main() -> Result<()> {
+    /// let coord = MeshCoord::try_new(1, 2, 3)?;
+    /// assert_eq!(coord.is_unit(&MeshUnit::One), true);
+    /// assert_eq!(coord.is_unit(&MeshUnit::Five), false);
+    /// # Ok(())}
+    /// ```
+    pub fn is_unit(&self, unit: &MeshUnit) -> bool {
+        match unit {
+            MeshUnit::One => true,
+            MeshUnit::Five => (self.third % u8::from(unit)).eq(&0),
+        }
     }
 
     fn from_degree(degree: &f64, unit: &MeshUnit) -> Self {
@@ -395,7 +403,7 @@ impl MeshCoord {
     /// # Ok(())}
     /// ```
     pub fn try_next_up(&self, unit: &MeshUnit) -> Result<Self> {
-        if unit.is_five() && !self.is_multiple_5() {
+        if !self.is_unit(unit) {
             return Err(Error::new_mesh_coord(MeshCoordErrorKind::MeshUnit));
         }
 
@@ -457,7 +465,7 @@ impl MeshCoord {
     /// # Ok(())}
     /// ```
     pub fn try_next_down(&self, unit: &MeshUnit) -> Result<Self> {
-        if unit.is_five() && !self.is_multiple_5() {
+        if !self.is_unit(unit) {
             return Err(Error::new_mesh_coord(MeshCoordErrorKind::MeshUnit));
         }
 
@@ -656,6 +664,28 @@ impl MeshNode {
     /// ```
     pub fn longitude(&self) -> &MeshCoord {
         &self.longitude
+    }
+
+    /// Returns `true` if `self` is compatible to the `unit`.
+    ///
+    /// This always returns `true` if `unit` is [`MeshUnit::One`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::*;
+    /// # fn main() -> Result<()> {
+    /// let node = MeshNode::try_from_meshcode(&54401027)?;
+    /// assert_eq!(node.is_unit(&MeshUnit::One), true);
+    /// assert_eq!(node.is_unit(&MeshUnit::Five), false);
+    /// # Ok(())}
+    /// ```
+    pub fn is_unit(&self, unit: &MeshUnit) -> bool {
+        match unit {
+            MeshUnit::One => true,
+            MeshUnit::Five => self.latitude.is_unit(unit) && self.longitude.is_unit(unit),
+        }
     }
 
     /// Makes the nearest north-west [`MeshNode`] of `point`.
@@ -917,17 +947,10 @@ impl MeshCell {
         unit: MeshUnit,
     ) -> Result<Self> {
         // consistently on unit v.s. the third
-        macro_rules! is_unit_five {
-            ($coord:expr) => {
-                !$coord.latitude.is_multiple_5() || !$coord.longitude.is_multiple_5()
-            };
-        }
-
-        if unit.is_five()
-            && (is_unit_five!(south_west)
-                || is_unit_five!(south_east)
-                || is_unit_five!(north_west)
-                || is_unit_five!(north_east))
+        if !south_west.is_unit(&unit)
+            || !south_east.is_unit(&unit)
+            || !north_west.is_unit(&unit)
+            || !north_east.is_unit(&unit)
         {
             return Err(Error::new_mesh_cell(MeshCellErrorKind::MeshUnit));
         };

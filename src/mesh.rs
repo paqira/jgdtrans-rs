@@ -190,6 +190,7 @@ impl MeshCoord {
     /// assert_eq!(coord.is_mesh_unit(&MeshUnit::Five), false);
     /// # Ok(())}
     /// ```
+    #[inline]
     pub fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
         match mesh_unit {
             MeshUnit::One => true,
@@ -675,6 +676,7 @@ impl MeshNode {
     /// assert_eq!(node.is_mesh_unit(&MeshUnit::Five), false);
     /// # Ok(())}
     /// ```
+    #[inline]
     pub fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
         match mesh_unit {
             MeshUnit::One => true,

@@ -8,6 +8,7 @@ use crate::transformer::Correction;
 use crate::{Error, Result};
 
 /// Returns the normalized latitude into -90.0 <= and <= 90.0.
+#[inline]
 fn normalize_latitude(t: &f64) -> f64 {
     if t.is_nan() || t.ge(&-90.) && t.le(&90.0) {
         *t
@@ -21,6 +22,7 @@ fn normalize_latitude(t: &f64) -> f64 {
 }
 
 /// Returns the normalize longitude -180.0 <= and <= 180.0.
+#[inline]
 fn normalize_longitude(t: &f64) -> f64 {
     if t.is_nan() || t.ge(&-180.0) && t.le(&180.0) {
         *t

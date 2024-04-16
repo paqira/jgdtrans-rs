@@ -32,12 +32,6 @@ pub enum MeshUnit {
     Five = 5,
 }
 
-impl From<MeshUnit> for u8 {
-    fn from(value: MeshUnit) -> Self {
-        (&value).into()
-    }
-}
-
 impl From<&MeshUnit> for u8 {
     fn from(value: &MeshUnit) -> Self {
         match value {

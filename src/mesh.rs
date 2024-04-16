@@ -730,7 +730,7 @@ impl MeshNode {
     /// ```
     pub fn try_from_meshcode(meshcode: &u32) -> Result<Self> {
         #[allow(clippy::inconsistent_digit_grouping)]
-        if meshcode.gt(&9999_99_99) {
+        if meshcode.ge(&10000_00_00) {
             return Err(Error::new_parse_mesh_node(
                 ParseMeshNodeErrorKind::Overflow(None),
             ));
@@ -742,16 +742,18 @@ impl MeshNode {
             };
         }
 
-        // code <= 9999_99_99
-        // lat_first, lng_first <= 99
-        let (lat_first, rest) = div_rem!(meshcode, 1_000_000_u32);
-        let (lng_first, rest) = div_rem!(rest, 10_000_u32);
+        // code < 10000_00_00
+        // lat_first, lng_first < 100
+        #[allow(clippy::inconsistent_digit_grouping)]
+        let (lat_first, rest) = div_rem!(meshcode, 100_00_00_u32);
+        #[allow(clippy::inconsistent_digit_grouping)]
+        let (lng_first, rest) = div_rem!(rest, 100_00_u32);
 
-        // lat_second, lng_second <= 9
-        let (lat_second, rest) = div_rem!(rest, 1000_u32);
+        // lat_second, lng_second < 8
+        let (lat_second, rest) = div_rem!(rest, 10_00_u32);
         let (lng_second, rest) = div_rem!(rest, 100_u32);
 
-        // lat_third, lng_third <= 9
+        // lat_third, lng_third < 10
         let (lat_third, lng_third) = div_rem!(rest, 10_u32);
 
         let latitude = MeshCoord::try_new(lat_first as u8, lat_second as u8, lat_third as u8)

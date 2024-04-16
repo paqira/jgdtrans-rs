@@ -120,11 +120,11 @@ impl Format {
     /// # use std::error::Error;
     /// # use jgdtrans::{Format, mesh::MeshUnit};
     /// # fn main() -> Result<(), Box<dyn Error>> {
-    /// assert_eq!(Format::TKY2JGD.unit(), MeshUnit::One);
-    /// assert_eq!(Format::SemiDynaEXE.unit(), MeshUnit::Five);
+    /// assert_eq!(Format::TKY2JGD.mesh_unit(), MeshUnit::One);
+    /// assert_eq!(Format::SemiDynaEXE.mesh_unit(), MeshUnit::Five);
     /// # Ok(())}
     /// ```
-    pub fn unit(&self) -> MeshUnit {
+    pub fn mesh_unit(&self) -> MeshUnit {
         match self {
             Self::TKY2JGD
             | Self::PatchJGD

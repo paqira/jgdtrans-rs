@@ -464,8 +464,8 @@ impl Point {
     /// );
     /// # Ok(())}
     /// ```
-    pub fn try_to_meshcode(&self, unit: &MeshUnit) -> Result<u32> {
-        let node = self.try_to_node(unit)?;
+    pub fn try_to_meshcode(&self, mesh_unit: &MeshUnit) -> Result<u32> {
+        let node = self.try_to_node(mesh_unit)?;
         Ok(node.to_meshcode())
     }
 
@@ -495,8 +495,8 @@ impl Point {
     /// );
     /// # Ok(())}
     /// ```
-    pub fn try_to_node(&self, unit: &MeshUnit) -> Result<MeshNode> {
-        MeshNode::try_from_point(self, unit)
+    pub fn try_to_node(&self, mesh_unit: &MeshUnit) -> Result<MeshNode> {
+        MeshNode::try_from_point(self, mesh_unit)
     }
 
     /// Returns a [`MeshCell`] containing `self`.
@@ -524,8 +524,8 @@ impl Point {
     /// );
     /// # Ok(())}
     /// ```
-    pub fn try_to_cell(&self, unit: MeshUnit) -> Result<MeshCell> {
-        MeshCell::try_from_point(self, unit)
+    pub fn try_to_cell(&self, mesh_unit: MeshUnit) -> Result<MeshCell> {
+        MeshCell::try_from_point(self, mesh_unit)
     }
 }
 

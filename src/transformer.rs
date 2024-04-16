@@ -272,7 +272,7 @@ impl Transformer {
     /// );
     ///
     /// assert_eq!(tf.format, Format::SemiDynaEXE);
-    /// assert_eq!(tf.format.unit(), MeshUnit::Five);
+    /// assert_eq!(tf.format.mesh_unit(), MeshUnit::Five);
     /// assert_eq!(
     ///     tf.parameter,
     ///     [
@@ -307,7 +307,7 @@ impl Transformer {
     ///     "My Parameter".to_string()
     /// );
     /// assert_eq!(tf.format, Format::TKY2JGD);
-    /// assert_eq!(tf.format.unit(), MeshUnit::One);
+    /// assert_eq!(tf.format.mesh_unit(), MeshUnit::One);
     /// assert_eq!(tf.parameter, BTreeMap::new());
     /// assert_eq!(tf.description, Some("My Parameter".to_string()));
     /// # Ok(())}
@@ -655,7 +655,7 @@ impl Transformer {
     /// # Ok(())}
     /// ```
     pub fn forward_corr(&self, point: &Point) -> Result<Correction> {
-        let cell = MeshCell::try_from_point(point, self.format.unit())
+        let cell = MeshCell::try_from_point(point, self.format.mesh_unit())
             .map_err(|err| Error::new_transformation(TransformErrorKind::Point(err)))?;
 
         let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
@@ -804,7 +804,7 @@ impl Transformer {
         for _ in 0..ITERATION {
             let current = Point::new(yn, xn, 0.0);
 
-            let cell = MeshCell::try_from_point(&current, self.format.unit())
+            let cell = MeshCell::try_from_point(&current, self.format.mesh_unit())
                 .map_err(|err| Error::new_transformation(TransformErrorKind::Point(err)))?;
 
             let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;

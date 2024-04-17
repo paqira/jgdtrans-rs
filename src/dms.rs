@@ -230,11 +230,11 @@ impl TryFrom<&f64> for DMS {
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// assert_eq!(
     ///     DMS::try_from(&36.103774791666666)?,
-    ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.589249999997719)?
+    ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.589249999997719).unwrap()
     /// );
     /// assert_eq!(
     ///     DMS::try_from(&140.08785504166664)?,
-    ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.2781499999141488)?
+    ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.2781499999141488).unwrap()
     /// );
     /// # Ok(())}
     /// ```

@@ -1,4 +1,4 @@
-# jgdtrans
+# jgdtrans for Rust
 
 ```rust
 use std::error::Error;

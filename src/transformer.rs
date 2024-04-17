@@ -583,7 +583,7 @@ impl Transformer {
             .parameter
             .get(&meshcode)
             .ok_or(Error::new_transformation(
-                TransformErrorKind::MissingParameter {
+                TransformErrorKind::ParameterNotFound {
                     meshcode,
                     corner: MeshCellCorner::SouthWest,
                 },
@@ -594,7 +594,7 @@ impl Transformer {
             .parameter
             .get(&meshcode)
             .ok_or(Error::new_transformation(
-                TransformErrorKind::MissingParameter {
+                TransformErrorKind::ParameterNotFound {
                     meshcode,
                     corner: MeshCellCorner::SouthEast,
                 },
@@ -605,7 +605,7 @@ impl Transformer {
             .parameter
             .get(&meshcode)
             .ok_or(Error::new_transformation(
-                TransformErrorKind::MissingParameter {
+                TransformErrorKind::ParameterNotFound {
                     meshcode,
                     corner: MeshCellCorner::NorthWest,
                 },
@@ -616,7 +616,7 @@ impl Transformer {
             .parameter
             .get(&meshcode)
             .ok_or(Error::new_transformation(
-                TransformErrorKind::MissingParameter {
+                TransformErrorKind::ParameterNotFound {
                     meshcode,
                     corner: MeshCellCorner::NorthEast,
                 },
@@ -874,7 +874,9 @@ impl Transformer {
             }
         }
 
-        Err(Error::new_transformation(TransformErrorKind::NotConverged))
+        Err(Error::new_transformation(
+            TransformErrorKind::CorrectionNotFound,
+        ))
     }
 }
 

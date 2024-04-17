@@ -348,22 +348,22 @@ impl std::fmt::Display for PointErrorKind {
 
 #[derive(Debug)]
 pub enum TransformErrorKind {
-    MissingParameter {
+    ParameterNotFound {
         meshcode: u32,
         corner: MeshCellCorner,
     },
     Point(Error),
-    NotConverged,
+    CorrectionNotFound,
 }
 
 impl std::fmt::Display for TransformErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Self::MissingParameter { meshcode, corner } => {
+            Self::ParameterNotFound { meshcode, corner } => {
                 write!(f, "missing parameter of {} at {}", meshcode, corner)
             }
             Self::Point(..) => write!(f, "location not supported for transformation"),
-            Self::NotConverged => write!(f, "transformation not converged"),
+            Self::CorrectionNotFound => write!(f, "correction not found"),
         }
     }
 }

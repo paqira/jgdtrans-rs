@@ -252,8 +252,8 @@ impl MeshCoord {
     /// );
     /// # Ok(())}
     /// ```
-    pub fn try_from_latitude(v: &f64, mesh_unit: &MeshUnit) -> Result<Self> {
-        if v.is_nan() {
+    pub fn try_from_latitude(degree: &f64, mesh_unit: &MeshUnit) -> Result<Self> {
+        if degree.is_nan() {
             return Err(Error::new_parse_mesh_coord(
                 ParseMeshCoordErrorKind::NAN,
                 ErrorAxis::Latitude,
@@ -261,12 +261,12 @@ impl MeshCoord {
         };
 
         let value = {
-            let value = 3.0 * v / 2.0;
+            let value = 3.0 * degree / 2.0;
 
             // Minimum add-hook trick to ensure the identity,
             // 1. MeshCoord::try_from_latitude(&coord.to_latitude(), &MeshUnit::One)
             // 2. MeshCoord::try_from_longitude(&coord.to_longitude(), &MeshUnit::One)
-            if (v.to_bits() % 2).eq(&1) {
+            if (degree.to_bits() % 2).eq(&1) {
                 value.next_up()
             } else {
                 value
@@ -310,22 +310,22 @@ impl MeshCoord {
     /// # Ok(())}
     /// # fn main() {try_main().unwrap()}
     /// ```
-    pub fn try_from_longitude(v: &f64, mesh_unit: &MeshUnit) -> Result<Self> {
-        if v.is_nan() {
+    pub fn try_from_longitude(degree: &f64, mesh_unit: &MeshUnit) -> Result<Self> {
+        if degree.is_nan() {
             return Err(Error::new_parse_mesh_coord(
                 ParseMeshCoordErrorKind::NAN,
                 ErrorAxis::Longitude,
             ));
         };
 
-        if v.lt(&100.0) || v.gt(&180.0) {
+        if degree.lt(&100.0) || degree.gt(&180.0) {
             return Err(Error::new_parse_mesh_coord(
                 ParseMeshCoordErrorKind::Overflow,
                 ErrorAxis::Longitude,
             ));
         };
 
-        Ok(Self::from_degree(v, mesh_unit))
+        Ok(Self::from_degree(degree, mesh_unit))
     }
 
     fn to_degree(&self) -> f64 {
@@ -1153,27 +1153,27 @@ impl MeshCell {
     /// );
     /// # Ok(())}
     /// ```
-    pub fn try_from_node(south_west: MeshNode, mesh_unit: MeshUnit) -> Result<Self> {
-        let next_lat_coord = south_west
+    pub fn try_from_node(node: MeshNode, mesh_unit: MeshUnit) -> Result<Self> {
+        let next_lat_coord = node
             .latitude
             .try_next_up(&mesh_unit)
             .map_err(Error::new_parse_mesh_cell)?;
-        let next_lng_coord = south_west
+        let next_lng_coord = node
             .longitude
             .try_next_up(&mesh_unit)
             .map_err(Error::new_parse_mesh_cell)?;
 
         // Call MeshNode::try_new
         // to check next_coord_lat
-        let south_east = MeshNode::try_new(south_west.latitude.clone(), next_lng_coord.clone())
+        let south_east = MeshNode::try_new(node.latitude.clone(), next_lng_coord.clone())
             .map_err(Error::new_parse_mesh_cell)?;
-        let north_west = MeshNode::try_new(next_lat_coord.clone(), south_west.longitude.clone())
+        let north_west = MeshNode::try_new(next_lat_coord.clone(), node.longitude.clone())
             .map_err(Error::new_parse_mesh_cell)?;
         let north_east = MeshNode::try_new(next_lat_coord, next_lng_coord)
             .map_err(Error::new_parse_mesh_cell)?;
 
         Ok(Self {
-            south_west,
+            south_west: node,
             south_east,
             north_west,
             north_east,

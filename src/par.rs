@@ -1,14 +1,16 @@
 //! Provides deserializer of par file.
 use std::collections::BTreeMap;
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+use std::num::{ParseFloatError, ParseIntError};
 use std::ops::Range;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::error::{ParColumn, ParseParErrorKind};
 use crate::mesh::MeshUnit;
 use crate::transformer::Parameter;
-use crate::{Error, Result, Transformer};
+use crate::Transformer;
 
 /// Deserialize par-formatted [`&str`] into a [`Transformer`].
 ///
@@ -46,9 +48,10 @@ use crate::{Error, Result, Transformer};
 /// # Example
 ///
 /// ```
+/// # use std::error::Error;
 /// # use jgdtrans::*;
 /// # use jgdtrans::transformer::Parameter;
-/// # fn main() -> Result<()> {
+/// # fn main() -> Result<(), Box<dyn Error>> {
 /// let s = r"<15 lines>
 /// # ...
 /// # ...
@@ -73,7 +76,7 @@ use crate::{Error, Result, Transformer};
 /// );
 /// # Ok(())}
 /// ```
-pub fn from_str(s: &str, format: Format) -> Result<Transformer> {
+pub fn from_str(s: &str, format: Format) -> Result<Transformer, ParseParError> {
     format.parse(s)
 }
 
@@ -119,10 +122,10 @@ impl Format {
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::{Format, mesh::MeshUnit};
-    /// # fn main() -> Result<(), Box<dyn Error>> {
+    /// # fn main() {
     /// assert_eq!(Format::TKY2JGD.mesh_unit(), MeshUnit::One);
     /// assert_eq!(Format::SemiDynaEXE.mesh_unit(), MeshUnit::Five);
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn mesh_unit(&self) -> MeshUnit {
         match self {
@@ -135,7 +138,7 @@ impl Format {
         }
     }
 
-    pub(crate) fn parse(&self, s: &str) -> Result<Transformer> {
+    pub(crate) fn parse(&self, s: &str) -> Result<Transformer, ParseParError> {
         use crate::par::*;
         match self {
             Self::TKY2JGD => parse(
@@ -188,7 +191,7 @@ fn parse(
     longitude: Option<Range<usize>>,
     altitude: Option<Range<usize>>,
     format: Format,
-) -> Result<Transformer> {
+) -> Result<Transformer, ParseParError> {
     let mut iter = text.lines().enumerate();
 
     let description = iter
@@ -204,22 +207,22 @@ fn parse(
             None => 0,
             Some(ref range) => line
                 .get(range.clone())
-                .ok_or(Error::new_parse_par(
+                .ok_or(ParseParError::new(
                     range.start,
                     range.end,
                     lineno + 1,
                     ParseParErrorKind::Missing,
-                    ParColumn::Meshcode,
+                    Column::Meshcode,
                 ))?
                 .trim()
                 .parse()
-                .map_err(|err| {
-                    Error::new_parse_par(
+                .map_err(|e| {
+                    ParseParError::new(
                         range.start,
                         range.end,
                         lineno + 1,
-                        ParseParErrorKind::ParseInt(err),
-                        ParColumn::Meshcode,
+                        ParseParErrorKind::ParseInt(e),
+                        Column::Meshcode,
                     )
                 })?,
         };
@@ -228,22 +231,22 @@ fn parse(
             None => 0.0,
             Some(ref range) => line
                 .get(range.clone())
-                .ok_or(Error::new_parse_par(
+                .ok_or(ParseParError::new(
                     range.start,
                     range.end,
                     lineno + 1,
                     ParseParErrorKind::Missing,
-                    ParColumn::Latitude,
+                    Column::Latitude,
                 ))?
                 .trim()
                 .parse()
-                .map_err(|err| {
-                    Error::new_parse_par(
+                .map_err(|e| {
+                    ParseParError::new(
                         range.start,
                         range.end,
                         lineno + 1,
-                        ParseParErrorKind::ParseFloat(err),
-                        ParColumn::Latitude,
+                        ParseParErrorKind::ParseFloat(e),
+                        Column::Latitude,
                     )
                 })?,
         };
@@ -252,22 +255,22 @@ fn parse(
             None => 0.0,
             Some(ref range) => line
                 .get(range.clone())
-                .ok_or(Error::new_parse_par(
+                .ok_or(ParseParError::new(
                     range.start,
                     range.end,
                     lineno + 1,
                     ParseParErrorKind::Missing,
-                    ParColumn::Longitude,
+                    Column::Longitude,
                 ))?
                 .trim()
                 .parse()
-                .map_err(|err| {
-                    Error::new_parse_par(
+                .map_err(|e| {
+                    ParseParError::new(
                         range.start,
                         range.end,
                         lineno + 1,
-                        ParseParErrorKind::ParseFloat(err),
-                        ParColumn::Longitude,
+                        ParseParErrorKind::ParseFloat(e),
+                        Column::Longitude,
                     )
                 })?,
         };
@@ -276,22 +279,22 @@ fn parse(
             None => 0.0,
             Some(ref range) => line
                 .get(range.clone())
-                .ok_or(Error::new_parse_par(
+                .ok_or(ParseParError::new(
                     range.start,
                     range.end,
                     lineno + 1,
                     ParseParErrorKind::Missing,
-                    ParColumn::Altitude,
+                    Column::Altitude,
                 ))?
                 .trim()
                 .parse()
-                .map_err(|err| {
-                    Error::new_parse_par(
+                .map_err(|e| {
+                    ParseParError::new(
                         range.start,
                         range.end,
                         lineno + 1,
-                        ParseParErrorKind::ParseFloat(err),
-                        ParColumn::Altitude,
+                        ParseParErrorKind::ParseFloat(e),
+                        Column::Altitude,
                     )
                 })?,
         };
@@ -311,6 +314,81 @@ fn parse(
         parameter,
         description: Some(description),
     })
+}
+
+#[derive(Debug)]
+pub enum Column {
+    Meshcode,
+    Latitude,
+    Longitude,
+    Altitude,
+}
+
+impl Display for Column {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            Self::Meshcode => write!(f, "meshcode"),
+            Self::Latitude => write!(f, "latitude"),
+            Self::Longitude => write!(f, "longitude"),
+            Self::Altitude => write!(f, "altitude"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum ParseParErrorKind {
+    Missing,
+    ParseInt(ParseIntError),
+    ParseFloat(ParseFloatError),
+}
+
+#[derive(Debug)]
+pub struct ParseParError {
+    /// Error kind
+    pub kind: ParseParErrorKind,
+    // Error Column
+    pub column: Column,
+    /// Lineno of the data
+    pub lineno: usize,
+    /// Start colum no. of the data
+    pub start: usize,
+    /// End colum no. of the data
+    pub end: usize,
+}
+
+impl Display for ParseParError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "parse error: {} at l{}:{}:{}",
+            self.column, self.lineno, self.start, self.end
+        )
+    }
+}
+
+impl Error for ParseParError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
+    }
+}
+
+impl ParseParError {
+    #[cold]
+    fn new(
+        start: usize,
+        end: usize,
+        lineno: usize,
+        kind: ParseParErrorKind,
+        column: Column,
+    ) -> Self {
+        Self {
+            kind,
+            column,
+            lineno,
+            start,
+            end,
+        }
+    }
 }
 
 #[cfg(test)]

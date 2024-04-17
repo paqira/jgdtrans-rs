@@ -1,11 +1,15 @@
 use std::collections::BTreeMap;
+use std::error::Error;
+use std::fmt::{Display, Formatter};
 
+use crate::{Format, Point};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::error::{MeshCellCorner, TransformErrorKind};
 use crate::mesh::MeshCell;
-use crate::{Error, Format, Point, Result};
+use crate::par::ParseParError;
+
+type Result<T> = std::result::Result<T, TransformError>;
 
 #[inline]
 fn bilinear_interpolation(sw: &f64, se: &f64, nw: &f64, ne: &f64, lat: &f64, lng: &f64) -> f64 {
@@ -215,7 +219,7 @@ pub struct Stats {
 /// # use jgdtrans::*;
 /// # use jgdtrans::mesh::MeshUnit;
 /// # use jgdtrans::transformer::Parameter;
-/// # fn main() -> Result<()> {
+/// # fn main() -> Result<(), TransformError> {
 /// // from SemiDynaEXE2023.par
 /// let tf = Transformer::new(
 ///     Format::SemiDynaEXE,
@@ -261,7 +265,7 @@ impl Transformer {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, Statistics};
-    /// # fn main() -> Result<()> {
+    /// # fn main() -> Result<(), TransformError> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -300,7 +304,7 @@ impl Transformer {
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, Statistics};
     /// # use std::collections::BTreeMap;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let tf = Transformer::new_with_description(
     ///     Format::TKY2JGD,
     ///     BTreeMap::new(),
@@ -310,7 +314,7 @@ impl Transformer {
     /// assert_eq!(tf.format.mesh_unit(), MeshUnit::One);
     /// assert_eq!(tf.parameter, BTreeMap::new());
     /// assert_eq!(tf.description, Some("My Parameter".to_string()));
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn new_with_description(
         format: Format,
@@ -362,7 +366,7 @@ impl Transformer {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::transformer::Parameter;
-    /// # fn main() -> Result<()> {
+    /// # fn main() -> Result<(), ParseParError> {
     /// let s = r"<15 lines>
     /// # ...
     /// # ...
@@ -387,7 +391,7 @@ impl Transformer {
     /// );
     /// # Ok(())}
     /// ```
-    pub fn from_str(s: &str, format: Format) -> Result<Self> {
+    pub fn from_str(s: &str, format: Format) -> std::result::Result<Self, ParseParError> {
         format.parse(s)
     }
 
@@ -404,7 +408,7 @@ impl Transformer {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, Statistics};
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -423,7 +427,7 @@ impl Transformer {
     /// assert_eq!(stats.latitude.abs, Some(0.006422499999999999));
     /// assert_eq!(stats.latitude.min, Some(-0.00664));
     /// assert_eq!(stats.latitude.max, Some(-0.0062));
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn statistics(&self) -> Stats {
         macro_rules! extract {
@@ -462,7 +466,7 @@ impl Transformer {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::Parameter;
-    /// # fn main() -> Result<()> {
+    /// # fn main() -> Result<(), TransformError> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -504,7 +508,7 @@ impl Transformer {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::Parameter;
-    /// # fn main() -> Result<()> {
+    /// # fn main() -> Result<(), TransformError> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -545,7 +549,7 @@ impl Transformer {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::Parameter;
-    /// # fn main() -> Result<()> {
+    /// # fn main() -> Result<(), TransformError> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -579,36 +583,40 @@ impl Transformer {
         cell: &MeshCell,
     ) -> Result<(&Parameter, &Parameter, &Parameter, &Parameter)> {
         let meshcode = cell.south_west.to_meshcode();
-        let sw = self.parameter.get(&meshcode).ok_or(Error::new_transform(
-            TransformErrorKind::ParameterNotFound {
+        let sw = self
+            .parameter
+            .get(&meshcode)
+            .ok_or(TransformError::ParameterNotFound {
                 meshcode,
                 corner: MeshCellCorner::SouthWest,
-            },
-        ))?;
+            })?;
 
         let meshcode = cell.south_east.to_meshcode();
-        let se = self.parameter.get(&meshcode).ok_or(Error::new_transform(
-            TransformErrorKind::ParameterNotFound {
+        let se = self
+            .parameter
+            .get(&meshcode)
+            .ok_or(TransformError::ParameterNotFound {
                 meshcode,
                 corner: MeshCellCorner::SouthEast,
-            },
-        ))?;
+            })?;
 
         let meshcode = cell.north_west.to_meshcode();
-        let nw = self.parameter.get(&meshcode).ok_or(Error::new_transform(
-            TransformErrorKind::ParameterNotFound {
+        let nw = self
+            .parameter
+            .get(&meshcode)
+            .ok_or(TransformError::ParameterNotFound {
                 meshcode,
                 corner: MeshCellCorner::NorthWest,
-            },
-        ))?;
+            })?;
 
         let meshcode = cell.north_east.to_meshcode();
-        let ne = self.parameter.get(&meshcode).ok_or(Error::new_transform(
-            TransformErrorKind::ParameterNotFound {
+        let ne = self
+            .parameter
+            .get(&meshcode)
+            .ok_or(TransformError::ParameterNotFound {
                 meshcode,
                 corner: MeshCellCorner::NorthEast,
-            },
-        ))?;
+            })?;
 
         Ok((sw, se, nw, ne))
     }
@@ -621,7 +629,7 @@ impl Transformer {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, Correction};
-    /// # fn main() -> Result<()> {
+    /// # fn main() -> Result<(), TransformError> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -644,7 +652,7 @@ impl Transformer {
     /// ```
     pub fn forward_corr(&self, point: &Point) -> Result<Correction> {
         let cell = MeshCell::try_from_point(point, self.format.mesh_unit())
-            .ok_or(Error::new_transform(TransformErrorKind::Point))?;
+            .ok_or(TransformError::Point)?;
 
         let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
 
@@ -697,7 +705,7 @@ impl Transformer {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, Correction};
-    /// # fn main() -> Result<()> {
+    /// # fn main() -> Result<(), TransformError> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -752,7 +760,7 @@ impl Transformer {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, Correction};
-    /// # fn main() -> Result<()> {
+    /// # fn main() -> Result<(), TransformError> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -793,7 +801,7 @@ impl Transformer {
             let current = Point::new(yn, xn, 0.0);
 
             let cell = MeshCell::try_from_point(&current, self.format.mesh_unit())
-                .ok_or(Error::new_transform(TransformErrorKind::Point))?;
+                .ok_or(TransformError::Point)?;
 
             let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
 
@@ -862,7 +870,7 @@ impl Transformer {
             }
         }
 
-        Err(Error::new_transform(TransformErrorKind::CorrectionNotFound))
+        Err(TransformError::CorrectionNotFound)
     }
 }
 
@@ -874,7 +882,7 @@ impl Transformer {
 /// # use jgdtrans::*;
 /// # use jgdtrans::mesh::MeshUnit;
 /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
-/// # fn main() -> Result<()> {
+/// # fn main() {
 /// // from SemiDynaEXE2023.par
 /// let tf: Transformer = TransformerBuilder::new(Format::SemiDynaEXE)
 ///   .parameters([
@@ -893,7 +901,7 @@ impl Transformer {
 ///     ].into()
 /// );
 /// assert_eq!(tf.description, Some("My parameter".to_string()));
-/// # Ok(())}
+/// # }
 /// ```
 #[derive(Debug, Clone)]
 pub struct TransformerBuilder {
@@ -912,13 +920,13 @@ impl TransformerBuilder {
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
     /// # use std::collections::BTreeMap;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let tf = TransformerBuilder::new(Format::SemiDynaEXE).build();
     ///
     /// assert_eq!(tf.format, Format::SemiDynaEXE);
     /// assert_eq!(tf.parameter, BTreeMap::new());
     /// assert_eq!(tf.description, None);
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn new(format: Format) -> Self {
         TransformerBuilder {
@@ -936,13 +944,13 @@ impl TransformerBuilder {
     /// # use jgdtrans::*;
     /// # use jgdtrans::transformer::TransformerBuilder;
     /// # use std::collections::BTreeMap;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
     ///     .format(Format::SemiDynaEXE)
     ///     .build();
     ///
     /// assert_eq!(tf.format, Format::SemiDynaEXE);
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn format(mut self, format: Format) -> Self {
         self.format = format;
@@ -958,14 +966,14 @@ impl TransformerBuilder {
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
     /// # use std::collections::BTreeMap;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// // from SemiDynaEXE2023.par
     /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
     ///     .parameter(54401005, Parameter::new(-0.00622, 0.01516, 0.0946))
     ///     .build();
     ///
     /// assert_eq!(tf.parameter, [(54401005, Parameter::new(-0.00622, 0.01516, 0.0946)), ].into());
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn parameter(mut self, key: u32, parameter: Parameter) -> Self {
         self.parameter.insert(key, parameter);
@@ -980,7 +988,7 @@ impl TransformerBuilder {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// // from SemiDynaEXE2023.par
     /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
     ///   .parameters([
@@ -997,7 +1005,7 @@ impl TransformerBuilder {
     ///       (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///       (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
     /// ].into());
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn parameters(mut self, parameters: impl IntoIterator<Item = (u32, Parameter)>) -> Self {
         for (key, parameter) in parameters.into_iter() {
@@ -1012,13 +1020,13 @@ impl TransformerBuilder {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::TransformerBuilder;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
     ///   .description("My parameter".to_string())
     ///   .build();
     ///
     /// assert_eq!(tf.description, Some("My parameter".to_string()));
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn description(mut self, s: String) -> Self {
         self.description = Some(s);
@@ -1032,6 +1040,53 @@ impl TransformerBuilder {
             parameter: self.parameter,
             description: self.description,
         }
+    }
+}
+
+#[derive(Debug)]
+pub enum MeshCellCorner {
+    NorthWest,
+    NorthEast,
+    SouthWest,
+    SouthEast,
+}
+
+impl Display for MeshCellCorner {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            Self::NorthWest => write!(f, "north-west"),
+            Self::NorthEast => write!(f, "north-east"),
+            Self::SouthWest => write!(f, "south-west"),
+            Self::SouthEast => write!(f, "south-east"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum TransformError {
+    ParameterNotFound {
+        meshcode: u32,
+        corner: MeshCellCorner,
+    },
+    CorrectionNotFound,
+    Point,
+}
+
+impl Display for TransformError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            Self::ParameterNotFound { meshcode, corner } => {
+                write!(f, "parameter not found: {} at {}", meshcode, corner)
+            }
+            Self::CorrectionNotFound => write!(f, "correction not found"),
+            Self::Point => write!(f, "location not supported for transformation"),
+        }
+    }
+}
+
+impl Error for TransformError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
     }
 }
 

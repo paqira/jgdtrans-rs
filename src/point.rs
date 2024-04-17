@@ -40,7 +40,7 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// ```
 /// # use jgdtrans::*;
 /// # use jgdtrans::transformer::Correction;
-/// # fn main() -> Result<()> {
+/// # fn main() {
 /// // Construct
 /// let point = Point::new(35.0, 145.0, 5.0);
 /// assert_eq!(point.latitude(), &35.0);
@@ -52,7 +52,7 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// assert_eq!(result, Point::new(36.0, 146.0, 6.0));
 /// let result = &result - Correction::new(1.0, 1.0, 1.0);
 /// assert_eq!(result, point);
-/// # Ok(())}
+/// # }
 /// ```
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -223,12 +223,12 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(35.0, 145.0, 5.0);
     /// assert_eq!(point.latitude(), &35.0);
     /// assert_eq!(point.longitude(), &145.0);
     /// assert_eq!(point.altitude(), &5.0);
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
@@ -286,11 +286,11 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(35.0, 145.0, 5.0);
     ///
     /// assert_eq!(point.latitude(), &35.0);
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn latitude(&self) -> &f64 {
         &self.latitude
@@ -302,11 +302,11 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(35.0, 145.0, 5.0);
     ///
     /// assert_eq!(point.longitude(), &145.0);
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn longitude(&self) -> &f64 {
         &self.longitude
@@ -318,11 +318,11 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(35.0, 145.0, 5.0);
     ///
     /// assert_eq!(point.altitude(), &5.0);
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn altitude(&self) -> &f64 {
         &self.altitude
@@ -338,14 +338,14 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(100.0, 200.0, 5.0);
     ///
     /// assert_eq!(
     ///     point.normalize(),
     ///     Point::new(80.0, -160.0, 5.0)
     /// );
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn normalize(&self) -> Self {
         Self {
@@ -451,7 +451,7 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(36.10377479, 140.087855041, 5.0);
     ///
     /// assert_eq!(
@@ -462,7 +462,7 @@ impl Point {
     ///     point.try_to_node(&MeshUnit::Five),
     ///     MeshNode::try_from_meshcode(&54401005),
     /// );
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn try_to_node(&self, mesh_unit: &MeshUnit) -> Option<MeshNode> {
         MeshNode::try_from_point(self, mesh_unit)

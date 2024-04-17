@@ -84,7 +84,7 @@ This package does not contain parameter files, download it from GIAJ.
 
 ## Optional Features
 
-- `serde`: supports serialization/deserialization by [`serde` crate](https://crates.io/crates/serde).
+- `serde`: supports serialization/deserialization by [`serde` crate][serde].
 
 ## Licence
 
@@ -97,7 +97,7 @@ MIT or Apache-2.0
    (English) <https://www.gsi.go.jp/ENGLISH/>.
 2. _TKY2JGD for Windows Ver.1.3.79_ (reference implementation): <https://www.gsi.go.jp/sokuchikijun/tky2jgd_download.html>,
    released under [国土地理院コンテンツ利用規約] which compatible to CC BY 4.0.
-1. Other implementation:
+3. Other implementation:
    Python <https://github.com/paqira/jgdtrans-py>,
    Java <https://github.com/paqira/jgdtrans-java>,
    JavaScript/TypeScript <https://github.com/paqira/jgdtrans-js>.

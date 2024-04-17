@@ -78,7 +78,7 @@
 //!
 //! ## Par File
 //!
-//! We provide APIs to parse par file, [`Transformer::from_str`] and [`par::from_str`].
+//! We provide APIs to parse par file, [`Transformer::from_str`] and [`from_str`].
 //!
 //! ```no_run
 //! use std::fs;
@@ -95,7 +95,7 @@
 //!
 //! ## Json File
 //!
-//! It supports (de)serialization by [`serde` crate](https://crates.io/crates/serde)
+//! It supports (de)serialization by [`serde` crate][serde]
 //! for all `struct` including [`Transformer`] (deserialized object of par-formatted data)
 //! only if the feature `serde` is enabled.
 //! We show a (de)serialization example to/from json;

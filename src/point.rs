@@ -217,7 +217,7 @@ impl SubAssign<&Correction> for Point {
 impl Point {
     /// Makes a [`Point`].
     ///
-    /// This does not check the value range.
+    /// This does not check any values.
     ///
     /// # Example
     ///
@@ -240,11 +240,12 @@ impl Point {
 
     /// Makes a [`Point`] with checking.
     ///
+    /// `latitude` satisfies -90.0 <= and <= 90.0
+    /// and `longitude` does -180.0 <= and <= 180.0.
+    ///
     /// # Errors
     ///
-    /// If `latitude` and/or `longitude` is out-of-range,
-    /// `latitude` must satisfy -90.0 <= and <= 90.0
-    /// and `longitude` does -180.0 <= and <= 180.0.
+    /// Returns [`None`] when `latitude` and/or `longitude` is out-of-bounds,
     ///
     /// # Example
     ///
@@ -256,7 +257,6 @@ impl Point {
     /// assert_eq!(point.longitude(), &145.0);
     /// assert_eq!(point.altitude(), &5.0);
     ///
-    /// // If out-of-range, returns Err
     /// assert_eq!(Point::try_new(91.0, 145.0, 5.0), None);
     /// assert_eq!(Point::try_new(35.0, 181.0, 5.0), None);
     /// assert_eq!(Point::try_new(f64::NAN, 145.0, 5.0), None);
@@ -472,8 +472,7 @@ impl Point {
     ///
     /// # Errors
     ///
-    /// Returns [`None`] when [`latitude`](Point::latitude)
-    /// and/or [`longitude`](Point::longitude) is out-of-bounds.
+    /// Returns [`None`] when it cannot construct a unit cell.
     ///
     /// # Example
     ///

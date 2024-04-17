@@ -38,7 +38,7 @@ impl From<&MeshUnit> for u8 {
 
 /// Represents mesh coordinate, namely, discrete latitude and/or longitude.
 ///
-/// This supports non-negative latitude and/or longitude only.
+/// This supports non-negative latitude and longitude only.
 ///
 /// This has three digits, _first_, _second_ and _third_.
 /// The first takes values from 0 to 99, the second does from 0 to 7
@@ -53,20 +53,21 @@ impl From<&MeshUnit> for u8 {
 /// # use jgdtrans::*;
 /// # use jgdtrans::mesh::*;
 /// # fn run() -> Option<()> {
-/// // The selection of MeshCoord depends on unit
+/// // The selection of MeshCoord depends on mesh unit
 /// let coord = MeshCoord::try_from_latitude(&36.103774791666666, &MeshUnit::One)?;
-/// assert_eq!(coord, MeshCoord::try_new(54, 1, 2)?);
-/// // Every fifth MeshCoord is taken, if unit is MeshUnit::Five
+/// assert_eq!(coord, MeshCoord::try_new(54, 1, 2).unwrap());
+/// // Every fifth MeshCoord is taken, when MeshUnit::Five given
 /// let coord = MeshCoord::try_from_latitude(&36.103774791666666, &MeshUnit::Five)?;
-/// assert_eq!(coord, MeshCoord::try_new(54, 1, 0)?);
+/// assert_eq!(coord, MeshCoord::try_new(54, 1, 0).unwrap());
 ///
 /// // Increment/decrement (not in-place)
 /// let coord = MeshCoord::try_new(54, 1, 2)?;
-/// assert_eq!(coord.try_next_up(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 3)?);
-/// assert_eq!(coord.try_next_down(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 1)?);
+/// assert_eq!(coord.try_next_up(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 3).unwrap());
+/// assert_eq!(coord.try_next_down(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 1).unwrap());
+///
 /// // Unit must be consistent with MeshCoord,
-/// // otherwise it returns Err.
-/// assert!(coord.try_next_up(&MeshUnit::Five).is_none());
+/// // otherwise it returns None.
+/// assert_eq!(coord.try_next_up(&MeshUnit::Five), None);
 /// # Some(())}
 /// # fn main() -> () {run();()}
 /// ```
@@ -90,7 +91,7 @@ impl MeshCoord {
     ///
     /// # Errors
     ///
-    /// Returns [`None`] when one of `first`, `second` and `third` is out-of-range.
+    /// Returns [`None`] when one of `first`, `second` and `third` is out-of-bounds.
     ///
     /// # Example
     ///
@@ -117,7 +118,7 @@ impl MeshCoord {
         })
     }
 
-    /// Returns the first digit of `self` (in `0..100`).
+    /// Returns the first digit (`0..100`) of `self`.
     ///
     /// # Example
     ///
@@ -134,7 +135,7 @@ impl MeshCoord {
         &self.first
     }
 
-    /// Returns the second digit of `self` (in `0..8`).
+    /// Returns the second digit (`0..8`) of `self`.
     ///
     /// # Example
     ///
@@ -151,7 +152,7 @@ impl MeshCoord {
         &self.second
     }
 
-    /// Returns the third digit of `self` (in `0..10`).
+    /// Returns the third digit (`0..10`) of `self`.
     ///
     /// # Example
     ///
@@ -170,7 +171,7 @@ impl MeshCoord {
 
     /// Returns `true` if `self` is compatible to the `mesh_unit`.
     ///
-    /// This always returns `true` if `mesh_unit` is [`MeshUnit::One`].
+    /// This always returns `true` when `mesh_unit` is [`MeshUnit::One`].
     ///
     /// # Example
     ///
@@ -222,11 +223,11 @@ impl MeshCoord {
 
     /// Makes the greatest [`MeshCoord`] less than latitude `degree` with `mesh_unit`.
     ///
-    /// `degree` is latitude which satisfies 0.0 <= and <= 66.666...
+    /// `degree` satisfies 0.0 <= and <= 66.666...
     ///
     /// # Errors
     ///
-    /// Returns [`None`] when `degree` is out-of-range.
+    /// Returns [`None`] when `degree` is out-of-bounds.
     ///
     /// # Example
     ///
@@ -238,11 +239,11 @@ impl MeshCoord {
     ///
     /// assert_eq!(
     ///     MeshCoord::try_from_latitude(&degree, &MeshUnit::One)?,
-    ///     MeshCoord::try_new(54, 1, 2)?
+    ///     MeshCoord::try_new(54, 1, 2).unwrap()
     /// );
     /// assert_eq!(
     ///     MeshCoord::try_from_latitude(&degree, &MeshUnit::Five)?,
-    ///     MeshCoord::try_new(54, 1, 0)?
+    ///     MeshCoord::try_new(54, 1, 0).unwrap()
     /// );
     /// # Some(())}
     /// # fn main() -> () {run();()}
@@ -274,7 +275,7 @@ impl MeshCoord {
 
     /// Makes the greatest [`MeshCoord`] less than longitude `degree` with `mesh_unit`.
     ///
-    /// `degree` is longitude which satisfies 100.0 <= and <= 180.0.
+    /// `degree` satisfies 100.0 <= and <= 180.0.
     ///
     /// # Errors
     ///
@@ -290,11 +291,11 @@ impl MeshCoord {
     ///
     /// assert_eq!(
     ///     MeshCoord::try_from_longitude(&degree, &MeshUnit::One)?,
-    ///     MeshCoord::try_new(40, 0, 7)?
+    ///     MeshCoord::try_new(40, 0, 7).unwrap()
     /// );
     /// assert_eq!(
     ///     MeshCoord::try_from_longitude(&degree, &MeshUnit::Five)?,
-    ///     MeshCoord::try_new(40, 0, 5)?
+    ///     MeshCoord::try_new(40, 0, 5).unwrap()
     /// );
     /// # Some(())}
     /// # fn main() -> () {run();()}
@@ -491,7 +492,7 @@ impl MeshCoord {
     }
 }
 
-/// Represents mesh node (node shortly), a pair of [`MeshCoord`]s.
+/// Represents mesh node, a pair of [`MeshCoord`]s.
 ///
 /// We note that this supports non-negative latitude and longitude only.
 ///
@@ -505,12 +506,14 @@ impl MeshCoord {
 /// let point = Point::new(36.10377479, 140.087855041, 0.0);
 /// let node = MeshNode::try_from_point(&point, &MeshUnit::One)?;
 /// assert_eq!(node.to_meshcode(), 54401027);
+///
 /// // The result depends on the selection of the mesh unit
 /// let node = MeshNode::try_from_point(&point, &MeshUnit::Five)?;
 /// assert_eq!(node.to_meshcode(), 54401005);
 ///
 /// // Construct from meshcode
 /// let node = MeshNode::try_from_meshcode(&54401027)?;
+///
 /// // The position where the MeshNode locates
 /// assert_eq!(node.to_point(), Point::new(36.1, 140.0875, 0.0));
 /// # Some(())}
@@ -529,7 +532,7 @@ pub struct MeshNode {
 }
 
 impl From<MeshNode> for u32 {
-    /// Makes a meshcode of [`MeshNode`]
+    /// Makes a meshcode of [`MeshNode`].
     #[inline]
     fn from(value: MeshNode) -> Self {
         value.to_meshcode()
@@ -544,7 +547,7 @@ impl MeshNode {
     ///
     /// # Errors
     ///
-    /// Returns [`None`] when `longitude` is out-of-range.
+    /// Returns [`None`] when `longitude` is out-of-bounds.
     ///
     /// # Example
     ///
@@ -618,7 +621,7 @@ impl MeshNode {
 
     /// Returns `true` if `self` is compatible to the `mesh_unit`.
     ///
-    /// This always returns `true` if `mesh_unit` is [`MeshUnit::One`].
+    /// This always returns `true` when [`MeshUnit::One`] given.
     ///
     /// # Example
     ///
@@ -648,7 +651,7 @@ impl MeshNode {
     ///
     /// # Errors
     ///
-    /// Returns [`None`] when  [`point.latitude`](Point::longitude)
+    /// Returns [`None`] when [`point.latitude`](Point::longitude)
     /// and/or [`point.longitude`](Point::longitude) is out-of-bounds.
     ///
     /// # Example
@@ -797,7 +800,7 @@ impl MeshNode {
     }
 }
 
-/// Represents unit mesh cell, a quadruplet of [`MeshNode`]s (and [`MeshUnit`]).
+/// Represents unit mesh cell, a quadruplet of [`MeshNode`]s and [`MeshUnit`].
 ///
 /// This has no other [`MeshNode`]s inside `self` in the unit.
 ///
@@ -821,6 +824,7 @@ impl MeshNode {
 /// // Construct from node
 /// let node = MeshNode::try_from_meshcode(&54401027)?;
 /// assert_eq!(MeshCell::try_from_node(node, MeshUnit::One)?, cell);
+///
 /// // Construct from meshcode
 /// assert_eq!(MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?, cell);
 ///
@@ -834,6 +838,7 @@ impl MeshNode {
 /// let (latitude, longitude) = cell.position(&cell.south_west().to_point());
 /// assert!((0.0 - latitude).abs() < 1e-12);
 /// assert!((0.0 - longitude).abs() < 1e-12);
+///
 /// // the north-east node is (1, 1)
 /// let (latitude, longitude) = cell.position(&cell.north_east().to_point());
 /// assert!((1.0 - latitude).abs() < 1e-12);
@@ -862,7 +867,7 @@ impl MeshCell {
     /// # Errors
     ///
     /// Returns [`None`] when the nodes and `mesh_unit` does not
-    /// construct an unit cell.
+    /// construct a unit cell.
     ///
     /// # Example
     ///
@@ -1036,9 +1041,8 @@ impl MeshCell {
     ///
     /// # Errors
     ///
-    /// If the meshcode `code` is invalid,
-    /// `mesh_unit` is inconsistent with meshcode,
-    /// or one of nodes constructing the cell is out-of-range.
+    /// Returns [`None`] when an invalid `meshcode` given,
+    /// or it cannot construct a unit cell.
     ///
     /// # Example
     ///
@@ -1073,8 +1077,7 @@ impl MeshCell {
     ///
     /// # Errors
     ///
-    /// Returns [`None`] when `mesh_unit` is inconsistent with `node`,
-    /// or one of nodes constructing the cell is out-of-range.
+    /// Returns [`None`] when it cannot construct a unit cell.
     ///
     /// # Example
     ///
@@ -1117,9 +1120,7 @@ impl MeshCell {
     ///
     /// # Errors
     ///
-    /// Returns [`None`] when  [`point.latitude`](Point::latitude)
-    /// and/or [`point.longitude`](Point::longitude) is out-of-bounds,
-    /// or one of nodes constructing the cell is out-of-range.
+    /// Returns [`None`] when it cannot construct a unit cell.
     ///
     /// # Example
     ///

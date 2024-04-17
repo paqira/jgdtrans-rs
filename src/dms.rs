@@ -216,11 +216,11 @@ impl TryFrom<&f64> for DMS {
 
     /// Makes a [`DMS`] from DD notation [`f64`].
     ///
-    /// `t` is angle which satisfies -180.0 <= and <= 180.0.
+    /// `value` is angle which satisfies -180.0 <= and <= 180.0.
     ///
     /// # Errors
     ///
-    /// When `t` is not in -180.0 to 180.0.
+    /// When `value` is not in -180.0 to 180.0.
     ///
     /// # Example
     ///

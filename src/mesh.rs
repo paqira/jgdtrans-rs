@@ -33,6 +33,7 @@ pub enum MeshUnit {
 }
 
 impl From<&MeshUnit> for u8 {
+    #[inline]
     fn from(value: &MeshUnit) -> Self {
         match value {
             MeshUnit::One => 1,
@@ -404,7 +405,10 @@ impl MeshCoord {
 
         let delta: u8 = mesh_unit.into();
         // 9 for MeshUnit::One and 5 for MeshUnit::Five
-        let bound = 10 - delta;
+        let bound = match mesh_unit {
+            MeshUnit::One => 9,
+            MeshUnit::Five => 5,
+        };
 
         if self.third.eq(&bound) {
             if self.second.eq(&7) {
@@ -466,7 +470,10 @@ impl MeshCoord {
 
         let delta: u8 = mesh_unit.into();
         // 9 for MeshUnit::One and 5 for MeshUnit::Five
-        let bound = 10 - delta;
+        let bound = match mesh_unit {
+            MeshUnit::One => 9,
+            MeshUnit::Five => 5,
+        };
 
         if self.third.eq(&0) {
             if self.second.eq(&0) {
@@ -579,6 +586,7 @@ impl FromStr for MeshNode {
 
 impl From<MeshNode> for u32 {
     /// Makes a meshcode of [`MeshNode`]
+    #[inline]
     fn from(value: MeshNode) -> Self {
         value.to_meshcode()
     }
@@ -830,7 +838,7 @@ impl MeshNode {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
@@ -921,7 +929,7 @@ impl MeshCell {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
@@ -986,7 +994,7 @@ impl MeshCell {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
@@ -1007,7 +1015,7 @@ impl MeshCell {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
@@ -1028,7 +1036,7 @@ impl MeshCell {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
@@ -1049,7 +1057,7 @@ impl MeshCell {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
@@ -1070,7 +1078,7 @@ impl MeshCell {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
@@ -1097,7 +1105,7 @@ impl MeshCell {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {
@@ -1132,7 +1140,7 @@ impl MeshCell {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// # fn main() -> Result<()> {

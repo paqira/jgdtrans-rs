@@ -338,7 +338,7 @@ impl Transformer {
     /// # fn main() -> Result<(), Box<dyn Error>> {
     /// // deserialize SemiDynaEXE par file, e.g. SemiDyna2023.par
     /// let s = fs::read_to_string("SemiDyna2023.par")?;
-    /// let tf = Transformer::from_par(&s, Format::SemiDynaEXE)?;
+    /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
     ///
     /// // prints Format::SemiDynaEXE
     /// println!("{:?}", tf.format);
@@ -380,14 +380,14 @@ impl Transformer {
     /// # ...
     /// MeshCode dB(sec)  dL(sec) dH(m)
     /// 12345678   0.00001   0.00002   0.00003";
-    /// let tf = Transformer::from_par(&s, Format::SemiDynaEXE)?;
+    /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
     /// assert_eq!(
     ///     tf.parameter.get(&12345678),
     ///     Some(&Parameter {latitude: 0.00001, longitude: 0.00002, altitude: 0.00003})
     /// );
     /// # Ok(())}
     /// ```
-    pub fn from_par(s: &str, format: Format) -> Result<Self> {
+    pub fn from_str(s: &str, format: Format) -> Result<Self> {
         format.parse(s)
     }
 

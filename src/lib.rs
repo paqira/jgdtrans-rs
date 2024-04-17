@@ -14,7 +14,7 @@
 //! fn main() -> Result<(), Box<dyn Error>> {
 //!     // Deserialize par-formatted file, e.g. SemiDyna2023.par
 //!     let s = fs::read_to_string("SemiDyna2023.par").expect("file not found 'SemiDyna2023.par'");
-//!     let tf = Transformer::from_par(&s, Format::SemiDynaEXE)?;
+//!     let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
 //!
 //!     // Makes the origin of transformation
 //!     let origin = Point::new(35.0, 135.0, 2.34);
@@ -78,7 +78,7 @@
 //!
 //! ## Par File
 //!
-//! We provide APIs to parse par file, [`Transformer::from_par`] and [`par::from_str`].
+//! We provide APIs to parse par file, [`Transformer::from_str`] and [`par::from_str`].
 //!
 //! ```no_run
 //! use std::fs;
@@ -87,7 +87,7 @@
 //!
 //! # fn main() -> Result<(), Box<dyn Error>> {
 //! let s = fs::read_to_string("SemiDyna2023.par").expect("file not found 'SemiDyna2023.par'");
-//! let tf = Transformer::from_par(&s, Format::SemiDynaEXE)?;
+//! let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
 //! // This is equivalent to:
 //! // let tf = jgdtrans::from_str(&s, Format::SemiDynaEXE)?;
 //! # Ok(())}

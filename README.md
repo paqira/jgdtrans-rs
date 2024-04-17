@@ -9,7 +9,7 @@ use jgdtrans::{Point, Transformer, Format};
 fn main() -> Result<(), Box<dyn Error>> {
     // Deserialize par-formatted file, e.g. SemiDyna2023.par
     let s = fs::read_to_string("SemiDyna2023.par").expect("file not found 'SemiDyna2023.par'");
-    let tf = Transformer::from_par(&s, Format::SemiDynaEXE)?;
+    let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
 
     // Make the origin of transformation
     let origin = Point::new(35.0, 135.0, 2.34);

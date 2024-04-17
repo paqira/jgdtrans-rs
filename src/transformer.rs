@@ -579,48 +579,36 @@ impl Transformer {
         cell: &MeshCell,
     ) -> Result<(&Parameter, &Parameter, &Parameter, &Parameter)> {
         let meshcode = cell.south_west.to_meshcode();
-        let sw = self
-            .parameter
-            .get(&meshcode)
-            .ok_or(Error::new_transformation(
-                TransformErrorKind::ParameterNotFound {
-                    meshcode,
-                    corner: MeshCellCorner::SouthWest,
-                },
-            ))?;
+        let sw = self.parameter.get(&meshcode).ok_or(Error::new_transform(
+            TransformErrorKind::ParameterNotFound {
+                meshcode,
+                corner: MeshCellCorner::SouthWest,
+            },
+        ))?;
 
         let meshcode = cell.south_east.to_meshcode();
-        let se = self
-            .parameter
-            .get(&meshcode)
-            .ok_or(Error::new_transformation(
-                TransformErrorKind::ParameterNotFound {
-                    meshcode,
-                    corner: MeshCellCorner::SouthEast,
-                },
-            ))?;
+        let se = self.parameter.get(&meshcode).ok_or(Error::new_transform(
+            TransformErrorKind::ParameterNotFound {
+                meshcode,
+                corner: MeshCellCorner::SouthEast,
+            },
+        ))?;
 
         let meshcode = cell.north_west.to_meshcode();
-        let nw = self
-            .parameter
-            .get(&meshcode)
-            .ok_or(Error::new_transformation(
-                TransformErrorKind::ParameterNotFound {
-                    meshcode,
-                    corner: MeshCellCorner::NorthWest,
-                },
-            ))?;
+        let nw = self.parameter.get(&meshcode).ok_or(Error::new_transform(
+            TransformErrorKind::ParameterNotFound {
+                meshcode,
+                corner: MeshCellCorner::NorthWest,
+            },
+        ))?;
 
         let meshcode = cell.north_east.to_meshcode();
-        let ne = self
-            .parameter
-            .get(&meshcode)
-            .ok_or(Error::new_transformation(
-                TransformErrorKind::ParameterNotFound {
-                    meshcode,
-                    corner: MeshCellCorner::NorthEast,
-                },
-            ))?;
+        let ne = self.parameter.get(&meshcode).ok_or(Error::new_transform(
+            TransformErrorKind::ParameterNotFound {
+                meshcode,
+                corner: MeshCellCorner::NorthEast,
+            },
+        ))?;
 
         Ok((sw, se, nw, ne))
     }
@@ -656,7 +644,7 @@ impl Transformer {
     /// ```
     pub fn forward_corr(&self, point: &Point) -> Result<Correction> {
         let cell = MeshCell::try_from_point(point, self.format.mesh_unit())
-            .map_err(|err| Error::new_transformation(TransformErrorKind::Point(err)))?;
+            .ok_or(Error::new_transform(TransformErrorKind::Point))?;
 
         let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
 
@@ -805,7 +793,7 @@ impl Transformer {
             let current = Point::new(yn, xn, 0.0);
 
             let cell = MeshCell::try_from_point(&current, self.format.mesh_unit())
-                .map_err(|err| Error::new_transformation(TransformErrorKind::Point(err)))?;
+                .ok_or(Error::new_transform(TransformErrorKind::Point))?;
 
             let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
 
@@ -874,9 +862,7 @@ impl Transformer {
             }
         }
 
-        Err(Error::new_transformation(
-            TransformErrorKind::CorrectionNotFound,
-        ))
+        Err(Error::new_transform(TransformErrorKind::CorrectionNotFound))
     }
 }
 

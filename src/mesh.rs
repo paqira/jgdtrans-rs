@@ -8,6 +8,9 @@
 //! Hence, the methods/operations that relate with [`MeshCoord`] returns [`Err`],
 //! if [`MeshUnit::Five`] is given even though the third digit is neither 0 nor 5,
 //! in general.
+use std::error::Error;
+use std::fmt::{Display, Formatter};
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "serde")]
@@ -80,6 +83,15 @@ pub struct MeshCoord {
     pub(crate) second: u8,
     /// takes 0 to 9 inclusive
     pub(crate) third: u8,
+}
+
+impl TryFrom<(u8, u8, u8)> for MeshCoord {
+    type Error = MeshTryFromError;
+
+    /// Makes a [`MeshCoord`], see [`MeshCoord::try_new`].
+    fn try_from(value: (u8, u8, u8)) -> Result<Self, Self::Error> {
+        Self::try_new(value.0, value.1, value.2).ok_or(Self::Error::new())
+    }
 }
 
 impl MeshCoord {
@@ -531,8 +543,27 @@ pub struct MeshNode {
     pub(crate) longitude: MeshCoord,
 }
 
+impl TryFrom<(MeshCoord, MeshCoord)> for MeshNode {
+    type Error = MeshTryFromError;
+
+    /// Makes a [`MeshNode`], see [`MeshNode::try_new`].
+
+    fn try_from(value: (MeshCoord, MeshCoord)) -> Result<Self, Self::Error> {
+        Self::try_new(value.0, value.1).ok_or(Self::Error::new())
+    }
+}
+
+impl TryFrom<&u32> for MeshNode {
+    type Error = MeshTryFromError;
+
+    /// Makes a [`MeshNode`] from meshcode, see [`MeshNode::try_from_meshcode`].
+    fn try_from(value: &u32) -> Result<Self, Self::Error> {
+        Self::try_from_meshcode(value).ok_or(Self::Error::new())
+    }
+}
+
 impl From<MeshNode> for u32 {
-    /// Makes a meshcode of [`MeshNode`].
+    /// Makes a meshcode from [`MeshNode`], see [`MeshNode::to_meshcode`].
     #[inline]
     fn from(value: MeshNode) -> Self {
         value.to_meshcode()
@@ -1163,8 +1194,8 @@ impl MeshCell {
     /// This returns from 0.0 to 1.0 for each latitude and longitude
     /// if `point` is inside `self`.
     ///
-    /// We note that the result is a (latitude, longitude) pair,
-    /// not a (right-handed) (y, x) pair.
+    /// We note that the result is a $(\\text{latitude}, \\text{longitude})$ pair,
+    /// not a (right-handed) $(y, x)$ pair.
     ///
     /// ```
     /// # use jgdtrans::*;
@@ -1228,6 +1259,33 @@ impl MeshCell {
             MeshUnit::One => (120. * lat, 80. * lng),
             MeshUnit::Five => (24. * lat, 16. * lng),
         }
+    }
+}
+
+//
+// Error
+//
+
+/// Error on the [`TryFrom`] trait.
+#[derive(Debug)]
+pub struct MeshTryFromError();
+
+impl Display for MeshTryFromError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "the value would be out-of-bounds of the output",)
+    }
+}
+
+impl Error for MeshTryFromError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
+    }
+}
+
+impl MeshTryFromError {
+    #[cold]
+    fn new() -> Self {
+        Self {}
     }
 }
 

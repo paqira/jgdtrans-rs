@@ -586,37 +586,25 @@ impl Transformer {
         let sw = self
             .parameter
             .get(&meshcode)
-            .ok_or(TransformError::ParameterNotFound {
-                meshcode,
-                corner: MeshCellCorner::SouthWest,
-            })?;
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthWest))?;
 
         let meshcode = cell.south_east.to_meshcode();
         let se = self
             .parameter
             .get(&meshcode)
-            .ok_or(TransformError::ParameterNotFound {
-                meshcode,
-                corner: MeshCellCorner::SouthEast,
-            })?;
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthEast))?;
 
         let meshcode = cell.north_west.to_meshcode();
         let nw = self
             .parameter
             .get(&meshcode)
-            .ok_or(TransformError::ParameterNotFound {
-                meshcode,
-                corner: MeshCellCorner::NorthWest,
-            })?;
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthWest))?;
 
         let meshcode = cell.north_east.to_meshcode();
         let ne = self
             .parameter
             .get(&meshcode)
-            .ok_or(TransformError::ParameterNotFound {
-                meshcode,
-                corner: MeshCellCorner::NorthEast,
-            })?;
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthEast))?;
 
         Ok((sw, se, nw, ne))
     }
@@ -652,7 +640,7 @@ impl Transformer {
     /// ```
     pub fn forward_corr(&self, point: &Point) -> Result<Correction> {
         let cell = MeshCell::try_from_point(point, self.format.mesh_unit())
-            .ok_or(TransformError::OutOfBounds)?;
+            .ok_or(TransformError::new_oob())?;
 
         let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
 
@@ -801,7 +789,7 @@ impl Transformer {
             let current = Point::new(yn, xn, 0.0);
 
             let cell = MeshCell::try_from_point(&current, self.format.mesh_unit())
-                .ok_or(TransformError::OutOfBounds)?;
+                .ok_or(TransformError::new_oob())?;
 
             let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
 
@@ -870,7 +858,7 @@ impl Transformer {
             }
         }
 
-        Err(TransformError::CorrectionNotFound)
+        Err(TransformError::new_cnf())
     }
 }
 
@@ -1091,6 +1079,21 @@ impl Display for TransformError {
 impl Error for TransformError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         None
+    }
+}
+
+impl TransformError {
+    #[cold]
+    fn new_pnf(meshcode: u32, corner: MeshCellCorner) -> Self {
+        Self::ParameterNotFound { meshcode, corner }
+    }
+    #[cold]
+    fn new_cnf() -> Self {
+        Self::CorrectionNotFound
+    }
+    #[cold]
+    fn new_oob() -> Self {
+        Self::OutOfBounds
     }
 }
 

@@ -165,14 +165,14 @@ impl FromStr for DMS {
 
         // too many '.'
         if parts.next().is_some() {
-            return Err(ParseDMSError::InvalidDigit);
+            return Err(ParseDMSError::new_id());
         };
 
         match (integer, fraction) {
             // [+-]?\d+[.]?
             (Some(i), Some("") | None) => {
                 let int = Self::parse_integer(i)?;
-                Self::try_new(int.0, int.1, int.2, int.3, 0.0).ok_or(ParseDMSError::OutOfBounds)
+                Self::try_new(int.0, int.1, int.2, int.3, 0.0).ok_or(ParseDMSError::new_oob())
             }
             (Some(i), Some(f)) => {
                 // 0 <= fract < 1
@@ -199,11 +199,10 @@ impl FromStr for DMS {
                 } else {
                     // [+-]?\d+[.]\d+
                     let int = Self::parse_integer(i)?;
-                    Self::try_new(int.0, int.1, int.2, int.3, fract)
-                        .ok_or(ParseDMSError::OutOfBounds)
+                    Self::try_new(int.0, int.1, int.2, int.3, fract).ok_or(ParseDMSError::new_oob())
                 }
             }
-            (None, None) => Err(ParseDMSError::Empty),
+            (None, None) => Err(ParseDMSError::new_empty()),
             // others
             (None, _) => unreachable!(),
         }
@@ -240,10 +239,10 @@ impl TryFrom<&f64> for DMS {
     /// ```
     fn try_from(value: &f64) -> Result<Self, TryFromDMSError> {
         if value.is_nan() {
-            return Err(TryFromDMSError::NAN);
+            return Err(TryFromDMSError::new_nan());
         };
         if value.lt(&-180.0) || value.gt(&180.0) {
-            return Err(TryFromDMSError::OutOfBounds);
+            return Err(TryFromDMSError::new_oob());
         };
 
         let mm = 60. * value.fract();
@@ -260,7 +259,7 @@ impl TryFrom<&f64> for DMS {
         let second = ss.trunc().abs() as u8;
         let fract = ss.fract().abs();
 
-        Self::try_new(sign, degree, minute, second, fract).ok_or(TryFromDMSError::OutOfBounds)
+        Self::try_new(sign, degree, minute, second, fract).ok_or(TryFromDMSError::new_oob())
     }
 }
 
@@ -275,26 +274,26 @@ impl DMS {
         let i = s
             .parse::<i64>()
             .map_err(|err| match err.kind() {
-                IntErrorKind::NegOverflow | IntErrorKind::PosOverflow => ParseDMSError::OutOfBounds,
-                _ => ParseDMSError::InvalidDigit,
+                IntErrorKind::NegOverflow | IntErrorKind::PosOverflow => ParseDMSError::new_oob(),
+                _ => ParseDMSError::new_id(),
             })?
             .unsigned_abs();
-        let degree = u8::try_from(i / 10000).map_err(|_| ParseDMSError::OutOfBounds)?;
+        let degree = u8::try_from(i / 10000).map_err(|_| ParseDMSError::new_oob())?;
 
         let rest = i % 10000;
-        let minute = u8::try_from(rest / 100).map_err(|_| ParseDMSError::OutOfBounds)?;
-        let second = u8::try_from(rest % 100).map_err(|_| ParseDMSError::OutOfBounds)?;
+        let minute = u8::try_from(rest / 100).map_err(|_| ParseDMSError::new_oob())?;
+        let second = u8::try_from(rest % 100).map_err(|_| ParseDMSError::new_oob())?;
 
         Ok((sign, degree, minute, second))
     }
 
     fn parse_fraction(s: &str) -> Result<f64, ParseDMSError> {
         if s.is_empty() {
-            Err(ParseDMSError::InvalidDigit)
+            Err(ParseDMSError::new_id())
         } else {
             format!("0.{}", s)
                 .parse::<f64>()
-                .map_err(|_| ParseDMSError::InvalidDigit)
+                .map_err(|_| ParseDMSError::new_id())
         }
     }
 }
@@ -464,16 +463,16 @@ impl DMS {
 #[derive(Debug)]
 pub enum ParseDMSError {
     InvalidDigit,
-    Empty,
     OutOfBounds,
+    Empty,
 }
 
 impl Display for ParseDMSError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             Self::InvalidDigit => write!(f, "invalid digit found in string"),
-            Self::Empty => write!(f, "cannot parse DMS from empty string"),
             Self::OutOfBounds => write!(f, "cannot parse out-of-bounds DMS"),
+            Self::Empty => write!(f, "cannot parse DMS from empty string"),
         }
     }
 }
@@ -481,6 +480,21 @@ impl Display for ParseDMSError {
 impl Error for ParseDMSError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         None
+    }
+}
+
+impl ParseDMSError {
+    #[cold]
+    fn new_id() -> Self {
+        Self::InvalidDigit
+    }
+    #[cold]
+    fn new_oob() -> Self {
+        Self::OutOfBounds
+    }
+    #[cold]
+    fn new_empty() -> Self {
+        Self::Empty
     }
 }
 
@@ -494,7 +508,7 @@ impl Display for TryFromDMSError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             Self::NAN => write!(f, "number would be NAN"),
-            Self::OutOfBounds => write!(f, "number is out-of-bounds"),
+            Self::OutOfBounds => write!(f, "number would be out-of-bounds"),
         }
     }
 }
@@ -502,6 +516,17 @@ impl Display for TryFromDMSError {
 impl Error for TryFromDMSError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         None
+    }
+}
+
+impl TryFromDMSError {
+    #[cold]
+    fn new_nan() -> Self {
+        Self::NAN
+    }
+    #[cold]
+    fn new_oob() -> Self {
+        Self::OutOfBounds
     }
 }
 

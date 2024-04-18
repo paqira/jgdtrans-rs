@@ -75,8 +75,7 @@ Features:
 [serde]: https://crates.io/crates/serde
 [serde_repr]: https://crates.io/crates/serde_repr
 
-`jdgtrans` requires nightly channel,
-it depends on `#![feature(float_next_up_down)]`.
+`jdgtrans` requires nightly channel, it depends on a `float_next_up_down` feature.
 
 This package does not contain parameter files, download it from GIAJ.
 

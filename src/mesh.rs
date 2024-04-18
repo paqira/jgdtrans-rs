@@ -1266,7 +1266,7 @@ impl MeshCell {
 // Error
 //
 
-/// Error on the [`TryFrom`] trait.
+/// Error on the [`TryFrom`] trait of [`jgdtrans::mesh`] module.
 #[derive(Debug)]
 pub struct MeshTryFromError();
 

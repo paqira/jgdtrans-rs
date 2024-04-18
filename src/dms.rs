@@ -243,7 +243,7 @@ impl TryFrom<&f64> for DMS {
             return Err(TryFromDMSError::NAN);
         };
         if value.lt(&-180.0) || value.gt(&180.0) {
-            return Err(TryFromDMSError::Overflow);
+            return Err(TryFromDMSError::OutOfBounds);
         };
 
         let mm = 60. * value.fract();
@@ -486,7 +486,6 @@ impl Error for ParseDMSError {
 
 #[derive(Debug)]
 pub enum TryFromDMSError {
-    Overflow,
     NAN,
     OutOfBounds,
 }
@@ -494,7 +493,6 @@ pub enum TryFromDMSError {
 impl Display for TryFromDMSError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Self::Overflow => write!(f, "number too large to fit in DMS"),
             Self::NAN => write!(f, "number would be NAN"),
             Self::OutOfBounds => write!(f, "number is out-of-bounds"),
         }

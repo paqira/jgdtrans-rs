@@ -5,7 +5,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::mesh::{MeshCell, MeshNode, MeshUnit};
 use crate::transformer::Correction;
-use crate::{Error, Result};
 
 /// Returns the normalized latitude into -90.0 <= and <= 90.0.
 #[inline]
@@ -41,7 +40,7 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// ```
 /// # use jgdtrans::*;
 /// # use jgdtrans::transformer::Correction;
-/// # fn main() -> Result<()> {
+/// # fn main() {
 /// // Construct
 /// let point = Point::new(35.0, 145.0, 5.0);
 /// assert_eq!(point.latitude(), &35.0);
@@ -53,7 +52,7 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// assert_eq!(result, Point::new(36.0, 146.0, 6.0));
 /// let result = &result - Correction::new(1.0, 1.0, 1.0);
 /// assert_eq!(result, point);
-/// # Ok(())}
+/// # }
 /// ```
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -84,15 +83,6 @@ impl From<MeshNode> for Point {
     /// see [`Point::from_node()`]
     fn from(value: MeshNode) -> Self {
         Self::from_node(&value)
-    }
-}
-
-impl TryFrom<u32> for Point {
-    type Error = Error;
-
-    /// see [`Point::try_from_meshcode()`]
-    fn try_from(value: u32) -> Result<Self> {
-        Self::try_from_meshcode(&value)
     }
 }
 
@@ -227,18 +217,18 @@ impl SubAssign<&Correction> for Point {
 impl Point {
     /// Makes a [`Point`].
     ///
-    /// This does not check the value range.
+    /// This does not check any values.
     ///
     /// # Example
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(35.0, 145.0, 5.0);
     /// assert_eq!(point.latitude(), &35.0);
     /// assert_eq!(point.longitude(), &145.0);
     /// assert_eq!(point.altitude(), &5.0);
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
@@ -250,68 +240,44 @@ impl Point {
 
     /// Makes a [`Point`] with checking.
     ///
+    /// `latitude` satisfies -90.0 <= and <= 90.0
+    /// and `longitude` does -180.0 <= and <= 180.0.
+    ///
     /// # Errors
     ///
-    /// If `latitude` and/or `longitude` is out-of-range,
-    /// `latitude` must satisfy -90.0 <= and <= 90.0
-    /// and `longitude` does -180.0 <= and <= 180.0.
+    /// Returns [`None`] when `latitude` and/or `longitude` is out-of-bounds,
     ///
     /// # Example
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn run() -> Option<()> {
     /// let point = Point::try_new(35.0, 145.0, 5.0)?;
     /// assert_eq!(point.latitude(), &35.0);
     /// assert_eq!(point.longitude(), &145.0);
     /// assert_eq!(point.altitude(), &5.0);
     ///
-    /// // If out-of-range, returns Err
-    /// let point = Point::try_new(91.0, 145.0, 5.0);
-    /// assert!(point.is_err());
-    /// let point = Point::try_new(35.0, 181.0, 5.0);
-    /// assert!(point.is_err());
-    /// let point = Point::try_new(f64::NAN, 145.0, 5.0);
-    /// assert!(point.is_err());
-    /// let point = Point::try_new(35.0, f64::NAN, 5.0);
-    /// assert!(point.is_err());
-    /// let point = Point::try_new(35.0, 145.0, f64::NAN);
-    /// assert!(point.is_err());
-    /// # Ok(())}
+    /// assert_eq!(Point::try_new(91.0, 145.0, 5.0), None);
+    /// assert_eq!(Point::try_new(35.0, 181.0, 5.0), None);
+    /// assert_eq!(Point::try_new(f64::NAN, 145.0, 5.0), None);
+    /// assert_eq!(Point::try_new(35.0, f64::NAN, 5.0), None);
+    /// assert_eq!(Point::try_new(35.0, 145.0, f64::NAN), None);
+    /// # Some(())}
+    /// # fn main() -> () {run();()}
     /// ```
-    pub fn try_new(latitude: f64, longitude: f64, altitude: f64) -> Result<Self> {
-        if latitude.is_nan() {
-            return Err(Error::new_point(
-                crate::error::ErrorAxis::Latitude,
-                crate::error::PointErrorKind::NAN,
-            ));
-        };
-        if latitude.lt(&-90.) || 90.0.lt(&latitude) {
-            return Err(Error::new_point(
-                crate::error::ErrorAxis::Latitude,
-                crate::error::PointErrorKind::Overflow,
-            ));
-        };
-        if longitude.is_nan() {
-            return Err(Error::new_point(
-                crate::error::ErrorAxis::Longitude,
-                crate::error::PointErrorKind::NAN,
-            ));
-        };
-        if longitude.lt(&-180.) || 180.0.lt(&longitude) {
-            return Err(Error::new_point(
-                crate::error::ErrorAxis::Longitude,
-                crate::error::PointErrorKind::Overflow,
-            ));
-        };
-        if altitude.is_nan() {
-            return Err(Error::new_point(
-                crate::error::ErrorAxis::Altitude,
-                crate::error::PointErrorKind::NAN,
-            ));
+    pub fn try_new(latitude: f64, longitude: f64, altitude: f64) -> Option<Self> {
+        if latitude.lt(&-90.)
+            || 90.0.lt(&latitude)
+            || longitude.lt(&-180.)
+            || 180.0.lt(&longitude)
+            || latitude.is_nan()
+            || longitude.is_nan()
+            || altitude.is_nan()
+        {
+            return None;
         };
 
-        Ok(Self::new(latitude, longitude, altitude))
+        Some(Self::new(latitude, longitude, altitude))
     }
 
     /// Returns the latitude of `self`.
@@ -320,11 +286,11 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(35.0, 145.0, 5.0);
     ///
     /// assert_eq!(point.latitude(), &35.0);
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn latitude(&self) -> &f64 {
         &self.latitude
@@ -336,11 +302,11 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(35.0, 145.0, 5.0);
     ///
     /// assert_eq!(point.longitude(), &145.0);
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn longitude(&self) -> &f64 {
         &self.longitude
@@ -352,11 +318,11 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(35.0, 145.0, 5.0);
     ///
     /// assert_eq!(point.altitude(), &5.0);
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn altitude(&self) -> &f64 {
         &self.altitude
@@ -372,14 +338,14 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(100.0, 200.0, 5.0);
     ///
     /// assert_eq!(
     ///     point.normalize(),
     ///     Point::new(80.0, -160.0, 5.0)
     /// );
-    /// # Ok(())}
+    /// # }
     /// ```
     pub fn normalize(&self) -> Self {
         Self {
@@ -395,22 +361,23 @@ impl Point {
     ///
     /// # Errors
     ///
-    /// If invalid meshcode given.
+    /// Returns [`None`] when an invalid meshcode given.
     ///
     /// # Example
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() -> Result<()> {
+    /// # fn run() -> Option<()> {
     /// let point = Point::try_from_meshcode(&54401027)?;
     /// assert_eq!(point.latitude(), &36.1);
     /// assert_eq!(point.longitude(), &140.0875);
     /// assert_eq!(point.altitude(), &0.0);
-    /// # Ok(())}
+    /// # Some(())}
+    /// # fn main() -> () {run();()}
     /// ```
-    pub fn try_from_meshcode(meshcode: &u32) -> Result<Self> {
+    pub fn try_from_meshcode(meshcode: &u32) -> Option<Self> {
         let node = &MeshNode::try_from_meshcode(meshcode)?;
-        Ok(Self::from_node(node))
+        Some(Self::from_node(node))
     }
 
     /// Makes a [`Point`] where the `node` locates.
@@ -422,21 +389,18 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshNode;
-    /// # fn main() -> Result<()> {
+    /// # fn run() -> Option<()> {
     /// let node = MeshNode::try_from_meshcode(&54401027)?;
     /// let point = Point::from_node(&node);
     /// assert_eq!(point.latitude(), &36.1);
     /// assert_eq!(point.longitude(), &140.0875);
     /// assert_eq!(point.altitude(), &0.0);
-    /// # Ok(())}
+    /// # Some(())}
+    /// # fn main() -> () {run();()}
     /// ```
     pub fn from_node(node: &MeshNode) -> Self {
         let latitude = node.latitude.to_latitude();
         let longitude = node.longitude.to_longitude();
-
-        debug_assert!(latitude.ge(&-90.0) && latitude.le(&90.0));
-        debug_assert!(longitude.ge(&-180.0) && longitude.le(&180.0));
-
         Self::new(latitude, longitude, 0.)
     }
 
@@ -446,14 +410,15 @@ impl Point {
     ///
     /// # Errors
     ///
-    /// If [`latitude`](Point::latitude) and/or [`longitude`](Point::longitude) is negative.
+    /// Returns [`None`] when [`latitude`](Point::latitude)
+    /// and/or [`longitude`](Point::longitude) is out-of-bounds.
     ///
     /// # Example
     ///
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
-    /// # fn main() -> Result<()> {
+    /// # fn run() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 50.0);
     ///
     /// assert_eq!(
@@ -464,56 +429,57 @@ impl Point {
     ///     point.try_to_meshcode(&MeshUnit::Five)?,
     ///     54401005
     /// );
-    /// # Ok(())}
+    /// # Some(())}
+    /// # fn main() -> () {run();()}
     /// ```
-    pub fn try_to_meshcode(&self, mesh_unit: &MeshUnit) -> Result<u32> {
+    pub fn try_to_meshcode(&self, mesh_unit: &MeshUnit) -> Option<u32> {
         let node = self.try_to_node(mesh_unit)?;
-        Ok(node.to_meshcode())
+        Some(node.to_meshcode())
     }
 
-    /// Returns the nearest south-east [`MeshNode`] of `self`
+    /// Returns the nearest south-east [`MeshNode`] of `self`.
     ///
     /// The result is independent of [`altitude`](Point::altitude).
     ///
     /// # Errors
     ///
-    /// If [`latitude`](Point::latitude) and/or [`longitude`](Point::longitude) is negative.
+    /// Returns [`None`] when [`latitude`](Point::latitude)
+    /// and/or [`longitude`](Point::longitude) is out-of-bounds.
     ///
     /// # Example
     ///
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
-    /// # fn main() -> Result<()> {
+    /// # fn main() {
     /// let point = Point::new(36.10377479, 140.087855041, 5.0);
     ///
     /// assert_eq!(
-    ///     point.try_to_node(&MeshUnit::One)?,
-    ///     MeshNode::try_from_meshcode(&54401027)?,
+    ///     point.try_to_node(&MeshUnit::One),
+    ///     MeshNode::try_from_meshcode(&54401027),
     /// );
     /// assert_eq!(
-    ///     point.try_to_node(&MeshUnit::Five)?,
-    ///     MeshNode::try_from_meshcode(&54401005)?,
+    ///     point.try_to_node(&MeshUnit::Five),
+    ///     MeshNode::try_from_meshcode(&54401005),
     /// );
-    /// # Ok(())}
+    /// # }
     /// ```
-    pub fn try_to_node(&self, mesh_unit: &MeshUnit) -> Result<MeshNode> {
+    pub fn try_to_node(&self, mesh_unit: &MeshUnit) -> Option<MeshNode> {
         MeshNode::try_from_point(self, mesh_unit)
     }
 
-    /// Returns a [`MeshCell`] containing `self`.
+    /// Returns a minimal [`MeshCell`] containing `self`.
     ///
     /// # Errors
     ///
-    /// If [`latitude`](Point::latitude) and/or [`longitude`](Point::longitude) is negative,
-    /// or such [`MeshCell`] is not found.
+    /// Returns [`None`] when it cannot construct a unit cell.
     ///
     /// # Example
     ///
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshCell, MeshUnit};
-    /// # fn main() -> Result<()> {
+    /// # fn run() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 10.0);
     ///
     /// assert_eq!(
@@ -524,9 +490,10 @@ impl Point {
     ///     point.try_to_cell(MeshUnit::Five)?,
     ///     MeshCell::try_from_meshcode(&54401005, MeshUnit::Five)?,
     /// );
-    /// # Ok(())}
+    /// # Some(())}
+    /// # fn main() -> () {run();()}
     /// ```
-    pub fn try_to_cell(&self, mesh_unit: MeshUnit) -> Result<MeshCell> {
+    pub fn try_to_cell(&self, mesh_unit: MeshUnit) -> Option<MeshCell> {
         MeshCell::try_from_point(self, mesh_unit)
     }
 }

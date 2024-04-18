@@ -152,16 +152,16 @@
 #![feature(float_next_up_down)]
 
 #[doc(inline)]
-pub use error::{Error, Result};
-#[doc(inline)]
 pub use par::{from_str, Format};
 #[doc(inline)]
 pub use point::Point;
 #[doc(inline)]
 pub use transformer::{Parameter, Transformer, TransformerBuilder};
 
+pub use par::ParseParError;
+pub use transformer::TransformError;
+
 pub mod dms;
-pub mod error;
 pub mod mesh;
 pub mod par;
 pub mod point;

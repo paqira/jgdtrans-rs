@@ -652,7 +652,7 @@ impl Transformer {
     /// ```
     pub fn forward_corr(&self, point: &Point) -> Result<Correction> {
         let cell = MeshCell::try_from_point(point, self.format.mesh_unit())
-            .ok_or(TransformError::Point)?;
+            .ok_or(TransformError::OutOfBounds)?;
 
         let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
 
@@ -801,7 +801,7 @@ impl Transformer {
             let current = Point::new(yn, xn, 0.0);
 
             let cell = MeshCell::try_from_point(&current, self.format.mesh_unit())
-                .ok_or(TransformError::Point)?;
+                .ok_or(TransformError::OutOfBounds)?;
 
             let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
 
@@ -1043,6 +1043,10 @@ impl TransformerBuilder {
     }
 }
 
+//
+// Error
+//
+
 #[derive(Debug)]
 pub enum MeshCellCorner {
     NorthWest,
@@ -1069,7 +1073,7 @@ pub enum TransformError {
         corner: MeshCellCorner,
     },
     CorrectionNotFound,
-    Point,
+    OutOfBounds,
 }
 
 impl Display for TransformError {
@@ -1079,7 +1083,7 @@ impl Display for TransformError {
                 write!(f, "parameter not found: {} at {}", meshcode, corner)
             }
             Self::CorrectionNotFound => write!(f, "correction not found"),
-            Self::Point => write!(f, "location not supported for transformation"),
+            Self::OutOfBounds => write!(f, "position is out-of-bounds of transformation"),
         }
     }
 }

@@ -275,15 +275,15 @@ impl DMS {
         let i = s
             .parse::<i64>()
             .map_err(|err| match err.kind() {
-                IntErrorKind::NegOverflow | IntErrorKind::PosOverflow => ParseDMSError::Overflow,
+                IntErrorKind::NegOverflow | IntErrorKind::PosOverflow => ParseDMSError::OutOfBounds,
                 _ => ParseDMSError::InvalidDigit,
             })?
             .unsigned_abs();
-        let degree = u8::try_from(i / 10000).map_err(|_| ParseDMSError::Overflow)?;
+        let degree = u8::try_from(i / 10000).map_err(|_| ParseDMSError::OutOfBounds)?;
 
         let rest = i % 10000;
-        let minute = u8::try_from(rest / 100).map_err(|_| ParseDMSError::Overflow)?;
-        let second = u8::try_from(rest % 100).map_err(|_| ParseDMSError::Overflow)?;
+        let minute = u8::try_from(rest / 100).map_err(|_| ParseDMSError::OutOfBounds)?;
+        let second = u8::try_from(rest % 100).map_err(|_| ParseDMSError::OutOfBounds)?;
 
         Ok((sign, degree, minute, second))
     }
@@ -457,10 +457,13 @@ impl DMS {
     }
 }
 
+//
+// Error
+//
+
 #[derive(Debug)]
 pub enum ParseDMSError {
     InvalidDigit,
-    Overflow,
     Empty,
     OutOfBounds,
 }
@@ -469,7 +472,6 @@ impl Display for ParseDMSError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
             Self::InvalidDigit => write!(f, "invalid digit found in string"),
-            Self::Overflow => write!(f, "number too large to fit in DMS"),
             Self::Empty => write!(f, "cannot parse DMS from empty string"),
             Self::OutOfBounds => write!(f, "cannot parse out-of-bounds DMS"),
         }

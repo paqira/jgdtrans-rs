@@ -211,7 +211,7 @@ fn parse(
                     range.start,
                     range.end,
                     lineno + 1,
-                    ParseParErrorKind::Missing,
+                    ParseParErrorKind::ColumnNotFound,
                     Column::Meshcode,
                 ))?
                 .trim()
@@ -235,7 +235,7 @@ fn parse(
                     range.start,
                     range.end,
                     lineno + 1,
-                    ParseParErrorKind::Missing,
+                    ParseParErrorKind::ColumnNotFound,
                     Column::Latitude,
                 ))?
                 .trim()
@@ -259,7 +259,7 @@ fn parse(
                     range.start,
                     range.end,
                     lineno + 1,
-                    ParseParErrorKind::Missing,
+                    ParseParErrorKind::ColumnNotFound,
                     Column::Longitude,
                 ))?
                 .trim()
@@ -283,7 +283,7 @@ fn parse(
                     range.start,
                     range.end,
                     lineno + 1,
-                    ParseParErrorKind::Missing,
+                    ParseParErrorKind::ColumnNotFound,
                     Column::Altitude,
                 ))?
                 .trim()
@@ -316,6 +316,10 @@ fn parse(
     })
 }
 
+//
+// Error
+//
+
 #[derive(Debug)]
 pub enum Column {
     Meshcode,
@@ -337,7 +341,7 @@ impl Display for Column {
 
 #[derive(Debug)]
 pub enum ParseParErrorKind {
-    Missing,
+    ColumnNotFound,
     ParseInt(ParseIntError),
     ParseFloat(ParseFloatError),
 }

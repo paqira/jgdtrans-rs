@@ -76,9 +76,9 @@
 //!
 //! # Serialization and Deserialization
 //!
-//! ## Par File
+//! ## Par (Gridded Correction Parameter)
 //!
-//! We provide APIs to parse par file, [`Transformer::from_str`] and [`from_str`].
+//! We provide APIs, [`Transformer::from_str`] and [`from_str`].
 //!
 //! ```no_run
 //! use std::fs;
@@ -93,7 +93,7 @@
 //! # Ok(())}
 //! ```
 //!
-//! ## Json File
+//! ## Json
 //!
 //! It supports (de)serialization by [`serde` crate][serde]
 //! for all `struct` including [`Transformer`] (deserialized object of par-formatted data)

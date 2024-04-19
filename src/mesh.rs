@@ -95,6 +95,25 @@ impl TryFrom<(u8, u8, u8)> for MeshCoord {
 }
 
 impl MeshCoord {
+    /// Smallest `first` value.
+    ///
+    /// Equals to [`u8::MIN`].
+    pub const FIRST_MIN: u8 = u8::MIN;
+    /// Largest `first` value.
+    pub const FIRST_MAX: u8 = 99;
+    /// Smallest `second` value.
+    ///
+    /// Equals to [`u8::MIN`].
+    pub const SECOND_MIN: u8 = u8::MIN;
+    /// Largest `second` value.
+    pub const SECOND_MAX: u8 = 7;
+    /// Smallest `third` value.
+    ///
+    /// Equals to [`u8::MIN`].
+    pub const THIRD_MIN: u8 = u8::MIN;
+    /// Largest `third` value.
+    pub const THIRD_MAX: u8 = 9;
+
     /// Makes a [`MeshCoord`].
     ///
     /// Notes, `first` takes values from 0 to 99,
@@ -119,7 +138,8 @@ impl MeshCoord {
     /// # fn main() -> () {run();()}
     /// ```
     pub fn try_new(first: u8, second: u8, third: u8) -> Option<Self> {
-        if first.gt(&99) || second.gt(&7) || third.gt(&9) {
+        if first.gt(&Self::FIRST_MAX) || second.gt(&Self::SECOND_MAX) || third.gt(&Self::THIRD_MAX)
+        {
             return None;
         };
 
@@ -206,8 +226,6 @@ impl MeshCoord {
     }
 
     fn from_degree(degree: &f64, mesh_unit: &MeshUnit) -> Self {
-        debug_assert!(degree.ge(&0.) && degree.le(&180.));
-
         let integer = degree.floor() as u32;
 
         let first = integer % 100;
@@ -407,15 +425,15 @@ impl MeshCoord {
         };
 
         if self.third.eq(&bound) {
-            if self.second.eq(&7) {
-                if self.first.eq(&99) {
+            if self.second.eq(&Self::SECOND_MAX) {
+                if self.first.eq(&Self::FIRST_MAX) {
                     None
                 } else {
                     // `first` is not 99
                     Some(Self {
                         first: self.first + 1,
-                        second: 0,
-                        third: 0,
+                        second: Self::SECOND_MIN,
+                        third: Self::THIRD_MIN,
                     })
                 }
             } else {
@@ -423,7 +441,7 @@ impl MeshCoord {
                 Some(Self {
                     first: self.first,
                     second: self.second + 1,
-                    third: 0,
+                    third: Self::THIRD_MIN,
                 })
             }
         } else {
@@ -473,15 +491,15 @@ impl MeshCoord {
             MeshUnit::Five => 5,
         };
 
-        if self.third.eq(&0) {
-            if self.second.eq(&0) {
-                if self.first.eq(&0) {
+        if self.third.eq(&Self::THIRD_MIN) {
+            if self.second.eq(&Self::SECOND_MIN) {
+                if self.first.eq(&Self::FIRST_MIN) {
                     None
                 } else {
                     // `first` is not 0
                     Some(Self {
                         first: self.first - 1,
-                        second: 7,
+                        second: Self::SECOND_MAX,
                         third: bound,
                     })
                 }
@@ -571,6 +589,39 @@ impl From<MeshNode> for u32 {
 }
 
 impl MeshNode {
+    /// Largest `latitude` value.
+    ///
+    /// Equals to `MeshCoord { first: 0, second: 0, third: 0 }`.
+    pub const LATITUDE_MIN: MeshCoord = MeshCoord {
+        first: 0,
+        second: 0,
+        third: 0,
+    };
+    /// Smallest `latitude` value.
+    ///
+    /// Equals to `MeshCoord { first: 99, second: 7, third: 9 }`.
+    pub const LATITUDE_MAX: MeshCoord = MeshCoord {
+        first: 99,
+        second: 7,
+        third: 9,
+    };
+    /// Largest `longitude` value.
+    ///
+    /// Equals to `MeshCoord { first: 0, second: 0, third: 0 }`.
+    pub const LONGITUDE_MIN: MeshCoord = MeshCoord {
+        first: 0,
+        second: 0,
+        third: 0,
+    };
+    /// Smallest `longitude` value.
+    ///
+    /// Equals to `MeshCoord { first: 80, second: 0, third: 0 }`.
+    pub const LONGITUDE_MAX: MeshCoord = MeshCoord {
+        first: 80,
+        second: 0,
+        third: 0,
+    };
+
     /// Makes a [`MeshNode`].
     ///
     /// `longitude` satisfies `MeshCoord {first: 0, second: 0, third: 0}` <=
@@ -596,11 +647,7 @@ impl MeshNode {
     /// # fn main() -> () {run();()}
     /// ```
     pub fn try_new(latitude: MeshCoord, longitude: MeshCoord) -> Option<Self> {
-        if longitude.gt(&MeshCoord {
-            first: 80,
-            second: 0,
-            third: 0,
-        }) {
+        if longitude.gt(&Self::LONGITUDE_MAX) {
             return None;
         };
 
@@ -1266,7 +1313,7 @@ impl MeshCell {
 // Error
 //
 
-/// Error on the [`TryFrom`] trait of [`jgdtrans::mesh`] module.
+/// Error on the [`TryFrom`] trait of [`mesh`](mod@self) module.
 #[derive(Debug)]
 pub struct MeshTryFromError();
 

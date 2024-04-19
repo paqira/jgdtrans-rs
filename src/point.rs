@@ -66,21 +66,21 @@ pub struct Point {
 }
 
 impl From<(f64, f64)> for Point {
-    /// see [`Point::new()`], defaulting 0.0 for altitude
+    /// see [`Point::new()`], defaulting 0.0 for altitude.
     fn from(rhs: (f64, f64)) -> Self {
         Self::new(rhs.0, rhs.1, 0.0)
     }
 }
 
 impl From<(f64, f64, f64)> for Point {
-    /// see [`Point::new()`]
+    /// see [`Point::new()`].
     fn from(rhs: (f64, f64, f64)) -> Self {
         Self::new(rhs.0, rhs.1, rhs.2)
     }
 }
 
 impl From<MeshNode> for Point {
-    /// see [`Point::from_node()`]
+    /// see [`Point::from_node()`].
     fn from(value: MeshNode) -> Self {
         Self::from_node(&value)
     }

@@ -95,24 +95,22 @@ impl TryFrom<(u8, u8, u8)> for MeshCoord {
 }
 
 impl MeshCoord {
-    /// Smallest `first` value.
+    /// Smallest [`MeshCoord`] value.
     ///
-    /// Equals to [`u8::MIN`].
-    pub const FIRST_MIN: u8 = u8::MIN;
-    /// Largest `first` value.
-    pub const FIRST_MAX: u8 = 99;
-    /// Smallest `second` value.
+    /// Equals to `MeshCoord { first: 0, second: 0, third: 0 }.`
+    pub const MIN: MeshCoord = Self {
+        first: 0,
+        second: 0,
+        third: 0,
+    };
+    /// Largest [`MeshCoord`] value.
     ///
-    /// Equals to [`u8::MIN`].
-    pub const SECOND_MIN: u8 = u8::MIN;
-    /// Largest `second` value.
-    pub const SECOND_MAX: u8 = 7;
-    /// Smallest `third` value.
-    ///
-    /// Equals to [`u8::MIN`].
-    pub const THIRD_MIN: u8 = u8::MIN;
-    /// Largest `third` value.
-    pub const THIRD_MAX: u8 = 9;
+    /// Equals to `MeshCoord { first: 99, second: 7, third: 9 }.`
+    pub const MAX: MeshCoord = Self {
+        first: 99,
+        second: 7,
+        third: 9,
+    };
 
     /// Makes a [`MeshCoord`].
     ///
@@ -138,7 +136,7 @@ impl MeshCoord {
     /// # fn main() -> () {run();()}
     /// ```
     pub fn try_new(first: u8, second: u8, third: u8) -> Option<Self> {
-        if first.gt(&Self::FIRST_MAX) || second.gt(&Self::SECOND_MAX) || third.gt(&Self::THIRD_MAX)
+        if first.gt(&Self::MAX.first) || second.gt(&Self::MAX.second) || third.gt(&Self::MAX.third)
         {
             return None;
         };
@@ -425,15 +423,15 @@ impl MeshCoord {
         };
 
         if self.third.eq(&bound) {
-            if self.second.eq(&Self::SECOND_MAX) {
-                if self.first.eq(&Self::FIRST_MAX) {
+            if self.second.eq(&Self::MAX.second) {
+                if self.first.eq(&Self::MAX.first) {
                     None
                 } else {
                     // `first` is not 99
                     Some(Self {
                         first: self.first + 1,
-                        second: Self::SECOND_MIN,
-                        third: Self::THIRD_MIN,
+                        second: Self::MIN.second,
+                        third: Self::MIN.third,
                     })
                 }
             } else {
@@ -441,7 +439,7 @@ impl MeshCoord {
                 Some(Self {
                     first: self.first,
                     second: self.second + 1,
-                    third: Self::THIRD_MIN,
+                    third: Self::MIN.third,
                 })
             }
         } else {
@@ -491,15 +489,15 @@ impl MeshCoord {
             MeshUnit::Five => 5,
         };
 
-        if self.third.eq(&Self::THIRD_MIN) {
-            if self.second.eq(&Self::SECOND_MIN) {
-                if self.first.eq(&Self::FIRST_MIN) {
+        if self.third.eq(&Self::MIN.third) {
+            if self.second.eq(&Self::MIN.second) {
+                if self.first.eq(&Self::MIN.first) {
                     None
                 } else {
                     // `first` is not 0
                     Some(Self {
                         first: self.first - 1,
-                        second: Self::SECOND_MAX,
+                        second: Self::MAX.second,
                         third: bound,
                     })
                 }
@@ -589,37 +587,35 @@ impl From<MeshNode> for u32 {
 }
 
 impl MeshNode {
-    /// Largest `latitude` value.
+    /// Smallest [`MeshNode`] value.
     ///
-    /// Equals to `MeshCoord { first: 0, second: 0, third: 0 }`.
-    pub const LATITUDE_MIN: MeshCoord = MeshCoord {
-        first: 0,
-        second: 0,
-        third: 0,
+    /// Equals to `MeshNode { latitude: MeshCoord { first: 0, second: 0, third: 0}, longitude: MeshCoord { first: 0, second: 0, third: 0 } }`.
+    pub const MIN: MeshNode = MeshNode {
+        latitude: MeshCoord {
+            first: 0,
+            second: 0,
+            third: 0,
+        },
+        longitude: MeshCoord {
+            first: 0,
+            second: 0,
+            third: 0,
+        },
     };
-    /// Smallest `latitude` value.
+    /// Largest [`MeshNode`] value.
     ///
-    /// Equals to `MeshCoord { first: 99, second: 7, third: 9 }`.
-    pub const LATITUDE_MAX: MeshCoord = MeshCoord {
-        first: 99,
-        second: 7,
-        third: 9,
-    };
-    /// Largest `longitude` value.
-    ///
-    /// Equals to `MeshCoord { first: 0, second: 0, third: 0 }`.
-    pub const LONGITUDE_MIN: MeshCoord = MeshCoord {
-        first: 0,
-        second: 0,
-        third: 0,
-    };
-    /// Smallest `longitude` value.
-    ///
-    /// Equals to `MeshCoord { first: 80, second: 0, third: 0 }`.
-    pub const LONGITUDE_MAX: MeshCoord = MeshCoord {
-        first: 80,
-        second: 0,
-        third: 0,
+    /// Equals to `MeshNode { latitude: MeshCoord { first: 99, second: 7, third: 9}, longitude: MeshCoord { first: 80, second: 0, third: 0 } }`.
+    pub const MAX: MeshNode = MeshNode {
+        latitude: MeshCoord {
+            first: 99,
+            second: 7,
+            third: 9,
+        },
+        longitude: MeshCoord {
+            first: 80,
+            second: 0,
+            third: 0,
+        },
     };
 
     /// Makes a [`MeshNode`].
@@ -647,7 +643,7 @@ impl MeshNode {
     /// # fn main() -> () {run();()}
     /// ```
     pub fn try_new(latitude: MeshCoord, longitude: MeshCoord) -> Option<Self> {
-        if longitude.gt(&Self::LONGITUDE_MAX) {
+        if longitude.gt(&Self::MAX.longitude) {
             return None;
         };
 

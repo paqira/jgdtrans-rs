@@ -148,7 +148,7 @@ impl Correction {
 /// This is a component of the result that [`Transformer::statistics()`] returns.
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Statistics {
+pub struct StatisticData {
     /// The count.
     pub count: Option<usize>,
     /// The average (\[sec\] or \[m\]).
@@ -163,7 +163,7 @@ pub struct Statistics {
     pub max: Option<f64>,
 }
 
-impl Statistics {
+impl StatisticData {
     fn from_arr(vs: &[f64]) -> Self {
         if vs.is_empty() {
             return Self {
@@ -217,13 +217,13 @@ impl Statistics {
 /// This is a result that [`Transformer::statistics()`] returns.
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Stats {
+pub struct Statistics {
     /// The statistics of latitude.
-    pub latitude: Statistics,
+    pub latitude: StatisticData,
     /// The statistics of longitude.
-    pub longitude: Statistics,
+    pub longitude: StatisticData,
     /// The statistics of altitude.
-    pub altitude: Statistics,
+    pub altitude: StatisticData,
 }
 
 /// The coordinate Transformer, and represents a deserializing result of par-formatted data.
@@ -287,7 +287,7 @@ impl Transformer {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Statistics};
+    /// # use jgdtrans::transformer::{Parameter, StatisticData};
     /// # fn main() -> Result<(), TransformError> {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
@@ -326,7 +326,7 @@ impl Transformer {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Statistics};
+    /// # use jgdtrans::transformer::{Parameter, StatisticData};
     /// # use std::collections::BTreeMap;
     /// # fn main() {
     /// let tf = Transformer::new_with_description(
@@ -421,16 +421,16 @@ impl Transformer {
         format.parse(s)
     }
 
-    /// Returns the statistical summary.
+    /// Returns the statistics of the parameter.
     ///
-    /// See [`Statistics`] for details of result's components.
+    /// See [`StatisticData`] for details of result's components.
     ///
     /// # Example
     ///
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Statistics};
+    /// # use jgdtrans::transformer::{Parameter, StatisticData};
     /// # fn main() {
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
@@ -452,7 +452,7 @@ impl Transformer {
     /// assert_eq!(stats.latitude.max, Some(-0.0062));
     /// # }
     /// ```
-    pub fn statistics(&self) -> Stats {
+    pub fn statistics(&self) -> Statistics {
         macro_rules! extract {
             ($name:ident) => {
                 self.parameter.values().map(|v| v.$name).collect::<Vec<_>>()
@@ -461,16 +461,16 @@ impl Transformer {
 
         // latitude
         let arr: Vec<f64> = extract!(latitude);
-        let latitude = Statistics::from_arr(&arr);
+        let latitude = StatisticData::from_arr(&arr);
 
         let arr: Vec<f64> = extract!(longitude);
-        let longitude = Statistics::from_arr(&arr);
+        let longitude = StatisticData::from_arr(&arr);
 
         // altitude
         let arr: Vec<f64> = extract!(altitude);
-        let altitude = Statistics::from_arr(&arr);
+        let altitude = StatisticData::from_arr(&arr);
 
-        Stats {
+        Statistics {
             latitude,
             longitude,
             altitude,
@@ -1156,7 +1156,7 @@ mod tests {
 
             assert_eq!(
                 stats.latitude,
-                Statistics {
+                StatisticData {
                     count: Some(4),
                     mean: Some(-0.0064225),
                     std: Some(0.019268673410486777),
@@ -1167,7 +1167,7 @@ mod tests {
             );
             assert_eq!(
                 stats.longitude,
-                Statistics {
+                StatisticData {
                     count: Some(4),
                     mean: Some(0.0151075),
                     std: Some(0.045322702644480496),
@@ -1178,7 +1178,7 @@ mod tests {
             );
             assert_eq!(
                 stats.altitude,
-                Statistics {
+                StatisticData {
                     count: Some(4),
                     mean: Some(0.0972325),
                     std: Some(0.29174846730531423),
@@ -1193,7 +1193,7 @@ mod tests {
                 .statistics();
             assert_eq!(
                 stats.latitude,
-                Statistics {
+                StatisticData {
                     count: None,
                     mean: None,
                     std: None,
@@ -1204,7 +1204,7 @@ mod tests {
             );
             assert_eq!(
                 stats.longitude,
-                Statistics {
+                StatisticData {
                     count: None,
                     mean: None,
                     std: None,
@@ -1215,7 +1215,7 @@ mod tests {
             );
             assert_eq!(
                 stats.altitude,
-                Statistics {
+                StatisticData {
                     count: None,
                     mean: None,
                     std: None,
@@ -1232,7 +1232,7 @@ mod tests {
 
             assert_eq!(
                 stats.latitude,
-                Statistics {
+                StatisticData {
                     count: Some(1),
                     mean: Some(1.0),
                     std: Some(0.0),
@@ -1243,7 +1243,7 @@ mod tests {
             );
             assert_eq!(
                 stats.longitude,
-                Statistics {
+                StatisticData {
                     count: Some(1),
                     mean: Some(0.0),
                     std: Some(0.0),

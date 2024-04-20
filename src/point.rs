@@ -43,9 +43,9 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// # fn main() {
 /// // Construct
 /// let point = Point::new(35.0, 145.0, 5.0);
-/// assert_eq!(point.latitude(), &35.0);
-/// assert_eq!(point.longitude(), &145.0);
-/// assert_eq!(point.altitude(), &5.0);
+/// assert_eq!(point.latitude, 35.0);
+/// assert_eq!(point.longitude, 145.0);
+/// assert_eq!(point.altitude, 5.0);
 ///
 /// // Add/sub Correction
 /// let result = &point + Correction::new(1.0, 1.0, 1.0);
@@ -58,11 +58,11 @@ fn normalize_longitude(t: &f64) -> f64 {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Point {
     /// The latitude \[deg\] of the point
-    pub(crate) latitude: f64,
+    pub latitude: f64,
     /// The longitude \[deg\] of the point
-    pub(crate) longitude: f64,
+    pub longitude: f64,
     /// The altitude \[m\] of the point.
-    pub(crate) altitude: f64,
+    pub altitude: f64,
 }
 
 impl From<(f64, f64)> for Point {
@@ -239,9 +239,9 @@ impl Point {
     /// # use jgdtrans::*;
     /// # fn main() {
     /// let point = Point::new(35.0, 145.0, 5.0);
-    /// assert_eq!(point.latitude(), &35.0);
-    /// assert_eq!(point.longitude(), &145.0);
-    /// assert_eq!(point.altitude(), &5.0);
+    /// assert_eq!(point.latitude, 35.0);
+    /// assert_eq!(point.longitude, 145.0);
+    /// assert_eq!(point.altitude, 5.0);
     /// # }
     /// ```
     #[inline]
@@ -268,9 +268,9 @@ impl Point {
     /// # use jgdtrans::*;
     /// # fn run() -> Option<()> {
     /// let point = Point::try_new(35.0, 145.0, 5.0)?;
-    /// assert_eq!(point.latitude(), &35.0);
-    /// assert_eq!(point.longitude(), &145.0);
-    /// assert_eq!(point.altitude(), &5.0);
+    /// assert_eq!(point.latitude, 35.0);
+    /// assert_eq!(point.longitude, 145.0);
+    /// assert_eq!(point.altitude, 5.0);
     ///
     /// assert_eq!(Point::try_new(91.0, 145.0, 5.0), None);
     /// assert_eq!(Point::try_new(35.0, 181.0, 5.0), None);
@@ -294,57 +294,6 @@ impl Point {
         };
 
         Some(Self::new(latitude, longitude, altitude))
-    }
-
-    /// Returns the latitude of `self`.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use jgdtrans::*;
-    /// # fn main() {
-    /// let point = Point::new(35.0, 145.0, 5.0);
-    ///
-    /// assert_eq!(point.latitude(), &35.0);
-    /// # }
-    /// ```
-    #[inline]
-    pub fn latitude(&self) -> &f64 {
-        &self.latitude
-    }
-
-    /// Returns the longitude of `self`.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use jgdtrans::*;
-    /// # fn main() {
-    /// let point = Point::new(35.0, 145.0, 5.0);
-    ///
-    /// assert_eq!(point.longitude(), &145.0);
-    /// # }
-    /// ```
-    #[inline]
-    pub fn longitude(&self) -> &f64 {
-        &self.longitude
-    }
-
-    /// Returns the altitude of `self`.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use jgdtrans::*;
-    /// # fn main() {
-    /// let point = Point::new(35.0, 145.0, 5.0);
-    ///
-    /// assert_eq!(point.altitude(), &5.0);
-    /// # }
-    /// ```
-    #[inline]
-    pub fn altitude(&self) -> &f64 {
-        &self.altitude
     }
 
     /// Makes a normalized [`Point`] from `self`.
@@ -389,9 +338,9 @@ impl Point {
     /// # use jgdtrans::*;
     /// # fn run() -> Option<()> {
     /// let point = Point::try_from_meshcode(&54401027)?;
-    /// assert_eq!(point.latitude(), &36.1);
-    /// assert_eq!(point.longitude(), &140.0875);
-    /// assert_eq!(point.altitude(), &0.0);
+    /// assert_eq!(point.latitude, 36.1);
+    /// assert_eq!(point.longitude, 140.0875);
+    /// assert_eq!(point.altitude, 0.0);
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
@@ -412,9 +361,9 @@ impl Point {
     /// # fn run() -> Option<()> {
     /// let node = MeshNode::try_from_meshcode(&54401027)?;
     /// let point = Point::from_node(&node);
-    /// assert_eq!(point.latitude(), &36.1);
-    /// assert_eq!(point.longitude(), &140.0875);
-    /// assert_eq!(point.altitude(), &0.0);
+    /// assert_eq!(point.latitude, 36.1);
+    /// assert_eq!(point.longitude, 140.0875);
+    /// assert_eq!(point.altitude, 0.0);
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
@@ -575,8 +524,8 @@ mod tests {
         }
 
         let actual = Point::new(f64::NAN, f64::NAN, f64::NAN).normalize();
-        assert!(actual.latitude().is_nan());
-        assert!(actual.longitude().is_nan());
-        assert!(actual.altitude().is_nan());
+        assert!(actual.latitude.is_nan());
+        assert!(actual.longitude.is_nan());
+        assert!(actual.altitude.is_nan());
     }
 }

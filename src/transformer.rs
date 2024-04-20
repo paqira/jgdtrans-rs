@@ -238,9 +238,9 @@ pub struct Stats {
 /// // forward transformation
 /// let origin = Point::new(36.10377479, 140.087855041, 2.34);
 /// let result = tf.forward(&origin)?;
-/// assert_eq!(result.latitude(), &36.103773017086695);
-/// assert_eq!(result.longitude(), &140.08785924333452);
-/// assert_eq!(result.altitude(), &2.4363138578103);
+/// assert_eq!(result.latitude, 36.103773017086695);
+/// assert_eq!(result.longitude, 140.08785924333452);
+/// assert_eq!(result.altitude, 2.4363138578103);
 /// # Ok(())}
 /// ```
 #[derive(Debug, PartialEq)]
@@ -487,9 +487,9 @@ impl Transformer {
     ///
     /// let origin = Point::new(36.10377479, 140.087855041, 2.34);
     /// let result = tf.forward(&origin)?;
-    /// assert_eq!(result.latitude(), &36.103773017086695);
-    /// assert_eq!(result.longitude(), &140.08785924333452);
-    /// assert_eq!(result.altitude(), &2.4363138578103);
+    /// assert_eq!(result.latitude, 36.103773017086695);
+    /// assert_eq!(result.longitude, 140.08785924333452);
+    /// assert_eq!(result.altitude, 2.4363138578103);
     ///
     /// // This is equivalent to adding the result of Transformer::forward_corr
     /// assert_eq!(result, &origin + tf.forward_corr(&origin)?);
@@ -531,9 +531,9 @@ impl Transformer {
     /// // origin is forward trans. from 36.10377479, 140.087855041, 2.34
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
     /// let result = tf.backward(&origin)?;
-    /// assert_eq!(result.latitude(), &36.10377479000002);
-    /// assert_eq!(result.longitude(), &140.087855041);
-    /// assert_eq!(result.altitude(), &2.339999999578243);
+    /// assert_eq!(result.latitude, 36.10377479000002);
+    /// assert_eq!(result.longitude, 140.087855041);
+    /// assert_eq!(result.altitude, 2.339999999578243);
     ///
     /// // This is equivalent to adding the result of Transformer::backward_corr
     /// assert_eq!(result, &origin + tf.backward_corr(&origin)?);
@@ -574,9 +574,9 @@ impl Transformer {
     /// // In this case, no error remains on latitude and longitude
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
     /// let result = tf.backward_safe(&origin)?;
-    /// assert_eq!(result.latitude(), &36.10377479);
-    /// assert_eq!(result.longitude(), &140.087855041);
-    /// assert_eq!(result.altitude(), &2.3399999999970085);
+    /// assert_eq!(result.latitude, 36.10377479);
+    /// assert_eq!(result.longitude, 140.087855041);
+    /// assert_eq!(result.altitude, 2.3399999999970085);
     ///
     /// // This is equivalent to adding the result of Transformer::backward_corr_safe
     /// assert_eq!(result, &origin + tf.backward_safe_corr(&origin)?);

@@ -18,7 +18,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::Point;
 
-/// Returns `ture` is `meshcode` is valid meshcode.
+/// Returns `ture` when `meshcode` is valid.
 ///
 /// # Example
 ///

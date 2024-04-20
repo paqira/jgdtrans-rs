@@ -18,6 +18,21 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::Point;
 
+/// Returns `ture` is `meshcode` is valid meshcode.
+///
+/// # Example
+///
+/// ```
+/// # use jgdtrans::mesh::*;
+/// assert_eq!(is_meshcode(&54401027), true);
+/// assert_eq!(is_meshcode(&10900000), false);
+/// assert_eq!(is_meshcode(&100000000), false);
+/// ```
+#[inline]
+pub fn is_meshcode(meshcode: &u32) -> bool {
+    matches!(MeshNode::try_from_meshcode(meshcode), Some(_))
+}
+
 /// The mesh unit, or approximate length of cell's edge.
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize_repr, Deserialize_repr))]

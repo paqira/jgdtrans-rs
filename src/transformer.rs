@@ -73,6 +73,7 @@ impl Parameter {
     /// assert_eq!(parameter.longitude, 2.);
     /// assert_eq!(parameter.altitude, 3.);
     /// ```
+    #[inline]
     pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
@@ -82,6 +83,7 @@ impl Parameter {
     }
 
     /// Returns $\\sqrt{\\text{latitude}^2 + \\text{longitude}^2}$.
+    #[inline]
     pub fn horizontal(&self) -> f64 {
         f64::hypot(self.latitude, self.longitude)
     }
@@ -115,6 +117,7 @@ pub struct Correction {
 
 impl Correction {
     /// Makes a [`Correction`].
+    #[inline]
     pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
@@ -124,6 +127,7 @@ impl Correction {
     }
 
     /// Returns $\\sqrt{\\text{latitude}^2 + \\text{longitude}^2}$.
+    #[inline]
     pub fn horizontal(&self) -> f64 {
         f64::hypot(self.latitude, self.longitude)
     }
@@ -287,6 +291,7 @@ impl Transformer {
     /// assert_eq!(tf.description, None);
     /// # Ok(())}
     /// ```
+    #[inline]
     pub fn new(format: Format, parameter: BTreeMap<u32, Parameter>) -> Self {
         Self {
             format,
@@ -316,6 +321,7 @@ impl Transformer {
     /// assert_eq!(tf.description, Some("My Parameter".to_string()));
     /// # }
     /// ```
+    #[inline]
     pub fn new_with_description(
         format: Format,
         parameter: BTreeMap<u32, Parameter>,
@@ -391,6 +397,7 @@ impl Transformer {
     /// );
     /// # Ok(())}
     /// ```
+    #[inline]
     pub fn from_str(s: &str, format: Format) -> std::result::Result<Self, ParseParError> {
         format.parse(s)
     }
@@ -488,6 +495,7 @@ impl Transformer {
     /// assert_eq!(result, &origin + tf.forward_corr(&origin)?);
     /// # Ok(())}
     /// ```
+    #[inline]
     pub fn forward(&self, point: &Point) -> Result<Point> {
         let corr = self.forward_corr(point)?;
         Ok(point + corr)
@@ -531,6 +539,7 @@ impl Transformer {
     /// assert_eq!(result, &origin + tf.backward_corr(&origin)?);
     /// # Ok(())}
     /// ```
+    #[inline]
     pub fn backward(&self, point: &Point) -> Result<Point> {
         let corr = self.backward_corr(point)?;
         Ok(point + corr)
@@ -573,6 +582,7 @@ impl Transformer {
     /// assert_eq!(result, &origin + tf.backward_safe_corr(&origin)?);
     /// # Ok(())}
     /// ```
+    #[inline]
     pub fn backward_safe(&self, point: &Point) -> Result<Point> {
         let corr = self.backward_safe_corr(point)?;
         Ok(point + corr)
@@ -916,6 +926,7 @@ impl TransformerBuilder {
     /// assert_eq!(tf.description, None);
     /// # }
     /// ```
+    #[inline]
     pub fn new(format: Format) -> Self {
         TransformerBuilder {
             format,
@@ -940,6 +951,7 @@ impl TransformerBuilder {
     /// assert_eq!(tf.format, Format::SemiDynaEXE);
     /// # }
     /// ```
+    #[inline]
     pub fn format(mut self, format: Format) -> Self {
         self.format = format;
         self
@@ -963,6 +975,7 @@ impl TransformerBuilder {
     /// assert_eq!(tf.parameter, [(54401005, Parameter::new(-0.00622, 0.01516, 0.0946)), ].into());
     /// # }
     /// ```
+    #[inline]
     pub fn parameter(mut self, key: u32, parameter: Parameter) -> Self {
         self.parameter.insert(key, parameter);
         self
@@ -995,6 +1008,7 @@ impl TransformerBuilder {
     /// ].into());
     /// # }
     /// ```
+    #[inline]
     pub fn parameters(mut self, parameters: impl IntoIterator<Item = (u32, Parameter)>) -> Self {
         for (key, parameter) in parameters.into_iter() {
             self.parameter.insert(key, parameter);
@@ -1016,12 +1030,14 @@ impl TransformerBuilder {
     /// assert_eq!(tf.description, Some("My parameter".to_string()));
     /// # }
     /// ```
+    #[inline]
     pub fn description(mut self, s: String) -> Self {
         self.description = Some(s);
         self
     }
 
     /// Builds [`Transformer`].
+    #[inline]
     pub fn build(self) -> Transformer {
         Transformer {
             format: self.format,

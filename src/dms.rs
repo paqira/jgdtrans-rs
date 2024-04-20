@@ -15,6 +15,7 @@ use std::str::FromStr;
 /// assert_eq!(to_dms(&36.103774791666666), Some("360613.589249999997719".to_string()));
 /// assert_eq!(to_dms(&140.08785504166664), Some("1400516.278149999914149".to_string()));
 /// ```
+#[inline]
 pub fn to_dms(t: &f64) -> Option<String> {
     DMS::try_from(t).ok().map(|x| x.to_string())
 }
@@ -30,6 +31,7 @@ pub fn to_dms(t: &f64) -> Option<String> {
 /// assert_eq!(from_dms("360613.58925"), Some(36.103774791666666));
 /// assert_eq!(from_dms("1400516.27815"), Some(140.08785504166667));
 /// ```
+#[inline]
 pub fn from_dms(s: &str) -> Option<f64> {
     s.parse::<DMS>().ok().map(|x| x.to_degree())
 }
@@ -316,6 +318,7 @@ impl DMS {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn try_new(sign: Sign, degree: u8, minute: u8, second: u8, fract: f64) -> Option<Self> {
         if fract.is_nan()
             || degree.eq(&180) && (minute.gt(&0) || second.gt(&0) || fract.gt(&0.0))
@@ -350,6 +353,7 @@ impl DMS {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn sign(&self) -> &Sign {
         &self.sign
     }
@@ -367,6 +371,7 @@ impl DMS {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn degree(&self) -> &u8 {
         &self.degree
     }
@@ -384,6 +389,7 @@ impl DMS {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn minute(&self) -> &u8 {
         &self.minute
     }
@@ -401,6 +407,7 @@ impl DMS {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn second(&self) -> &u8 {
         &self.second
     }
@@ -418,6 +425,7 @@ impl DMS {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn fract(&self) -> &f64 {
         &self.fract
     }
@@ -444,6 +452,7 @@ impl DMS {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn to_degree(&self) -> f64 {
         let res = (self.degree as f64)
             + self.minute as f64 / 60.

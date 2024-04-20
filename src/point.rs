@@ -67,6 +67,7 @@ pub struct Point {
 
 impl From<(f64, f64)> for Point {
     /// see [`Point::new()`], defaulting 0.0 for altitude.
+    #[inline]
     fn from(rhs: (f64, f64)) -> Self {
         Self::new(rhs.0, rhs.1, 0.0)
     }
@@ -74,6 +75,7 @@ impl From<(f64, f64)> for Point {
 
 impl From<(f64, f64, f64)> for Point {
     /// see [`Point::new()`].
+    #[inline]
     fn from(rhs: (f64, f64, f64)) -> Self {
         Self::new(rhs.0, rhs.1, rhs.2)
     }
@@ -89,6 +91,7 @@ impl From<MeshNode> for Point {
 impl Add<Correction> for Point {
     type Output = Self;
 
+    #[inline]
     fn add(self, rhs: Correction) -> Self::Output {
         Self::Output::new(
             self.latitude + rhs.latitude,
@@ -101,6 +104,7 @@ impl Add<Correction> for Point {
 impl Add<&Correction> for Point {
     type Output = Self;
 
+    #[inline]
     fn add(self, rhs: &Correction) -> Self::Output {
         Self::Output::new(
             self.latitude + rhs.latitude,
@@ -113,6 +117,7 @@ impl Add<&Correction> for Point {
 impl Add<Correction> for &Point {
     type Output = Point;
 
+    #[inline]
     fn add(self, rhs: Correction) -> Self::Output {
         Self::Output::new(
             self.latitude + rhs.latitude,
@@ -125,6 +130,7 @@ impl Add<Correction> for &Point {
 impl Add<&Correction> for &Point {
     type Output = Point;
 
+    #[inline]
     fn add(self, rhs: &Correction) -> Self::Output {
         Self::Output::new(
             self.latitude + rhs.latitude,
@@ -135,6 +141,7 @@ impl Add<&Correction> for &Point {
 }
 
 impl AddAssign<Correction> for Point {
+    #[inline]
     fn add_assign(&mut self, rhs: Correction) {
         self.latitude += rhs.latitude;
         self.longitude += rhs.longitude;
@@ -143,6 +150,7 @@ impl AddAssign<Correction> for Point {
 }
 
 impl AddAssign<&Correction> for Point {
+    #[inline]
     fn add_assign(&mut self, rhs: &Correction) {
         self.latitude += rhs.latitude;
         self.longitude += rhs.longitude;
@@ -153,6 +161,7 @@ impl AddAssign<&Correction> for Point {
 impl Sub<Correction> for Point {
     type Output = Self;
 
+    #[inline]
     fn sub(self, rhs: Correction) -> Self::Output {
         Self::Output::new(
             self.latitude - rhs.latitude,
@@ -165,6 +174,7 @@ impl Sub<Correction> for Point {
 impl Sub<&Correction> for Point {
     type Output = Self;
 
+    #[inline]
     fn sub(self, rhs: &Correction) -> Self::Output {
         Self::Output::new(
             self.latitude - rhs.latitude,
@@ -177,6 +187,7 @@ impl Sub<&Correction> for Point {
 impl Sub<Correction> for &Point {
     type Output = Point;
 
+    #[inline]
     fn sub(self, rhs: Correction) -> Self::Output {
         Self::Output::new(
             self.latitude - rhs.latitude,
@@ -189,6 +200,7 @@ impl Sub<Correction> for &Point {
 impl Sub<&Correction> for &Point {
     type Output = Point;
 
+    #[inline]
     fn sub(self, rhs: &Correction) -> Self::Output {
         Self::Output::new(
             self.latitude - rhs.latitude,
@@ -199,6 +211,7 @@ impl Sub<&Correction> for &Point {
 }
 
 impl SubAssign<Correction> for Point {
+    #[inline]
     fn sub_assign(&mut self, rhs: Correction) {
         self.latitude -= rhs.latitude;
         self.longitude -= rhs.longitude;
@@ -207,6 +220,7 @@ impl SubAssign<Correction> for Point {
 }
 
 impl SubAssign<&Correction> for Point {
+    #[inline]
     fn sub_assign(&mut self, rhs: &Correction) {
         self.latitude -= rhs.latitude;
         self.longitude -= rhs.longitude;
@@ -230,6 +244,7 @@ impl Point {
     /// assert_eq!(point.altitude(), &5.0);
     /// # }
     /// ```
+    #[inline]
     pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
@@ -265,6 +280,7 @@ impl Point {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn try_new(latitude: f64, longitude: f64, altitude: f64) -> Option<Self> {
         if latitude.lt(&-90.)
             || 90.0.lt(&latitude)
@@ -292,6 +308,7 @@ impl Point {
     /// assert_eq!(point.latitude(), &35.0);
     /// # }
     /// ```
+    #[inline]
     pub fn latitude(&self) -> &f64 {
         &self.latitude
     }
@@ -308,6 +325,7 @@ impl Point {
     /// assert_eq!(point.longitude(), &145.0);
     /// # }
     /// ```
+    #[inline]
     pub fn longitude(&self) -> &f64 {
         &self.longitude
     }
@@ -324,6 +342,7 @@ impl Point {
     /// assert_eq!(point.altitude(), &5.0);
     /// # }
     /// ```
+    #[inline]
     pub fn altitude(&self) -> &f64 {
         &self.altitude
     }
@@ -347,6 +366,7 @@ impl Point {
     /// );
     /// # }
     /// ```
+    #[inline]
     pub fn normalize(&self) -> Self {
         Self {
             latitude: normalize_latitude(&self.latitude),

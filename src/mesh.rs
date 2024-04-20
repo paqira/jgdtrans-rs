@@ -89,6 +89,7 @@ impl TryFrom<(u8, u8, u8)> for MeshCoord {
     type Error = MeshTryFromError;
 
     /// Makes a [`MeshCoord`], see [`MeshCoord::try_new`].
+    #[inline]
     fn try_from(value: (u8, u8, u8)) -> Result<Self, Self::Error> {
         Self::try_new(value.0, value.1, value.2).ok_or(Self::Error::new())
     }
@@ -103,6 +104,7 @@ impl MeshCoord {
         second: 0,
         third: 0,
     };
+
     /// Largest [`MeshCoord`] value.
     ///
     /// Equals to `MeshCoord { first: 99, second: 7, third: 9 }.`
@@ -135,6 +137,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn try_new(first: u8, second: u8, third: u8) -> Option<Self> {
         if first.gt(&Self::MAX.first) || second.gt(&Self::MAX.second) || third.gt(&Self::MAX.third)
         {
@@ -161,6 +164,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn first(&self) -> &u8 {
         &self.first
     }
@@ -178,6 +182,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn second(&self) -> &u8 {
         &self.second
     }
@@ -195,6 +200,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn third(&self) -> &u8 {
         &self.third
     }
@@ -276,6 +282,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn try_from_latitude(degree: &f64, mesh_unit: &MeshUnit) -> Option<Self> {
         if degree.is_nan() {
             return None;
@@ -328,6 +335,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn try_from_longitude(degree: &f64, mesh_unit: &MeshUnit) -> Option<Self> {
         if degree.is_nan() || degree.lt(&100.0) || degree.gt(&180.0) {
             return None;
@@ -336,6 +344,7 @@ impl MeshCoord {
         Some(Self::from_degree(degree, mesh_unit))
     }
 
+    #[inline]
     fn to_degree(&self) -> f64 {
         self.first as f64 + self.second as f64 / 8. + self.third as f64 / 80.
     }
@@ -361,6 +370,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn to_latitude(&self) -> f64 {
         2. * self.to_degree() / 3.
     }
@@ -386,6 +396,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn to_longitude(&self) -> f64 {
         100. + self.to_degree()
     }
@@ -563,7 +574,7 @@ impl TryFrom<(MeshCoord, MeshCoord)> for MeshNode {
     type Error = MeshTryFromError;
 
     /// Makes a [`MeshNode`], see [`MeshNode::try_new`].
-
+    #[inline]
     fn try_from(value: (MeshCoord, MeshCoord)) -> Result<Self, Self::Error> {
         Self::try_new(value.0, value.1).ok_or(Self::Error::new())
     }
@@ -573,6 +584,7 @@ impl TryFrom<&u32> for MeshNode {
     type Error = MeshTryFromError;
 
     /// Makes a [`MeshNode`] from meshcode, see [`MeshNode::try_from_meshcode`].
+    #[inline]
     fn try_from(value: &u32) -> Result<Self, Self::Error> {
         Self::try_from_meshcode(value).ok_or(Self::Error::new())
     }
@@ -602,6 +614,7 @@ impl MeshNode {
             third: 0,
         },
     };
+
     /// Largest [`MeshNode`] value.
     ///
     /// Equals to `MeshNode { latitude: MeshCoord { first: 99, second: 7, third: 9}, longitude: MeshCoord { first: 80, second: 0, third: 0 } }`.
@@ -642,6 +655,7 @@ impl MeshNode {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn try_new(latitude: MeshCoord, longitude: MeshCoord) -> Option<Self> {
         if longitude.gt(&Self::MAX.longitude) {
             return None;
@@ -669,6 +683,7 @@ impl MeshNode {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn latitude(&self) -> &MeshCoord {
         &self.latitude
     }
@@ -689,6 +704,7 @@ impl MeshNode {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn longitude(&self) -> &MeshCoord {
         &self.longitude
     }
@@ -840,6 +856,7 @@ impl MeshNode {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn to_meshcode(&self) -> u32 {
         (self.latitude.first as u32 * 100 + self.longitude.first as u32) * 10_000
             + (self.latitude.second as u32 * 10 + self.longitude.second as u32) * 100
@@ -865,6 +882,7 @@ impl MeshNode {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn to_point(&self) -> Point {
         Point::new(
             self.latitude.to_latitude(),
@@ -1019,6 +1037,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn south_west(&self) -> &MeshNode {
         &self.south_west
     }
@@ -1041,6 +1060,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn south_east(&self) -> &MeshNode {
         &self.south_east
     }
@@ -1063,6 +1083,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn north_west(&self) -> &MeshNode {
         &self.north_west
     }
@@ -1085,6 +1106,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn north_east(&self) -> &MeshNode {
         &self.north_east
     }
@@ -1107,6 +1129,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn mesh_unit(&self) -> &MeshUnit {
         &self.mesh_unit
     }

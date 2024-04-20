@@ -76,6 +76,7 @@ use crate::Transformer;
 /// );
 /// # Ok(())}
 /// ```
+#[inline]
 pub fn from_str(s: &str, format: Format) -> Result<Transformer, ParseParError> {
     format.parse(s)
 }
@@ -127,6 +128,7 @@ impl Format {
     /// assert_eq!(Format::SemiDynaEXE.mesh_unit(), MeshUnit::Five);
     /// # }
     /// ```
+    #[inline]
     pub fn mesh_unit(&self) -> MeshUnit {
         match self {
             Self::TKY2JGD

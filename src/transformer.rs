@@ -117,6 +117,16 @@ pub struct Correction {
 
 impl Correction {
     /// Makes a [`Correction`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::transformer::Correction;
+    /// let correction = Correction::new(1., 2., 3.);
+    /// assert_eq!(correction.latitude, 1.);
+    /// assert_eq!(correction.longitude, 2.);
+    /// assert_eq!(correction.altitude, 3.);
+    /// ```
     #[inline]
     pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
@@ -361,13 +371,13 @@ impl Transformer {
     ///
     /// // prints Format::SemiDynaEXE
     /// println!("{:?}", tf.format);
-    /// // prints all parameter (be careful, long display)
+    /// // prints all parameter (long display)
     /// println!("{:?}", tf.parameter);
     /// // prints first 16 lines
     /// println!("{:?}", tf.description);
     ///
     /// // transform coordinate
-    /// let point: Point = (35.0, 135.0).try_into()?;
+    /// let point: Point = (35.0, 135.0).into();
     /// let result = tf.forward(&point);
     /// # Ok(())}
     /// ```

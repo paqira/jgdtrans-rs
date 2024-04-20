@@ -374,7 +374,11 @@ impl Display for ParseParError {
 
 impl Error for ParseParError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
+        match &self.kind {
+            ParseParErrorKind::ColumnNotFound => None,
+            ParseParErrorKind::ParseInt(e) => Some(e),
+            ParseParErrorKind::ParseFloat(e) => Some(e),
+        }
     }
 }
 

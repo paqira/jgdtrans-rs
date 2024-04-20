@@ -92,9 +92,9 @@ MIT or Apache-2.0
 ## Reference
 
 1. Geospatial Information Authority of Japan (GIAJ, 国土地理院):
-   <https://www.gsi.go.jp/>,
-   (English) <https://www.gsi.go.jp/ENGLISH/>.
-2. _TKY2JGD for Windows Ver.1.3.79_ (reference implementation): <https://www.gsi.go.jp/sokuchikijun/tky2jgd_download.html>,
+   <https://www.gsi.go.jp/>, (English) <https://www.gsi.go.jp/ENGLISH/>.
+2. _TKY2JGD for Windows Ver.1.3.79_ (reference implementation):
+   <https://www.gsi.go.jp/sokuchikijun/tky2jgd_download.html>,
    released under [国土地理院コンテンツ利用規約] which compatible to CC BY 4.0.
 3. Other implementation:
    Python <https://github.com/paqira/jgdtrans-py>,

@@ -52,7 +52,7 @@
 //!     and JGD2000 to JGD2011 ([EPSG:4612] to [EPSG:6668])
 //! - Clean implementation
 //! - No dependency
-//!   - It depends on [`serde`][serde] and [`serde_repr`][serde_repr] crates only if `serde` feature on
+//!   - It depends on [`serde`][serde] and [`serde_repr`][serde_repr] crates only when `serde` feature on
 //!
 //! [TKY2JGD]: https://www.gsi.go.jp/sokuchikijun/tky2jgd.html
 //! [PatchJGD]: https://vldb.gsi.go.jp/sokuchi/surveycalc/patchjgd/index.html
@@ -68,7 +68,7 @@
 //! [serde]: https://crates.io/crates/serde
 //! [serde_repr]: https://crates.io/crates/serde_repr
 //!
-//! This package does not contain parameter files, download it from GIAJ [^7].
+//! This package does not contain parameter files, download it from GIAJ [^2].
 //!
 //! <span lang="ja">このパッケージはパラメータファイルを提供しません。公式サイトよりダウンロードしてください [^2]。</span>
 //!
@@ -97,7 +97,7 @@
 //!
 //! It supports (de)serialization by [`serde` crate][serde]
 //! for all `struct` including [`Transformer`] (deserialized object of par-formatted data)
-//! only if the feature `serde` is enabled.
+//! only when the feature `serde` is enabled.
 //! We show a (de)serialization example to/from json;
 //!
 //! ```
@@ -131,8 +131,8 @@
 //! }
 //! ```
 //!
-//! [^1]: Geospatial Information Authority of Japan (GIAJ, <span lang="ja">国土地理院</span>): <https://www.gsi.go.jp/>
-//!       (English) <https://www.gsi.go.jp/ENGLISH/>.
+//! [^1]: Geospatial Information Authority of Japan (GIAJ, <span lang="ja">国土地理院</span>):
+//!       <https://www.gsi.go.jp/>, (English) <https://www.gsi.go.jp/ENGLISH/>.
 //!
 //! [^2]: TKY2JGD: <https://www.gsi.go.jp/sokuchikijun/tky2jgd_download.html>;
 //!       PatchJGD, PatchJGD(H) and HyokoRev: <https://www.gsi.go.jp/sokuchikijun/sokuchikijun41012.html>;
@@ -149,7 +149,7 @@
 //!       JavaScript/TypeScript <https://github.com/paqira/jgdtrans-js>.
 //!
 //! [国土地理院コンテンツ利用規約]: https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
-#![feature(float_next_up_down)]
+#![feature(float_next_up_down)] // For `Mesh::next_up` and `Mesh::next_down`.
 
 #[doc(inline)]
 pub use par::{from_str, Format};

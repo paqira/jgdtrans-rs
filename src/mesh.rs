@@ -426,8 +426,7 @@ impl MeshCoord {
             return None;
         }
 
-        let delta: u8 = mesh_unit.into();
-        // 9 for MeshUnit::One and 5 for MeshUnit::Five
+        // 10 - u8::from(mesh_unit)
         let bound = match mesh_unit {
             MeshUnit::One => 9,
             MeshUnit::Five => 5,
@@ -458,7 +457,7 @@ impl MeshCoord {
             Some(Self {
                 first: self.first,
                 second: self.second,
-                third: self.third + delta,
+                third: self.third + u8::from(mesh_unit),
             })
         }
     }
@@ -493,8 +492,7 @@ impl MeshCoord {
             return None;
         }
 
-        let delta: u8 = mesh_unit.into();
-        // 9 for MeshUnit::One and 5 for MeshUnit::Five
+        // 10 - u8::from(mesh_unit)
         let bound = match mesh_unit {
             MeshUnit::One => 9,
             MeshUnit::Five => 5,
@@ -525,7 +523,7 @@ impl MeshCoord {
             Some(Self {
                 first: self.first,
                 second: self.second,
-                third: self.third - delta,
+                third: self.third - u8::from(mesh_unit),
             })
         }
     }

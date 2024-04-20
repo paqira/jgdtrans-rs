@@ -30,7 +30,7 @@ use crate::Point;
 /// ```
 #[inline]
 pub fn is_meshcode(meshcode: &u32) -> bool {
-    matches!(MeshNode::try_from_meshcode(meshcode), Some(_))
+    MeshNode::try_from_meshcode(meshcode).is_some()
 }
 
 /// The mesh unit, or approximate length of cell's edge.

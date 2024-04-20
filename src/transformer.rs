@@ -139,17 +139,17 @@ impl Correction {
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Statistics {
-    /// The count
+    /// The count.
     pub count: Option<usize>,
-    /// The average (\[sec\] or \[m\])
+    /// The average (\[sec\] or \[m\]).
     pub mean: Option<f64>,
-    /// The standard variance (\[sec\] or \[m\])
+    /// The standard variance (\[sec\] or \[m\]).
     pub std: Option<f64>,
-    /// $(1/n) \\sum_{i=1}^n \\left| \\text{parameter}_i \\right|$ (\[sec\] or \[m\])
+    /// $(1/n) \\sum_{i=1}^n \\left| \\text{parameter}_i \\right|$ (\[sec\] or \[m\]).
     pub abs: Option<f64>,
-    /// The minimum (\[sec\] or \[m\])
+    /// The minimum (\[sec\] or \[m\]).
     pub min: Option<f64>,
-    /// The maximum (\[sec\] or \[m\])
+    /// The maximum (\[sec\] or \[m\]).
     pub max: Option<f64>,
 }
 
@@ -166,9 +166,17 @@ impl Statistics {
             };
         }
 
-        let length = vs.len() as f64;
-
         let sum = ksum(vs);
+        if sum.is_nan() {
+            return Self {
+                count: Some(vs.len()),
+                mean: Some(f64::NAN),
+                std: Some(f64::NAN),
+                abs: Some(f64::NAN),
+                min: Some(f64::NAN),
+                max: Some(f64::NAN),
+            };
+        }
 
         let mut max = f64::MIN;
         let mut min = f64::MAX;
@@ -182,6 +190,7 @@ impl Statistics {
             abs.push(v.abs());
         }
 
+        let length = vs.len() as f64;
         Self {
             count: Some(vs.len()),
             mean: Some(sum / length),
@@ -404,9 +413,6 @@ impl Transformer {
 
     /// Returns the statistical summary.
     ///
-    /// This fills the result by [`None`] if the population is empty,
-    /// and drops [`NAN`](f64::NAN) from the population of the summary.
-    ///
     /// See [`Statistics`] for details of result's components.
     ///
     /// # Example
@@ -439,11 +445,7 @@ impl Transformer {
     pub fn statistics(&self) -> Stats {
         macro_rules! extract {
             ($name:ident) => {
-                self.parameter
-                    .values()
-                    .map(|v| v.$name)
-                    .filter(|v| !v.is_nan())
-                    .collect::<Vec<_>>()
+                self.parameter.values().map(|v| v.$name).collect::<Vec<_>>()
             };
         }
 
@@ -1117,6 +1119,16 @@ impl TransformError {
 mod tests {
     use super::*;
 
+    mod test_ksum {
+        use super::*;
+
+        #[test]
+        fn test_nan() {
+            let actual = ksum(&[1., f64::NAN, 1.]);
+            assert!(actual.is_nan());
+        }
+    }
+
     mod tests_transformer {
         use super::*;
 
@@ -1230,17 +1242,12 @@ mod tests {
                     max: Some(0.0)
                 }
             );
-            assert_eq!(
-                stats.altitude,
-                Statistics {
-                    count: None,
-                    mean: None,
-                    std: None,
-                    abs: None,
-                    min: None,
-                    max: None
-                }
-            );
+            assert_eq!(stats.altitude.count, Some(1));
+            assert!(stats.altitude.mean.unwrap().is_nan());
+            assert!(stats.altitude.std.unwrap().is_nan());
+            assert!(stats.altitude.abs.unwrap().is_nan());
+            assert!(stats.altitude.min.unwrap().is_nan());
+            assert!(stats.altitude.max.unwrap().is_nan());
         }
 
         #[test]

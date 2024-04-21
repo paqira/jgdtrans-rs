@@ -561,7 +561,7 @@ impl Transformer {
     ///
     /// The result's drafting from the exact solution
     /// is less than error of the GIAJ latitude and longitude parameter,
-    /// 2.7e-9 \[deg\], for each latitude and longitude.
+    /// 1e-9 \[deg\], for each latitude and longitude.
     /// The altitude's drafting is less than 1e-5 which is error of the GIAJ altitude parameter.
     ///     
     /// # Example
@@ -583,12 +583,12 @@ impl Transformer {
     /// );
     ///
     /// // origin is forward trans. from 36.10377479, 140.087855041, 2.34
-    /// // In this case, no error remains on latitude and longitude
+    /// // In this case, no error remains
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
     /// let result = tf.backward_safe(&origin)?;
     /// assert_eq!(result.latitude, 36.10377479);
     /// assert_eq!(result.longitude, 140.087855041);
-    /// assert_eq!(result.altitude, 2.3399999999970085);
+    /// assert_eq!(result.altitude, 2.34);
     ///
     /// // This is equivalent to adding the result of Transformer::backward_corr_safe
     /// assert_eq!(result, &origin + tf.backward_safe_corr(&origin)?);
@@ -784,9 +784,9 @@ impl Transformer {
     ///
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
     /// let corr = tf.backward_safe_corr(&origin)?;
-    /// assert_eq!(corr.latitude, 1.772913310099049e-6);
-    /// assert_eq!(corr.longitude, -4.202334510033827e-6);
-    /// assert_eq!(corr.altitude, -0.0963138578132916);
+    /// assert_eq!(corr.latitude, 1.7729133100878255e-6);
+    /// assert_eq!(corr.longitude, -4.202334510058886e-6);
+    /// assert_eq!(corr.altitude, -0.09631385781030007);
     ///
     /// assert_eq!(&origin + corr, tf.backward_safe(&origin)?);
     /// # Ok(())}
@@ -795,8 +795,8 @@ impl Transformer {
         // Newton's Method
 
         const SCALE: f64 = 3600.;
-        const CRITERIA: f64 = 2.5e-9;
-        const ITERATION: usize = 3;
+        const CRITERIA: f64 = 5e-14;
+        const ITERATION: usize = 4;
 
         let mut yn = point.latitude;
         let mut xn = point.longitude;
@@ -857,7 +857,7 @@ impl Transformer {
             // fy,x
             let fy_x = -(lat_sub!(se, sw) * (1. - yn) + lat_sub!(ne, nw) * yn) / SCALE;
             // fx,y
-            let fy_y = -1. - (lat_sub!(ne, sw) * (1. - xn) + lat_sub!(ne, se) * xn) / SCALE;
+            let fy_y = -1. - (lat_sub!(nw, sw) * (1. - xn) + lat_sub!(ne, se) * xn) / SCALE;
 
             // # and its determinant
             let det = fx_x * fy_y - fy_x * fy_x;

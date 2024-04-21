@@ -129,7 +129,7 @@ impl Format {
     /// # }
     /// ```
     #[inline]
-    pub fn mesh_unit(&self) -> MeshUnit {
+    pub const fn mesh_unit(&self) -> MeshUnit {
         match self {
             Self::TKY2JGD
             | Self::PatchJGD
@@ -384,7 +384,7 @@ impl Error for ParseParError {
 
 impl ParseParError {
     #[cold]
-    fn new(
+    const fn new(
         start: usize,
         end: usize,
         lineno: usize,

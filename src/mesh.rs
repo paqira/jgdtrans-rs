@@ -47,9 +47,16 @@ pub enum MeshUnit {
 impl From<&MeshUnit> for u8 {
     #[inline]
     fn from(value: &MeshUnit) -> Self {
-        match value {
-            MeshUnit::One => 1,
-            MeshUnit::Five => 5,
+        value.as_u8()
+    }
+}
+
+impl MeshUnit {
+    #[inline]
+    const fn as_u8(&self) -> u8 {
+        match self {
+            Self::One => 1,
+            Self::Five => 5,
         }
     }
 }
@@ -153,9 +160,8 @@ impl MeshCoord {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn try_new(first: u8, second: u8, third: u8) -> Option<Self> {
-        if first.gt(&Self::MAX.first) || second.gt(&Self::MAX.second) || third.gt(&Self::MAX.third)
-        {
+    pub const fn try_new(first: u8, second: u8, third: u8) -> Option<Self> {
+        if first > Self::MAX.first || second > Self::MAX.second || third > Self::MAX.third {
             return None;
         };
 
@@ -180,7 +186,7 @@ impl MeshCoord {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn first(&self) -> &u8 {
+    pub const fn first(&self) -> &u8 {
         &self.first
     }
 
@@ -198,7 +204,7 @@ impl MeshCoord {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn second(&self) -> &u8 {
+    pub const fn second(&self) -> &u8 {
         &self.second
     }
 
@@ -216,7 +222,7 @@ impl MeshCoord {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn third(&self) -> &u8 {
+    pub const fn third(&self) -> &u8 {
         &self.third
     }
 
@@ -237,10 +243,10 @@ impl MeshCoord {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
+    pub const fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
         match mesh_unit {
             MeshUnit::One => true,
-            MeshUnit::Five => (self.third % u8::from(mesh_unit)).eq(&0),
+            MeshUnit::Five => (self.third % mesh_unit.as_u8()) == 0,
         }
     }
 
@@ -435,7 +441,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
-    pub fn try_next_up(&self, mesh_unit: &MeshUnit) -> Option<Self> {
+    pub const fn try_next_up(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         if !self.is_mesh_unit(mesh_unit) {
             return None;
         }
@@ -446,9 +452,9 @@ impl MeshCoord {
             MeshUnit::Five => 5,
         };
 
-        if self.third.eq(&bound) {
-            if self.second.eq(&Self::MAX.second) {
-                if self.first.eq(&Self::MAX.first) {
+        if self.third == bound {
+            if self.second == Self::MAX.second {
+                if self.first == Self::MAX.first {
                     None
                 } else {
                     // `first` is not 99
@@ -471,7 +477,7 @@ impl MeshCoord {
             Some(Self {
                 first: self.first,
                 second: self.second,
-                third: self.third + u8::from(mesh_unit),
+                third: self.third + mesh_unit.as_u8(),
             })
         }
     }
@@ -501,7 +507,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
-    pub fn try_next_down(&self, mesh_unit: &MeshUnit) -> Option<Self> {
+    pub const fn try_next_down(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         if !self.is_mesh_unit(mesh_unit) {
             return None;
         }
@@ -512,9 +518,9 @@ impl MeshCoord {
             MeshUnit::Five => 5,
         };
 
-        if self.third.eq(&Self::MIN.third) {
-            if self.second.eq(&Self::MIN.second) {
-                if self.first.eq(&Self::MIN.first) {
+        if self.third == Self::MIN.third {
+            if self.second == Self::MIN.second {
+                if self.first == Self::MIN.first {
                     None
                 } else {
                     // `first` is not 0
@@ -537,7 +543,7 @@ impl MeshCoord {
             Some(Self {
                 first: self.first,
                 second: self.second,
-                third: self.third - u8::from(mesh_unit),
+                third: self.third - mesh_unit.as_u8(),
             })
         }
     }
@@ -696,7 +702,7 @@ impl MeshNode {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn latitude(&self) -> &MeshCoord {
+    pub const fn latitude(&self) -> &MeshCoord {
         &self.latitude
     }
 
@@ -717,7 +723,7 @@ impl MeshNode {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn longitude(&self) -> &MeshCoord {
+    pub const fn longitude(&self) -> &MeshCoord {
         &self.longitude
     }
 
@@ -738,7 +744,7 @@ impl MeshNode {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
+    pub const fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
         match mesh_unit {
             MeshUnit::One => true,
             MeshUnit::Five => {
@@ -870,7 +876,7 @@ impl MeshNode {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn to_meshcode(&self) -> u32 {
+    pub const fn to_meshcode(&self) -> u32 {
         (self.latitude.first as u32 * 100 + self.longitude.first as u32) * 10_000
             + (self.latitude.second as u32 * 10 + self.longitude.second as u32) * 100
             + (self.latitude.third as u32 * 10 + self.longitude.third as u32)
@@ -1051,7 +1057,7 @@ impl MeshCell {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn south_west(&self) -> &MeshNode {
+    pub const fn south_west(&self) -> &MeshNode {
         &self.south_west
     }
 
@@ -1074,7 +1080,7 @@ impl MeshCell {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn south_east(&self) -> &MeshNode {
+    pub const fn south_east(&self) -> &MeshNode {
         &self.south_east
     }
 
@@ -1097,7 +1103,7 @@ impl MeshCell {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn north_west(&self) -> &MeshNode {
+    pub const fn north_west(&self) -> &MeshNode {
         &self.north_west
     }
 
@@ -1120,7 +1126,7 @@ impl MeshCell {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn north_east(&self) -> &MeshNode {
+    pub const fn north_east(&self) -> &MeshNode {
         &self.north_east
     }
 
@@ -1143,7 +1149,7 @@ impl MeshCell {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn mesh_unit(&self) -> &MeshUnit {
+    pub const fn mesh_unit(&self) -> &MeshUnit {
         &self.mesh_unit
     }
 
@@ -1364,7 +1370,7 @@ impl Error for MeshTryFromError {
 
 impl MeshTryFromError {
     #[cold]
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {}
     }
 }

@@ -74,7 +74,7 @@ impl Parameter {
     /// assert_eq!(parameter.altitude, 3.);
     /// ```
     #[inline]
-    pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
+    pub const fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
             longitude,
@@ -128,7 +128,7 @@ impl Correction {
     /// assert_eq!(correction.altitude, 3.);
     /// ```
     #[inline]
-    pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
+    pub const fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
             longitude,
@@ -311,7 +311,7 @@ impl Transformer {
     /// # Ok(())}
     /// ```
     #[inline]
-    pub fn new(format: Format, parameter: BTreeMap<u32, Parameter>) -> Self {
+    pub const fn new(format: Format, parameter: BTreeMap<u32, Parameter>) -> Self {
         Self {
             format,
             parameter,
@@ -341,7 +341,7 @@ impl Transformer {
     /// # }
     /// ```
     #[inline]
-    pub fn new_with_description(
+    pub const fn new_with_description(
         format: Format,
         parameter: BTreeMap<u32, Parameter>,
         description: String,
@@ -936,7 +936,7 @@ impl TransformerBuilder {
     /// # }
     /// ```
     #[inline]
-    pub fn new(format: Format) -> Self {
+    pub const fn new(format: Format) -> Self {
         TransformerBuilder {
             format,
             parameter: BTreeMap::new(),
@@ -961,7 +961,7 @@ impl TransformerBuilder {
     /// # }
     /// ```
     #[inline]
-    pub fn format(mut self, format: Format) -> Self {
+    pub const fn format(mut self, format: Format) -> Self {
         self.format = format;
         self
     }
@@ -1109,15 +1109,15 @@ impl Error for TransformError {
 
 impl TransformError {
     #[cold]
-    fn new_pnf(meshcode: u32, corner: MeshCellCorner) -> Self {
+    const fn new_pnf(meshcode: u32, corner: MeshCellCorner) -> Self {
         Self::ParameterNotFound { meshcode, corner }
     }
     #[cold]
-    fn new_cnf() -> Self {
+    const fn new_cnf() -> Self {
         Self::CorrectionNotFound
     }
     #[cold]
-    fn new_oob() -> Self {
+    const fn new_oob() -> Self {
         Self::OutOfBounds
     }
 }

@@ -246,7 +246,7 @@ impl Point {
     /// # }
     /// ```
     #[inline]
-    pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
+    pub const fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
             longitude,

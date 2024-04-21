@@ -354,7 +354,7 @@ impl DMS {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn sign(&self) -> &Sign {
+    pub const fn sign(&self) -> &Sign {
         &self.sign
     }
 
@@ -372,7 +372,7 @@ impl DMS {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn degree(&self) -> &u8 {
+    pub const fn degree(&self) -> &u8 {
         &self.degree
     }
 
@@ -390,7 +390,7 @@ impl DMS {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn minute(&self) -> &u8 {
+    pub const fn minute(&self) -> &u8 {
         &self.minute
     }
 
@@ -408,7 +408,7 @@ impl DMS {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn second(&self) -> &u8 {
+    pub const fn second(&self) -> &u8 {
         &self.second
     }
 
@@ -426,7 +426,7 @@ impl DMS {
     /// # fn main() -> () {run();()}
     /// ```
     #[inline]
-    pub fn fract(&self) -> &f64 {
+    pub const fn fract(&self) -> &f64 {
         &self.fract
     }
 
@@ -494,15 +494,15 @@ impl Error for ParseDMSError {
 
 impl ParseDMSError {
     #[cold]
-    fn new_id() -> Self {
+    const fn new_id() -> Self {
         Self::InvalidDigit
     }
     #[cold]
-    fn new_oob() -> Self {
+    const fn new_oob() -> Self {
         Self::OutOfBounds
     }
     #[cold]
-    fn new_empty() -> Self {
+    const fn new_empty() -> Self {
         Self::Empty
     }
 }
@@ -530,11 +530,11 @@ impl Error for TryFromDMSError {
 
 impl TryFromDMSError {
     #[cold]
-    fn new_nan() -> Self {
+    const fn new_nan() -> Self {
         Self::NAN
     }
     #[cold]
-    fn new_oob() -> Self {
+    const fn new_oob() -> Self {
         Self::OutOfBounds
     }
 }

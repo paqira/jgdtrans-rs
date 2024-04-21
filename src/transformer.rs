@@ -582,7 +582,7 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// // origin is forward trans. from 36.10377479, 140.087855041, 2.34
+    /// // The origin is forward trans. from 36.10377479, 140.087855041, 2.34
     /// // In this case, no error remains
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
     /// let result = tf.backward_safe(&origin)?;

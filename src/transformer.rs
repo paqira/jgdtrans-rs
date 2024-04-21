@@ -509,8 +509,7 @@ impl Transformer {
     /// ```
     #[inline]
     pub fn forward(&self, point: &Point) -> Result<Point> {
-        let corr = self.forward_corr(point)?;
-        Ok(point + corr)
+        self.forward_corr(point).map(|corr| point + corr)
     }
 
     /// Returns the backward-transformed position from [`point`](Point).
@@ -553,8 +552,7 @@ impl Transformer {
     /// ```
     #[inline]
     pub fn backward(&self, point: &Point) -> Result<Point> {
-        let corr = self.backward_corr(point)?;
-        Ok(point + corr)
+        self.backward_corr(point).map(|corr| point + corr)
     }
 
     /// Returns the validated backward-transformed position.
@@ -596,8 +594,7 @@ impl Transformer {
     /// ```
     #[inline]
     pub fn backward_safe(&self, point: &Point) -> Result<Point> {
-        let corr = self.backward_safe_corr(point)?;
-        Ok(point + corr)
+        self.backward_safe_corr(point).map(|corr| point + corr)
     }
 
     fn parameter_quadruple(

@@ -347,8 +347,7 @@ impl Point {
     /// ```
     #[inline]
     pub fn try_from_meshcode(meshcode: &u32) -> Option<Self> {
-        let node = &MeshNode::try_from_meshcode(meshcode)?;
-        Some(Self::from_node(node))
+        MeshNode::try_from_meshcode(meshcode).map(|node| Self::from_node(&node))
     }
 
     /// Makes a [`Point`] where the `node` locates.
@@ -406,8 +405,7 @@ impl Point {
     /// ```
     #[inline]
     pub fn try_to_meshcode(&self, mesh_unit: &MeshUnit) -> Option<u32> {
-        let node = self.try_to_node(mesh_unit)?;
-        Some(node.to_meshcode())
+        self.try_to_node(mesh_unit).map(|node| node.to_meshcode())
     }
 
     /// Returns the nearest south-east [`MeshNode`] of `self`.

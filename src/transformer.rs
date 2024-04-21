@@ -871,7 +871,7 @@ impl Transformer {
             let delta_x = delta!(point.longitude, xn, corr.longitude);
             let delta_y = delta!(point.latitude, yn, corr.latitude);
 
-            if delta_x.abs().le(&CRITERIA) && delta_y.abs().le(&CRITERIA) {
+            if delta_x.abs().lt(&CRITERIA) && delta_y.abs().lt(&CRITERIA) {
                 return Ok(Correction {
                     latitude: -corr.latitude,
                     longitude: -corr.longitude,

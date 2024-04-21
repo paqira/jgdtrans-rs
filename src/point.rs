@@ -83,6 +83,7 @@ impl From<(f64, f64, f64)> for Point {
 
 impl From<MeshNode> for Point {
     /// see [`Point::from_node()`].
+    #[inline]
     fn from(value: MeshNode) -> Self {
         Self::from_node(&value)
     }
@@ -344,6 +345,7 @@ impl Point {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn try_from_meshcode(meshcode: &u32) -> Option<Self> {
         let node = &MeshNode::try_from_meshcode(meshcode)?;
         Some(Self::from_node(node))
@@ -367,6 +369,7 @@ impl Point {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn from_node(node: &MeshNode) -> Self {
         let latitude = node.latitude.to_latitude();
         let longitude = node.longitude.to_longitude();
@@ -401,6 +404,7 @@ impl Point {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn try_to_meshcode(&self, mesh_unit: &MeshUnit) -> Option<u32> {
         let node = self.try_to_node(mesh_unit)?;
         Some(node.to_meshcode())
@@ -433,6 +437,7 @@ impl Point {
     /// );
     /// # }
     /// ```
+    #[inline]
     pub fn try_to_node(&self, mesh_unit: &MeshUnit) -> Option<MeshNode> {
         MeshNode::try_from_point(self, mesh_unit)
     }

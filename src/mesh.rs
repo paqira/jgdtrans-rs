@@ -350,7 +350,6 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
-    #[inline]
     pub fn try_from_longitude(degree: &f64, mesh_unit: &MeshUnit) -> Option<Self> {
         if degree.is_nan() || degree.lt(&100.0) || degree.gt(&180.0) {
             return None;
@@ -782,6 +781,7 @@ impl MeshNode {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn try_from_point(point: &Point, mesh_unit: &MeshUnit) -> Option<Self> {
         let latitude = MeshCoord::try_from_latitude(&point.latitude, mesh_unit)?;
         let longitude = MeshCoord::try_from_longitude(&point.longitude, mesh_unit)?;
@@ -1327,6 +1327,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() -> () {run();()}
     /// ```
+    #[inline]
     pub fn position(&self, point: &Point) -> (f64, f64) {
         let lat = point.latitude - self.south_west.latitude.to_latitude();
         let lng = point.longitude - self.south_west.longitude.to_longitude();

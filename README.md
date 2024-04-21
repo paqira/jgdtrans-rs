@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Perform verified backward transformation
     // that the error from the exact solution is less than GIAJ parameter error
     let q = tf.backward_safe(&result)?;
-    // Prints Verified Backward: Point { latitude: 35.0, longitude: 135.0, altitude: 2.3400000000005847 }
+    // Prints Verified Backward: Point { latitude: 35.0, longitude: 135.0, altitude: 2.34 }
     println!("Verified Backward: {q:?}");
 
     Ok(())

@@ -34,7 +34,7 @@
 //!     // Perform verified backward transformation
 //!     // that the error from the exact solution is less than GIAJ parameter error
 //!     let q = tf.backward_safe(&result)?;
-//!     // Prints Verified Backward: Point { latitude: 35.0, longitude: 135.0, altitude: 2.3400000000005847 }
+//!     // Prints Verified Backward: Point { latitude: 35.0, longitude: 135.0, altitude: 2.34 }
 //!     println!("Verified Backward: {q:?}");
 //!
 //!     Ok(())
@@ -150,6 +150,7 @@
 //!
 //! [国土地理院コンテンツ利用規約]: https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
 #![feature(float_next_up_down)] // For `Mesh::next_up` and `Mesh::next_down`.
+#![feature(portable_simd)]
 
 #[doc(inline)]
 pub use par::{from_str, Format};

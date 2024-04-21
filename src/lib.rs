@@ -150,7 +150,6 @@
 //!
 //! [国土地理院コンテンツ利用規約]: https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
 #![feature(float_next_up_down)] // For `Mesh::next_up` and `Mesh::next_down`.
-#![feature(portable_simd)]
 
 #[doc(inline)]
 pub use par::{from_str, Format};

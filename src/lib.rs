@@ -115,8 +115,9 @@
 //!
 //! fn main() -> serde_json::Result<()> {
 //!     // Construct a Transformer by TransformerBuilder
-//!     let tf = TransformerBuilder::new(Format::TKY2JGD)
-//!         .parameter(12345678, Parameter::new(1., 2., 3.))
+//!     let tf = TransformerBuilder::new()
+//!         .format(Format::TKY2JGD)
+//!         .parameter(12345678, (1., 2., 3.))
 //!         .build();
 //!
 //!     // Serialize to json

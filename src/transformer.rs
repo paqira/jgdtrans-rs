@@ -893,6 +893,10 @@ impl<'a> Interpol<'a> {
 
 /// The builder of [`Transformer`].
 ///
+/// # Safety
+///
+/// Panics when `format` is not assigned.
+///
 /// # Example
 ///
 /// ```
@@ -900,27 +904,28 @@ impl<'a> Interpol<'a> {
 /// # use jgdtrans::mesh::MeshUnit;
 /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
 /// // from SemiDynaEXE2023.par
-/// let tf: Transformer = TransformerBuilder::new(Format::SemiDynaEXE)
-///   .parameters([
-///       (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-///       (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-///   ])
-///   .description("My parameter".to_string())
-///   .build();
+/// let tf: Transformer = TransformerBuilder::new()
+///     .format(Format::SemiDynaEXE)
+///     .parameters([
+///         (54401005, (-0.00622, 0.01516, 0.0946)),
+///         (54401055, (-0.0062, 0.01529, 0.08972)),
+///     ])
+///     .description("My parameter".to_string())
+///     .build();
 ///
 /// assert_eq!(tf.format, Format::SemiDynaEXE);
 /// assert_eq!(
 ///     tf.parameter,
 ///     [
-///       (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-///       (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
 ///     ].into()
 /// );
 /// assert_eq!(tf.description, Some("My parameter".to_string()));
 /// ```
 #[derive(Debug, Clone)]
 pub struct TransformerBuilder {
-    format: Format,
+    format: Option<Format>,
     parameter: HashMap<u32, Parameter>,
     description: Option<String>,
 }
@@ -935,16 +940,19 @@ impl TransformerBuilder {
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
     /// # use std::collections::HashMap;
-    /// let tf = TransformerBuilder::new(Format::SemiDynaEXE).build();
+    /// let tf = TransformerBuilder::new()
+    ///     .format(Format::SemiDynaEXE)
+    ///     .build();
     ///
     /// assert_eq!(tf.format, Format::SemiDynaEXE);
     /// assert_eq!(tf.parameter, HashMap::new());
     /// assert_eq!(tf.description, None);
     /// ```
+    #[allow(clippy::new_without_default)]
     #[inline]
-    pub fn new(format: Format) -> Self {
-        TransformerBuilder {
-            format,
+    pub fn new() -> Self {
+        Self {
+            format: None,
             parameter: HashMap::new(),
             description: None,
         }
@@ -958,7 +966,7 @@ impl TransformerBuilder {
     /// # use jgdtrans::*;
     /// # use jgdtrans::transformer::TransformerBuilder;
     /// # use std::collections::HashMap;
-    /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
+    /// let tf = TransformerBuilder::new()
     ///     .format(Format::SemiDynaEXE)
     ///     .build();
     ///
@@ -966,7 +974,7 @@ impl TransformerBuilder {
     /// ```
     #[inline]
     pub const fn format(mut self, format: Format) -> Self {
-        self.format = format;
+        self.format = Some(format);
         self
     }
 
@@ -980,15 +988,16 @@ impl TransformerBuilder {
     /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
     /// # use std::collections::HashMap;
     /// // from SemiDynaEXE2023.par
-    /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
-    ///     .parameter(54401005, Parameter::new(-0.00622, 0.01516, 0.0946))
+    /// let tf = TransformerBuilder::new()
+    ///     .format(Format::SemiDynaEXE)
+    ///     .parameter(54401005, (-0.00622, 0.01516, 0.0946))
     ///     .build();
     ///
     /// assert_eq!(tf.parameter, [(54401005, Parameter::new(-0.00622, 0.01516, 0.0946)), ].into());
     /// ```
     #[inline]
-    pub fn parameter(mut self, key: u32, parameter: Parameter) -> Self {
-        self.parameter.insert(key, parameter);
+    pub fn parameter(mut self, key: u32, parameter: impl Into<Parameter>) -> Self {
+        self.parameter.insert(key, parameter.into());
         self
     }
 
@@ -1001,26 +1010,32 @@ impl TransformerBuilder {
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
     /// // from SemiDynaEXE2023.par
-    /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
-    ///   .parameters([
-    ///       (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///       (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///       (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///       (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///   ])
-    ///   .build();
+    /// let tf = TransformerBuilder::new()
+    ///     .format(Format::SemiDynaEXE)
+    ///     .parameters([
+    ///         (54401005, (-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, (-0.0062, 0.01529, 0.08972)),
+    ///         (54401100, (-0.00663, 0.01492, 0.10374)),
+    ///         (54401150, (-0.00664, 0.01506, 0.10087)),
+    ///     ])
+    ///     .build();
     ///
-    /// assert_eq!(tf.parameter, [
-    ///       (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///       (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///       (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///       (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    /// ].into());
+    /// assert_eq!(tf.parameter,
+    ///     [
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///     ].into()
+    /// );
     /// ```
     #[inline]
-    pub fn parameters(mut self, parameters: impl IntoIterator<Item = (u32, Parameter)>) -> Self {
+    pub fn parameters(
+        mut self,
+        parameters: impl IntoIterator<Item = (u32, impl Into<Parameter>)>,
+    ) -> Self {
         for (key, parameter) in parameters.into_iter() {
-            self.parameter.insert(key, parameter);
+            self.parameter.insert(key, parameter.into());
         }
         self
     }
@@ -1031,9 +1046,10 @@ impl TransformerBuilder {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::TransformerBuilder;
-    /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
-    ///   .description("My parameter".to_string())
-    ///   .build();
+    /// let tf = TransformerBuilder::new()
+    ///     .format(Format::SemiDynaEXE)
+    ///     .description("My parameter".to_string())
+    ///     .build();
     ///
     /// assert_eq!(tf.description, Some("My parameter".to_string()));
     /// ```
@@ -1044,10 +1060,14 @@ impl TransformerBuilder {
     }
 
     /// Builds [`Transformer`].
+    ///
+    /// # Safety
+    ///
+    /// Panics when `format` is not assigned.
     #[inline]
     pub fn build(self) -> Transformer {
         Transformer {
-            format: self.format,
+            format: self.format.expect("format is not assigned"),
             parameter: self.parameter,
             description: self.description,
         }
@@ -1154,12 +1174,13 @@ mod tests {
         }
     }
 
-    mod tests_transformer {
+    mod test_transformer {
         use super::*;
 
         #[test]
         fn test_stats() {
-            let stats = TransformerBuilder::new(Format::SemiDynaEXE)
+            let stats = TransformerBuilder::new()
+                .format(Format::SemiDynaEXE)
                 .parameters([
                     (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
                     (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -1203,7 +1224,8 @@ mod tests {
                 }
             );
 
-            let stats = TransformerBuilder::new(Format::TKY2JGD)
+            let stats = TransformerBuilder::new()
+                .format(Format::TKY2JGD)
                 .build()
                 .statistics();
             assert_eq!(
@@ -1240,7 +1262,8 @@ mod tests {
                 }
             );
 
-            let stats = TransformerBuilder::new(Format::SemiDynaEXE)
+            let stats = TransformerBuilder::new()
+                .format(Format::SemiDynaEXE)
                 .parameters([(54401005, Parameter::new(1., 0.0, f64::NAN))])
                 .build()
                 .statistics();
@@ -1277,17 +1300,18 @@ mod tests {
 
         #[test]
         fn test_on_tky2jgd() {
-            let tf = TransformerBuilder::new(Format::TKY2JGD)
+            let tf = TransformerBuilder::new()
+                .format(Format::TKY2JGD)
                 .parameters([
                     // forward
-                    (54401027, Parameter::new(11.49105, -11.80078, 0.0)),
-                    (54401027, Parameter::new(11.49105, -11.80078, 0.0)),
-                    (54401037, Parameter::new(11.48732, -11.80198, 0.0)),
-                    (54401028, Parameter::new(11.49096, -11.80476, 0.0)),
-                    (54401038, Parameter::new(11.48769, -11.80555, 0.0)),
+                    (54401027, (11.49105, -11.80078, 0.0)),
+                    (54401027, (11.49105, -11.80078, 0.0)),
+                    (54401037, (11.48732, -11.80198, 0.0)),
+                    (54401028, (11.49096, -11.80476, 0.0)),
+                    (54401038, (11.48769, -11.80555, 0.0)),
                     // backward
-                    (54401047, Parameter::new(11.48373, -11.80318, 0.0)),
-                    (54401048, Parameter::new(11.48438, -11.80689, 0.0)),
+                    (54401047, (11.48373, -11.80318, 0.0)),
+                    (54401048, (11.48438, -11.80689, 0.0)),
                 ])
                 .build();
 
@@ -1311,16 +1335,17 @@ mod tests {
 
         #[test]
         fn test_on_patch_jgd_hv() {
-            let tf = TransformerBuilder::new(Format::PatchJGD_HV)
+            let tf = TransformerBuilder::new()
+                .format(Format::PatchJGD_HV)
                 .parameters([
                     // forward
-                    (57413454, Parameter::new(-0.05984, 0.22393, -1.25445)),
-                    (57413464, Parameter::new(-0.06011, 0.22417, -1.24845)),
-                    (57413455, Parameter::new(-0.0604, 0.2252, -1.29)),
-                    (57413465, Parameter::new(-0.06064, 0.22523, -1.27667)),
+                    (57413454, (-0.05984, 0.22393, -1.25445)),
+                    (57413464, (-0.06011, 0.22417, -1.24845)),
+                    (57413455, (-0.0604, 0.2252, -1.29)),
+                    (57413465, (-0.06064, 0.22523, -1.27667)),
                     // backward
-                    (57413474, Parameter::new(-0.06037, 0.22424, -0.35308)),
-                    (57413475, Parameter::new(-0.06089, 0.22524, 0.0)),
+                    (57413474, (-0.06037, 0.22424, -0.35308)),
+                    (57413475, (-0.06089, 0.22524, 0.0)),
                 ])
                 .build();
 
@@ -1343,12 +1368,13 @@ mod tests {
 
         #[test]
         fn test_on_semi_nyna_exe() {
-            let tf = TransformerBuilder::new(Format::SemiDynaEXE)
+            let tf = TransformerBuilder::new()
+                .format(Format::SemiDynaEXE)
                 .parameters([
-                    (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-                    (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-                    (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-                    (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+                    (54401005, (-0.00622, 0.01516, 0.0946)),
+                    (54401055, (-0.0062, 0.01529, 0.08972)),
+                    (54401100, (-0.00663, 0.01492, 0.10374)),
+                    (54401150, (-0.00664, 0.01506, 0.10087)),
                 ])
                 .build();
 
@@ -1371,12 +1397,13 @@ mod tests {
 
         #[test]
         fn test_on_semi_nyna_exe_exact() {
-            let tf = TransformerBuilder::new(Format::SemiDynaEXE)
+            let tf = TransformerBuilder::new()
+                .format(Format::SemiDynaEXE)
                 .parameters([
-                    (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-                    (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-                    (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-                    (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+                    (54401005, (-0.00622, 0.01516, 0.0946)),
+                    (54401055, (-0.0062, 0.01529, 0.08972)),
+                    (54401100, (-0.00663, 0.01492, 0.10374)),
+                    (54401150, (-0.00664, 0.01506, 0.10087)),
                 ])
                 .build();
 
@@ -1394,6 +1421,25 @@ mod tests {
             assert!((36.10377479166668 - actual.latitude).abs() < DELTA);
             assert!((140.08785504166664 - actual.longitude).abs() < DELTA);
             assert!((-4.2175864502150125955e-10 - actual.altitude).abs() < DELTA);
+        }
+    }
+
+    mod test_builder {
+        use super::*;
+        #[test]
+        #[should_panic(expected = "format is not assigned")]
+        fn test_panic() {
+            let _ = TransformerBuilder::new().build();
+        }
+
+        #[test]
+        fn test_impl() {
+            let _ = TransformerBuilder::new()
+                .format(Format::SemiDynaEXE)
+                .parameter(54401005, (-0.00622, 0.01516, 0.0946))
+                .parameter(54401055, [-0.0062, 0.01529, 0.08972])
+                .parameter(54401100, Parameter::new(-0.00663, 0.01492, 0.10374))
+                .build();
         }
     }
 }

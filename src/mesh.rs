@@ -52,7 +52,7 @@ impl From<&MeshUnit> for u8 {
 }
 
 impl MeshUnit {
-    #[inline]
+    #[inline(always)]
     const fn as_u8(&self) -> u8 {
         match self {
             Self::One => 1,
@@ -99,11 +99,11 @@ impl MeshUnit {
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MeshCoord {
-    /// takes 0 to 99 inclusive
+    /// Takes 0 to 99 inclusive.
     pub(crate) first: u8,
-    /// takes 0 to 7 inclusive
+    /// Takes 0 to 7 inclusive.
     pub(crate) second: u8,
-    /// takes 0 to 9 inclusive
+    /// Takes 0 to 9 inclusive.
     pub(crate) third: u8,
 }
 
@@ -583,8 +583,8 @@ pub struct MeshNode {
     pub(crate) latitude: MeshCoord,
     /// The mesh coord of longitude
     ///
-    /// This satisfies `MeshCoord {first: 0, second: 0, third: 0}` <=
-    /// and <= `MeshCoord {first: 80, second: 0, third: 0}`
+    /// This satisfies `MeshCoord { first: 0, second: 0, third: 0 }` <=
+    /// and <= `MeshCoord { first: 80, second: 0, third: 0 }`
     pub(crate) longitude: MeshCoord,
 }
 
@@ -625,7 +625,7 @@ impl From<MeshNode> for u32 {
 impl MeshNode {
     /// Smallest [`MeshNode`] value.
     ///
-    /// Equals to `MeshNode { latitude: MeshCoord { first: 0, second: 0, third: 0}, longitude: MeshCoord { first: 0, second: 0, third: 0 } }`.
+    /// Equals to `MeshNode { latitude: MeshCoord { first: 0, second: 0, third: 0 }, longitude: MeshCoord { first: 0, second: 0, third: 0 } }`.
     pub const MIN: MeshNode = MeshNode {
         latitude: MeshCoord {
             first: 0,
@@ -641,7 +641,7 @@ impl MeshNode {
 
     /// Largest [`MeshNode`] value.
     ///
-    /// Equals to `MeshNode { latitude: MeshCoord { first: 99, second: 7, third: 9}, longitude: MeshCoord { first: 80, second: 0, third: 0 } }`.
+    /// Equals to `MeshNode { latitude: MeshCoord { first: 99, second: 7, third: 9 }, longitude: MeshCoord { first: 80, second: 0, third: 0 } }`.
     pub const MAX: MeshNode = MeshNode {
         latitude: MeshCoord {
             first: 99,
@@ -657,8 +657,8 @@ impl MeshNode {
 
     /// Makes a [`MeshNode`].
     ///
-    /// `longitude` satisfies `MeshCoord {first: 0, second: 0, third: 0}` <=
-    /// and <= `MeshCoord {first: 80, second: 0, third: 0}`.
+    /// `longitude` satisfies `MeshCoord { first: 0, second: 0, third: 0 }` <=
+    /// and <= `MeshCoord { first: 80, second: 0, third: 0 }`.
     ///
     /// # Errors
     ///
@@ -751,12 +751,7 @@ impl MeshNode {
     /// ```
     #[inline]
     pub const fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
-        match mesh_unit {
-            MeshUnit::One => true,
-            MeshUnit::Five => {
-                self.latitude.is_mesh_unit(mesh_unit) && self.longitude.is_mesh_unit(mesh_unit)
-            }
-        }
+        self.latitude.is_mesh_unit(mesh_unit) && self.longitude.is_mesh_unit(mesh_unit)
     }
 
     /// Makes the nearest north-west [`MeshNode`] of `point`.

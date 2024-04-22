@@ -778,35 +778,25 @@ impl Transformer {
 
             // for readability
             macro_rules! lng_sub {
-                ($a:expr, $b:expr) => {
-                    $a.longitude - $b.longitude
+                ($a:ident, $b:ident) => {
+                    interpol.$a.longitude - interpol.$b.longitude
                 };
             }
 
             macro_rules! lat_sub {
-                ($a:expr, $b:expr) => {
-                    $a.latitude - $b.latitude
+                ($a:ident, $b:ident) => {
+                    interpol.$a.latitude - interpol.$b.latitude
                 };
             }
 
             // fx,x
-            let fx_x = -1.
-                - (lng_sub!(interpol.se, interpol.sw) * (1. - yn)
-                    + lng_sub!(interpol.ne, interpol.nw) * yn)
-                    / SCALE;
+            let fx_x = -1. - (lng_sub!(se, sw) * (1. - yn) + lng_sub!(ne, nw) * yn) / SCALE;
             // fx,y
-            let fx_y = -(lng_sub!(interpol.nw, interpol.sw) * (1. - xn)
-                + lng_sub!(interpol.ne, interpol.se) * xn)
-                / SCALE;
+            let fx_y = -(lng_sub!(nw, sw) * (1. - xn) + lng_sub!(ne, se) * xn) / SCALE;
             // fy,x
-            let fy_x = -(lat_sub!(interpol.se, interpol.sw) * (1. - yn)
-                + lat_sub!(interpol.ne, interpol.nw) * yn)
-                / SCALE;
+            let fy_x = -(lat_sub!(se, sw) * (1. - yn) + lat_sub!(ne, nw) * yn) / SCALE;
             // fy,y
-            let fy_y = -1.
-                - (lat_sub!(interpol.nw, interpol.sw) * (1. - xn)
-                    + lat_sub!(interpol.ne, interpol.se) * xn)
-                    / SCALE;
+            let fy_y = -1. - (lat_sub!(nw, sw) * (1. - xn) + lat_sub!(ne, se) * xn) / SCALE;
 
             // and its determinant
             let det = fx_x * fy_y - fy_x * fy_x;
@@ -1182,10 +1172,10 @@ mod tests {
             let stats = TransformerBuilder::new()
                 .format(Format::SemiDynaEXE)
                 .parameters([
-                    (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-                    (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-                    (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-                    (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+                    (54401005, (-0.00622, 0.01516, 0.0946)),
+                    (54401055, (-0.0062, 0.01529, 0.08972)),
+                    (54401100, (-0.00663, 0.01492, 0.10374)),
+                    (54401150, (-0.00664, 0.01506, 0.10087)),
                 ])
                 .build()
                 .statistics();
@@ -1264,7 +1254,7 @@ mod tests {
 
             let stats = TransformerBuilder::new()
                 .format(Format::SemiDynaEXE)
-                .parameters([(54401005, Parameter::new(1., 0.0, f64::NAN))])
+                .parameters([(54401005, (1., 0.0, f64::NAN))])
                 .build()
                 .statistics();
 
@@ -1434,12 +1424,22 @@ mod tests {
 
         #[test]
         fn test_impl() {
-            let _ = TransformerBuilder::new()
+            let tf = TransformerBuilder::new()
                 .format(Format::SemiDynaEXE)
                 .parameter(54401005, (-0.00622, 0.01516, 0.0946))
                 .parameter(54401055, [-0.0062, 0.01529, 0.08972])
                 .parameter(54401100, Parameter::new(-0.00663, 0.01492, 0.10374))
                 .build();
+
+            assert_eq!(
+                tf.parameter,
+                [
+                    (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+                    (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+                    (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+                ]
+                .into()
+            );
         }
     }
 }

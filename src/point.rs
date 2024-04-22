@@ -40,7 +40,6 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// ```
 /// # use jgdtrans::*;
 /// # use jgdtrans::transformer::Correction;
-/// # fn main() {
 /// // Construct
 /// let point = Point::new(35.0, 145.0, 5.0);
 /// assert_eq!(point.latitude, 35.0);
@@ -52,7 +51,6 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// assert_eq!(result, Point::new(36.0, 146.0, 6.0));
 /// let result = &result - Correction::new(1.0, 1.0, 1.0);
 /// assert_eq!(result, point);
-/// # }
 /// ```
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

@@ -1,3 +1,4 @@
+//! Provides [`Transformer`] etc.
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
@@ -424,7 +425,7 @@ impl Transformer {
     /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
     /// assert_eq!(
     ///     tf.parameter.get(&12345678),
-    ///     Some(&Parameter {latitude: 0.00001, longitude: 0.00002, altitude: 0.00003})
+    ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -455,6 +456,7 @@ impl Transformer {
     /// );
     ///
     /// let stats = tf.statistics();
+    ///
     /// assert_eq!(stats.latitude.count, Some(4));
     /// assert_eq!(stats.latitude.mean, Some(-0.0064225));
     /// assert_eq!(stats.latitude.std, Some(0.019268673410486777));
@@ -507,6 +509,7 @@ impl Transformer {
     ///
     /// let point = Point::new(36.10377479, 140.087855041, 2.34);
     /// let result = tf.forward(&point)?;
+    ///
     /// assert_eq!(result.latitude, 36.103773017086695);
     /// assert_eq!(result.longitude, 140.08785924333452);
     /// assert_eq!(result.altitude, 2.4363138578103);
@@ -545,6 +548,7 @@ impl Transformer {
     ///
     /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
     /// let result = tf.backward_compat(&point)?;
+    ///
     /// assert_eq!(result.latitude, 36.10377479000002);  // exact: 36.10377479
     /// assert_eq!(result.longitude, 140.087855041);  // exact: 140.087855041
     /// assert_eq!(result.altitude, 2.339999999578243);  // exact: 2.34
@@ -592,6 +596,7 @@ impl Transformer {
     /// // In this case, no error remains
     /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
     /// let result = tf.backward(&point)?;
+    ///
     /// assert_eq!(result.latitude, 36.10377479);  // exact: 36.10377479
     /// assert_eq!(result.longitude, 140.087855041);  // exact: 140.087855041
     /// assert_eq!(result.altitude, 2.34);  // exact: 2.34
@@ -629,6 +634,7 @@ impl Transformer {
     ///
     /// let origin = Point::new(36.10377479, 140.087855041, 0.0);
     /// let corr = tf.forward_corr(&origin)?;
+    ///
     /// assert_eq!(corr.latitude, -1.7729133100878255e-6);
     /// assert_eq!(corr.longitude, 4.202334510058886e-6);
     /// assert_eq!(corr.altitude, 0.09631385781030007);
@@ -683,6 +689,7 @@ impl Transformer {
     ///
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
     /// let corr = tf.backward_compat_corr(&origin)?;
+    ///
     /// assert_eq!(corr.latitude, 1.7729133219831587e-6);
     /// assert_eq!(corr.longitude, -4.202334509042613e-6);
     /// assert_eq!(corr.altitude, -0.0963138582320569);
@@ -738,6 +745,7 @@ impl Transformer {
     ///
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
     /// let corr = tf.backward_corr(&origin)?;
+    ///
     /// assert_eq!(corr.latitude, 1.7729133100878255e-6);
     /// assert_eq!(corr.longitude, -4.202334510058886e-6);
     /// assert_eq!(corr.altitude, -0.09631385781030007);
@@ -983,11 +991,14 @@ impl TransformerBuilder {
     ///     .parameter(54401005, (-0.00622, 0.01516, 0.0946))
     ///     .build();
     ///
-    /// assert_eq!(tf.parameter, [(54401005, Parameter::new(-0.00622, 0.01516, 0.0946)), ].into());
+    /// assert_eq!(
+    ///     tf.parameter,
+    ///     [(54401005, Parameter::new(-0.00622, 0.01516, 0.0946)), ].into()
+    /// );
     /// ```
     #[inline]
-    pub fn parameter(mut self, key: u32, parameter: impl Into<Parameter>) -> Self {
-        self.parameter.insert(key, parameter.into());
+    pub fn parameter(mut self, meshcode: u32, parameter: impl Into<Parameter>) -> Self {
+        self.parameter.insert(meshcode, parameter.into());
         self
     }
 
@@ -1010,7 +1021,8 @@ impl TransformerBuilder {
     ///     ])
     ///     .build();
     ///
-    /// assert_eq!(tf.parameter,
+    /// assert_eq!(
+    ///     tf.parameter,
     ///     [
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
@@ -1024,8 +1036,8 @@ impl TransformerBuilder {
         mut self,
         parameters: impl IntoIterator<Item = (u32, impl Into<Parameter>)>,
     ) -> Self {
-        for (key, parameter) in parameters.into_iter() {
-            self.parameter.insert(key, parameter.into());
+        for (meshcode, parameter) in parameters.into_iter() {
+            self.parameter.insert(meshcode, parameter.into());
         }
         self
     }

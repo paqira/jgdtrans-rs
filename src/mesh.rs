@@ -153,6 +153,7 @@ impl MeshCoord {
     /// # use jgdtrans::mesh::MeshCoord;
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
+    ///
     /// assert_eq!(coord.first(), &1);
     /// assert_eq!(coord.second(), &2);
     /// assert_eq!(coord.third(), &3);
@@ -181,6 +182,7 @@ impl MeshCoord {
     /// # use jgdtrans::mesh::MeshCoord;
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
+    ///
     /// assert_eq!(coord.first(), &1);
     /// # Some(())}
     /// # fn main() {wrapper();()}
@@ -199,6 +201,7 @@ impl MeshCoord {
     /// # use jgdtrans::mesh::MeshCoord;
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
+    ///
     /// assert_eq!(coord.second(), &2);
     /// # Some(())}
     /// # fn main() {wrapper();()}
@@ -217,6 +220,7 @@ impl MeshCoord {
     /// # use jgdtrans::mesh::MeshCoord;
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
+    ///
     /// assert_eq!(coord.third(), &3);
     /// # Some(())}
     /// # fn main() {wrapper();()}
@@ -237,6 +241,7 @@ impl MeshCoord {
     /// # use jgdtrans::mesh::*;
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
+    ///
     /// assert_eq!(coord.is_mesh_unit(&MeshUnit::One), true);
     /// assert_eq!(coord.is_mesh_unit(&MeshUnit::Five), false);
     /// # Some(())}
@@ -436,6 +441,7 @@ impl MeshCoord {
     /// # use jgdtrans::mesh::*;
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(0, 0, 0)?;
+    ///
     /// assert_eq!(coord.try_next_up(&MeshUnit::One)?, MeshCoord::try_new(0, 0, 1)?);
     /// assert_eq!(coord.try_next_up(&MeshUnit::Five)?, MeshCoord::try_new(0, 0, 5)?);
     /// # Some(())}
@@ -674,6 +680,7 @@ impl MeshNode {
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
     /// let node = MeshNode::try_new(latitude.clone(), longitude.clone())?;
+    ///
     /// assert_eq!(node.latitude(), &latitude);
     /// assert_eq!(node.longitude(), &longitude);
     /// # Some(())}
@@ -703,6 +710,7 @@ impl MeshNode {
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
     /// let node = MeshNode::try_new(latitude.clone(), longitude)?;
+    ///
     /// assert_eq!(node.latitude(), &latitude);
     /// # Some(())}
     /// # fn main() {wrapper();()}
@@ -724,6 +732,7 @@ impl MeshNode {
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
     /// let node = MeshNode::try_new(latitude, longitude.clone())?;
+    ///
     /// assert_eq!(node.longitude(), &longitude);
     /// # Some(())}
     /// # fn main() {wrapper();()}
@@ -744,6 +753,7 @@ impl MeshNode {
     /// # use jgdtrans::mesh::*;
     /// # fn wrapper() -> Option<()> {
     /// let node = MeshNode::try_from_meshcode(&54401027)?;
+    ///
     /// assert_eq!(node.is_mesh_unit(&MeshUnit::One), true);
     /// assert_eq!(node.is_mesh_unit(&MeshUnit::Five), false);
     /// # Some(())}
@@ -1290,18 +1300,22 @@ impl MeshCell {
     /// let point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
+    ///
     /// // the south-west of the cell is (0, 0), origin
     /// let (latitude, longitude) = cell.position(&cell.south_west().to_point());
     /// assert!((0.0 - latitude).abs() < 1e-12);
     /// assert!((0.0 - longitude).abs() < 1e-12);
+    ///
     /// // the south-east is (0, 1)
     /// let (latitude, longitude) = cell.position(&cell.south_east().to_point());
     /// assert!((0.0 - latitude).abs() < 1e-12);
     /// assert!((1.0 - longitude).abs() < 1e-12);
+    ///
     /// // the north-west is (1, 0)
     /// let (latitude, longitude) = cell.position(&cell.north_west().to_point());
     /// assert!((1.0 - latitude).abs() < 1e-12);
     /// assert!((0.0 - longitude).abs() < 1e-12);
+    ///
     /// // the north-east is (1, 1)
     /// let (latitude, longitude) = cell.position(&cell.north_east().to_point());
     /// assert!((1.0 - latitude).abs() < 1e-12);

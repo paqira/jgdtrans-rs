@@ -1,3 +1,4 @@
+//! Provides [`Point`].
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 #[cfg(feature = "serde")]
@@ -42,6 +43,7 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// # use jgdtrans::transformer::Correction;
 /// // Construct
 /// let point = Point::new(35.0, 145.0, 5.0);
+///
 /// assert_eq!(point.latitude, 35.0);
 /// assert_eq!(point.longitude, 145.0);
 /// assert_eq!(point.altitude, 5.0);
@@ -49,6 +51,7 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// // Add/sub Correction
 /// let result = &point + Correction::new(1.0, 1.0, 1.0);
 /// assert_eq!(result, Point::new(36.0, 146.0, 6.0));
+///
 /// let result = &result - Correction::new(1.0, 1.0, 1.0);
 /// assert_eq!(result, point);
 /// ```
@@ -237,6 +240,7 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// let point = Point::new(35.0, 145.0, 5.0);
+    ///
     /// assert_eq!(point.latitude, 35.0);
     /// assert_eq!(point.longitude, 145.0);
     /// assert_eq!(point.altitude, 5.0);
@@ -265,6 +269,7 @@ impl Point {
     /// # use jgdtrans::*;
     /// # fn wrapper() -> Option<()> {
     /// let point = Point::try_new(35.0, 145.0, 5.0)?;
+    ///
     /// assert_eq!(point.latitude, 35.0);
     /// assert_eq!(point.longitude, 145.0);
     /// assert_eq!(point.altitude, 5.0);
@@ -333,6 +338,7 @@ impl Point {
     /// # use jgdtrans::*;
     /// # fn wrapper() -> Option<()> {
     /// let point = Point::try_from_meshcode(&54401027)?;
+    ///
     /// assert_eq!(point.latitude, 36.1);
     /// assert_eq!(point.longitude, 140.0875);
     /// assert_eq!(point.altitude, 0.0);
@@ -356,6 +362,7 @@ impl Point {
     /// # fn wrapper() -> Option<()> {
     /// let node = MeshNode::try_from_meshcode(&54401027)?;
     /// let point = Point::from_node(&node);
+    ///
     /// assert_eq!(point.latitude, 36.1);
     /// assert_eq!(point.longitude, 140.0875);
     /// assert_eq!(point.altitude, 0.0);

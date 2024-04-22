@@ -160,7 +160,7 @@ pub use par::{from_str, Format};
 #[doc(inline)]
 pub use point::Point;
 #[doc(inline)]
-pub use transformer::{Parameter, Transformer, TransformerBuilder};
+pub use transformer::{Correction, Parameter, Transformer, TransformerBuilder};
 
 pub use par::ParseParError;
 pub use transformer::TransformError;

@@ -68,9 +68,10 @@ use crate::Transformer;
 /// MeshCode dB(sec)  dL(sec) dH(m)
 /// 12345678   0.00001   0.00002   0.00003";
 /// let tf = from_str(&s, Format::SemiDynaEXE)?;
+///
 /// assert_eq!(
 ///     tf.parameter.get(&12345678),
-///     Some(&Parameter {latitude: 0.00001, longitude: 0.00002, altitude: 0.00003})
+///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```

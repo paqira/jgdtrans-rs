@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
@@ -266,7 +266,7 @@ pub struct Transformer {
     ///
     /// The entry represents single line of par-formatted file's parameter section,
     /// the key is meshcode, and the value parameter.
-    pub parameter: BTreeMap<u32, Parameter>,
+    pub parameter: HashMap<u32, Parameter>,
     /// The description, or the header of par-formatted data.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub description: Option<String>,
@@ -309,7 +309,7 @@ impl Transformer {
     /// # Ok(())}
     /// ```
     #[inline]
-    pub const fn new(format: Format, parameter: BTreeMap<u32, Parameter>) -> Self {
+    pub const fn new(format: Format, parameter: HashMap<u32, Parameter>) -> Self {
         Self {
             format,
             parameter,
@@ -325,23 +325,23 @@ impl Transformer {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, StatisticData};
-    /// # use std::collections::BTreeMap;
+    /// # use std::collections::HashMap;
     /// # fn main() {
     /// let tf = Transformer::new_with_description(
     ///     Format::TKY2JGD,
-    ///     BTreeMap::new(),
+    ///     HashMap::new(),
     ///     "My Parameter".to_string()
     /// );
     /// assert_eq!(tf.format, Format::TKY2JGD);
     /// assert_eq!(tf.format.mesh_unit(), MeshUnit::One);
-    /// assert_eq!(tf.parameter, BTreeMap::new());
+    /// assert_eq!(tf.parameter, HashMap::new());
     /// assert_eq!(tf.description, Some("My Parameter".to_string()));
     /// # }
     /// ```
     #[inline]
     pub const fn new_with_description(
         format: Format,
-        parameter: BTreeMap<u32, Parameter>,
+        parameter: HashMap<u32, Parameter>,
         description: String,
     ) -> Self {
         Self {
@@ -840,7 +840,7 @@ macro_rules! interpol {
 
 impl<'a> Interpol<'a> {
     #[inline]
-    fn from(parameter: &'a BTreeMap<u32, Parameter>, cell: &MeshCell) -> Result<Self> {
+    fn from(parameter: &'a HashMap<u32, Parameter>, cell: &MeshCell) -> Result<Self> {
         let meshcode = cell.south_west.to_meshcode();
         let sw = parameter
             .get(&meshcode)
@@ -912,7 +912,7 @@ impl<'a> Interpol<'a> {
 #[derive(Debug, Clone)]
 pub struct TransformerBuilder {
     format: Format,
-    parameter: BTreeMap<u32, Parameter>,
+    parameter: HashMap<u32, Parameter>,
     description: Option<String>,
 }
 
@@ -925,20 +925,20 @@ impl TransformerBuilder {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
-    /// # use std::collections::BTreeMap;
+    /// # use std::collections::HashMap;
     /// # fn main() {
     /// let tf = TransformerBuilder::new(Format::SemiDynaEXE).build();
     ///
     /// assert_eq!(tf.format, Format::SemiDynaEXE);
-    /// assert_eq!(tf.parameter, BTreeMap::new());
+    /// assert_eq!(tf.parameter, HashMap::new());
     /// assert_eq!(tf.description, None);
     /// # }
     /// ```
     #[inline]
-    pub const fn new(format: Format) -> Self {
+    pub fn new(format: Format) -> Self {
         TransformerBuilder {
             format,
-            parameter: BTreeMap::new(),
+            parameter: HashMap::new(),
             description: None,
         }
     }
@@ -950,7 +950,7 @@ impl TransformerBuilder {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::transformer::TransformerBuilder;
-    /// # use std::collections::BTreeMap;
+    /// # use std::collections::HashMap;
     /// # fn main() {
     /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)
     ///     .format(Format::SemiDynaEXE)
@@ -973,7 +973,7 @@ impl TransformerBuilder {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, TransformerBuilder};
-    /// # use std::collections::BTreeMap;
+    /// # use std::collections::HashMap;
     /// # fn main() {
     /// // from SemiDynaEXE2023.par
     /// let tf = TransformerBuilder::new(Format::SemiDynaEXE)

@@ -1,5 +1,5 @@
 //! Provides deserializer of par file.
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::num::{ParseFloatError, ParseIntError};
@@ -203,7 +203,7 @@ fn parse(
         .collect::<Vec<_>>()
         .join("\n");
 
-    let mut parameter: BTreeMap<u32, Parameter> = BTreeMap::new();
+    let mut parameter: HashMap<u32, Parameter> = HashMap::new();
     for (lineno, line) in iter {
         let meshcode: u32 = match meshcode {
             None => 0,
@@ -451,7 +451,7 @@ MeshCode   dB(sec)   dL(sec)
             let actual = from_str(&text, Format::TKY2JGD);
             let expected = Transformer {
                 format: Format::TKY2JGD,
-                parameter: BTreeMap::new(),
+                parameter: HashMap::new(),
                 description: Some(
                     "JGD2000-TokyoDatum Ver.2.1.2\nMeshCode   dB(sec)   dL(sec)".to_string(),
                 ),

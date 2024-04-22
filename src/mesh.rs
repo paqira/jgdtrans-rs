@@ -588,13 +588,19 @@ pub struct MeshNode {
     pub(crate) longitude: MeshCoord,
 }
 
-impl TryFrom<(MeshCoord, MeshCoord)> for MeshNode {
+impl<T, K> TryFrom<(T, K)> for MeshNode
+where
+    T: TryInto<MeshCoord, Error = MeshTryFromError>,
+    K: TryInto<MeshCoord, Error = MeshTryFromError>,
+{
     type Error = MeshTryFromError;
 
     /// Makes a [`MeshNode`], see [`MeshNode::try_new`].
     #[inline]
-    fn try_from(value: (MeshCoord, MeshCoord)) -> Result<Self, Self::Error> {
-        Self::try_new(value.0, value.1).ok_or(Self::Error::new())
+    fn try_from(value: (T, K)) -> Result<Self, Self::Error> {
+        let latitude: MeshCoord = value.0.try_into().map_err(|_| Self::Error::new())?;
+        let longitude: MeshCoord = value.1.try_into().map_err(|_| Self::Error::new())?;
+        Self::try_new(latitude, longitude).ok_or(Self::Error::new())
     }
 }
 
@@ -1823,6 +1829,16 @@ mod tests {
             assert_eq!(
                 node,
                 MeshNode::try_from_meshcode(&node.to_meshcode()).unwrap()
+            );
+        }
+
+        #[test]
+        fn test_try_from() {
+            let coord = MeshCoord::try_new(0, 0, 0).unwrap();
+
+            assert_eq!(
+                MeshNode::try_new(coord.clone(), coord.clone(),).unwrap(),
+                MeshNode::try_from(((0, 0, 0), (0, 0, 0))).unwrap()
             );
         }
     }

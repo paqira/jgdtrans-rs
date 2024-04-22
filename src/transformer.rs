@@ -56,6 +56,26 @@ pub struct Parameter {
     pub altitude: f64,
 }
 
+impl From<(f64, f64, f64)> for Parameter {
+    fn from(value: (f64, f64, f64)) -> Self {
+        Self {
+            latitude: value.0,
+            longitude: value.1,
+            altitude: value.2,
+        }
+    }
+}
+
+impl From<[f64; 3]> for Parameter {
+    fn from(value: [f64; 3]) -> Self {
+        Self {
+            latitude: value[0],
+            longitude: value[1],
+            altitude: value[2],
+        }
+    }
+}
+
 impl Parameter {
     /// Makes a `Parameter`.
     ///

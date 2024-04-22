@@ -55,7 +55,6 @@ pub enum Sign {
 /// # use std::error::Error;
 /// # use jgdtrans::*;
 /// use jgdtrans::dms::{DMS, Sign};
-/// # fn main() -> Result<(), Box<dyn Error>> {
 ///
 /// let latitude = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap();
 ///
@@ -77,7 +76,7 @@ pub enum Sign {
 /// assert_eq!(latitude.minute(), &6);
 /// assert_eq!(latitude.second(), &13);
 /// assert!((0.58925 - latitude.fract()).abs() < 1e-10);
-/// # Ok(())}
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 #[derive(Debug, PartialEq, Clone)]
 pub struct DMS {
@@ -96,13 +95,13 @@ impl Display for DMS {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::dms::{DMS, Sign};
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.to_string(), "360613.58925");
     /// let dms = DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815)?;
     /// assert_eq!(dms.to_string(), "1400516.27815");
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self.sign {
@@ -147,7 +146,6 @@ impl FromStr for DMS {
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// # use jgdtrans::dms::{DMS, Sign};
-    /// # fn main() -> Result<(), Box<dyn Error>> {
     /// assert_eq!(
     ///     "360613.58925".parse::<DMS>()?,
     ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap()
@@ -156,7 +154,7 @@ impl FromStr for DMS {
     ///     "1400516.27815".parse::<DMS>()?,
     ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815).unwrap()
     /// );
-    /// # Ok(())}
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn from_str(s: &str) -> Result<Self, ParseDMSError> {
         // float-like
@@ -228,7 +226,6 @@ impl TryFrom<&f64> for DMS {
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// # use jgdtrans::dms::{DMS, Sign};
-    /// # fn main() -> Result<(), Box<dyn Error>> {
     /// assert_eq!(
     ///     DMS::try_from(&36.103774791666666)?,
     ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.589249999997719).unwrap()
@@ -237,13 +234,12 @@ impl TryFrom<&f64> for DMS {
     ///     DMS::try_from(&140.08785504166664)?,
     ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.2781499999141488).unwrap()
     /// );
-    /// # Ok(())}
+    /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn try_from(value: &f64) -> Result<Self, TryFromDMSError> {
         if value.is_nan() {
             return Err(TryFromDMSError::new_nan());
-        };
-        if value.lt(&-180.0) || value.gt(&180.0) {
+        } else if value.lt(&-180.0) || value.gt(&180.0) {
             return Err(TryFromDMSError::new_oob());
         };
 
@@ -312,11 +308,11 @@ impl DMS {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::dms::{DMS, Sign};
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.to_string(), "360613.58925");
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn try_new(sign: Sign, degree: u8, minute: u8, second: u8, fract: f64) -> Option<Self> {
@@ -347,11 +343,11 @@ impl DMS {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::dms::{DMS, Sign};
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.sign(), &Sign::Plus);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn sign(&self) -> &Sign {
@@ -365,11 +361,11 @@ impl DMS {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::dms::{DMS, Sign};
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.degree(), &36);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn degree(&self) -> &u8 {
@@ -383,11 +379,11 @@ impl DMS {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::dms::{DMS, Sign};
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.minute(), &6);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn minute(&self) -> &u8 {
@@ -401,11 +397,11 @@ impl DMS {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::dms::{DMS, Sign};
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.second(), &13);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn second(&self) -> &u8 {
@@ -419,11 +415,11 @@ impl DMS {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::dms::{DMS, Sign};
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.fract(), &0.58925);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn fract(&self) -> &f64 {
@@ -437,7 +433,7 @@ impl DMS {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::dms::{DMS, Sign};
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(
     ///     dms.to_degree(),
@@ -450,7 +446,7 @@ impl DMS {
     ///     -36.103774791666666,
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn to_degree(&self) -> f64 {
@@ -470,18 +466,51 @@ impl DMS {
 //
 
 #[derive(Debug)]
-pub enum ParseDMSError {
+pub struct ParseDMSError {
+    kind: ParseDMSErrorKind,
+}
+
+#[derive(Debug)]
+pub enum ParseDMSErrorKind {
     InvalidDigit,
     OutOfBounds,
     Empty,
 }
 
+impl ParseDMSError {
+    #[cold]
+    const fn new_id() -> Self {
+        Self {
+            kind: ParseDMSErrorKind::InvalidDigit,
+        }
+    }
+
+    #[cold]
+    const fn new_oob() -> Self {
+        Self {
+            kind: ParseDMSErrorKind::OutOfBounds,
+        }
+    }
+
+    #[cold]
+    const fn new_empty() -> Self {
+        Self {
+            kind: ParseDMSErrorKind::Empty,
+        }
+    }
+
+    /// Returns the detailed cause.
+    pub const fn kind(&self) -> &ParseDMSErrorKind {
+        &self.kind
+    }
+}
+
 impl Display for ParseDMSError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self {
-            Self::InvalidDigit => write!(f, "invalid digit found in string"),
-            Self::OutOfBounds => write!(f, "cannot parse out-of-bounds DMS"),
-            Self::Empty => write!(f, "cannot parse DMS from empty string"),
+        match self.kind {
+            ParseDMSErrorKind::InvalidDigit => write!(f, "invalid digit found in string"),
+            ParseDMSErrorKind::OutOfBounds => write!(f, "cannot parse out-of-bounds DMS"),
+            ParseDMSErrorKind::Empty => write!(f, "cannot parse DMS from empty string"),
         }
     }
 }
@@ -492,32 +521,43 @@ impl Error for ParseDMSError {
     }
 }
 
-impl ParseDMSError {
-    #[cold]
-    const fn new_id() -> Self {
-        Self::InvalidDigit
-    }
-    #[cold]
-    const fn new_oob() -> Self {
-        Self::OutOfBounds
-    }
-    #[cold]
-    const fn new_empty() -> Self {
-        Self::Empty
-    }
+#[derive(Debug)]
+pub struct TryFromDMSError {
+    kind: TryFromDMSErrorKind,
 }
 
 #[derive(Debug)]
-pub enum TryFromDMSError {
+pub enum TryFromDMSErrorKind {
     NAN,
     OutOfBounds,
 }
 
+impl TryFromDMSError {
+    #[cold]
+    const fn new_nan() -> Self {
+        Self {
+            kind: TryFromDMSErrorKind::NAN,
+        }
+    }
+
+    #[cold]
+    const fn new_oob() -> Self {
+        Self {
+            kind: TryFromDMSErrorKind::OutOfBounds,
+        }
+    }
+
+    /// Returns the detailed cause.
+    pub const fn kind(&self) -> &TryFromDMSErrorKind {
+        &self.kind
+    }
+}
+
 impl Display for TryFromDMSError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self {
-            Self::NAN => write!(f, "number would be NAN"),
-            Self::OutOfBounds => write!(f, "number would be out-of-bounds"),
+        match self.kind {
+            TryFromDMSErrorKind::NAN => write!(f, "number would be NAN"),
+            TryFromDMSErrorKind::OutOfBounds => write!(f, "number would be out-of-bounds"),
         }
     }
 }
@@ -525,17 +565,6 @@ impl Display for TryFromDMSError {
 impl Error for TryFromDMSError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         None
-    }
-}
-
-impl TryFromDMSError {
-    #[cold]
-    const fn new_nan() -> Self {
-        Self::NAN
-    }
-    #[cold]
-    const fn new_oob() -> Self {
-        Self::OutOfBounds
     }
 }
 

@@ -238,12 +238,10 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() {
     /// let point = Point::new(35.0, 145.0, 5.0);
     /// assert_eq!(point.latitude, 35.0);
     /// assert_eq!(point.longitude, 145.0);
     /// assert_eq!(point.altitude, 5.0);
-    /// # }
     /// ```
     #[inline]
     pub const fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
@@ -267,7 +265,7 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let point = Point::try_new(35.0, 145.0, 5.0)?;
     /// assert_eq!(point.latitude, 35.0);
     /// assert_eq!(point.longitude, 145.0);
@@ -279,7 +277,7 @@ impl Point {
     /// assert_eq!(Point::try_new(35.0, f64::NAN, 5.0), None);
     /// assert_eq!(Point::try_new(35.0, 145.0, f64::NAN), None);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn try_new(latitude: f64, longitude: f64, altitude: f64) -> Option<Self> {
@@ -307,14 +305,12 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn main() {
     /// let point = Point::new(100.0, 200.0, 5.0);
     ///
     /// assert_eq!(
     ///     point.normalize(),
     ///     Point::new(80.0, -160.0, 5.0)
     /// );
-    /// # }
     /// ```
     #[inline]
     pub fn normalize(&self) -> Self {
@@ -337,13 +333,13 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let point = Point::try_from_meshcode(&54401027)?;
     /// assert_eq!(point.latitude, 36.1);
     /// assert_eq!(point.longitude, 140.0875);
     /// assert_eq!(point.altitude, 0.0);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn try_from_meshcode(meshcode: &u32) -> Option<Self> {
@@ -359,14 +355,14 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshNode;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let node = MeshNode::try_from_meshcode(&54401027)?;
     /// let point = Point::from_node(&node);
     /// assert_eq!(point.latitude, 36.1);
     /// assert_eq!(point.longitude, 140.0875);
     /// assert_eq!(point.altitude, 0.0);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn from_node(node: &MeshNode) -> Self {
@@ -389,7 +385,7 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 50.0);
     ///
     /// assert_eq!(
@@ -401,7 +397,7 @@ impl Point {
     ///     54401005
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn try_to_meshcode(&self, mesh_unit: &MeshUnit) -> Option<u32> {
@@ -422,7 +418,6 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
-    /// # fn main() {
     /// let point = Point::new(36.10377479, 140.087855041, 5.0);
     ///
     /// assert_eq!(
@@ -433,7 +428,6 @@ impl Point {
     ///     point.try_to_node(&MeshUnit::Five),
     ///     MeshNode::try_from_meshcode(&54401005),
     /// );
-    /// # }
     /// ```
     #[inline]
     pub fn try_to_node(&self, mesh_unit: &MeshUnit) -> Option<MeshNode> {
@@ -451,7 +445,7 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshCell, MeshUnit};
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 10.0);
     ///
     /// assert_eq!(
@@ -463,7 +457,7 @@ impl Point {
     ///     MeshCell::try_from_meshcode(&54401005, MeshUnit::Five)?,
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     pub fn try_to_cell(&self, mesh_unit: MeshUnit) -> Option<MeshCell> {
         MeshCell::try_from_point(self, mesh_unit)

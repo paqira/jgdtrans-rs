@@ -23,7 +23,6 @@ use crate::Transformer;
 /// # use std::fs;
 /// # use std::error::Error;
 /// # use jgdtrans::{Transformer, Format, Point, par};
-/// # fn main() -> Result<(), Box<dyn Error>> {
 /// // deserialize SemiDynaEXE par file, e.g. SemiDyna2023.par
 /// let s = fs::read_to_string("SemiDyna2023.par")?;
 /// let tf = par::from_str(&s, Format::SemiDynaEXE)?;
@@ -38,7 +37,7 @@ use crate::Transformer;
 /// // transform coordinate
 /// let point: Point = (35.0, 135.0).try_into()?;
 /// let result = tf.forward(&point);
-/// # Ok(())}
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 ///
 /// # Errors
@@ -51,7 +50,6 @@ use crate::Transformer;
 /// # use std::error::Error;
 /// # use jgdtrans::*;
 /// # use jgdtrans::transformer::Parameter;
-/// # fn main() -> Result<(), Box<dyn Error>> {
 /// let s = r"<15 lines>
 /// # ...
 /// # ...
@@ -74,7 +72,7 @@ use crate::Transformer;
 ///     tf.parameter.get(&12345678),
 ///     Some(&Parameter {latitude: 0.00001, longitude: 0.00002, altitude: 0.00003})
 /// );
-/// # Ok(())}
+/// # Ok::<(), Box<dyn Error>>(())
 /// ```
 #[inline]
 pub fn from_str(s: &str, format: Format) -> Result<Transformer, ParseParError> {
@@ -123,10 +121,8 @@ impl Format {
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::{Format, mesh::MeshUnit};
-    /// # fn main() {
     /// assert_eq!(Format::TKY2JGD.mesh_unit(), MeshUnit::One);
     /// assert_eq!(Format::SemiDynaEXE.mesh_unit(), MeshUnit::Five);
-    /// # }
     /// ```
     #[inline]
     pub const fn mesh_unit(&self) -> MeshUnit {
@@ -323,22 +319,17 @@ fn parse(
 //
 
 #[derive(Debug)]
-pub enum Column {
-    Meshcode,
-    Latitude,
-    Longitude,
-    Altitude,
-}
-
-impl Display for Column {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self {
-            Self::Meshcode => write!(f, "meshcode"),
-            Self::Latitude => write!(f, "latitude"),
-            Self::Longitude => write!(f, "longitude"),
-            Self::Altitude => write!(f, "altitude"),
-        }
-    }
+pub struct ParseParError {
+    /// Error kind
+    kind: ParseParErrorKind,
+    // Error Column
+    pub column: Column,
+    /// Lineno of the data
+    pub lineno: usize,
+    /// Start colum no. of the data
+    pub start: usize,
+    /// End colum no. of the data
+    pub end: usize,
 }
 
 #[derive(Debug)]
@@ -349,17 +340,35 @@ pub enum ParseParErrorKind {
 }
 
 #[derive(Debug)]
-pub struct ParseParError {
-    /// Error kind
-    pub kind: ParseParErrorKind,
-    // Error Column
-    pub column: Column,
-    /// Lineno of the data
-    pub lineno: usize,
-    /// Start colum no. of the data
-    pub start: usize,
-    /// End colum no. of the data
-    pub end: usize,
+pub enum Column {
+    Meshcode,
+    Latitude,
+    Longitude,
+    Altitude,
+}
+
+impl ParseParError {
+    #[cold]
+    const fn new(
+        start: usize,
+        end: usize,
+        lineno: usize,
+        kind: ParseParErrorKind,
+        column: Column,
+    ) -> Self {
+        Self {
+            kind,
+            column,
+            lineno,
+            start,
+            end,
+        }
+    }
+
+    /// Returns the detailed cause.
+    pub const fn kind(&self) -> &ParseParErrorKind {
+        &self.kind
+    }
 }
 
 impl Display for ParseParError {
@@ -382,21 +391,13 @@ impl Error for ParseParError {
     }
 }
 
-impl ParseParError {
-    #[cold]
-    const fn new(
-        start: usize,
-        end: usize,
-        lineno: usize,
-        kind: ParseParErrorKind,
-        column: Column,
-    ) -> Self {
-        Self {
-            kind,
-            column,
-            lineno,
-            start,
-            end,
+impl Display for Column {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            Self::Meshcode => write!(f, "meshcode"),
+            Self::Latitude => write!(f, "latitude"),
+            Self::Longitude => write!(f, "longitude"),
+            Self::Altitude => write!(f, "altitude"),
         }
     }
 }

@@ -77,7 +77,7 @@ impl MeshUnit {
 /// ```
 /// # use jgdtrans::*;
 /// # use jgdtrans::mesh::*;
-/// # fn run() -> Option<()> {
+/// # fn wrapper() -> Option<()> {
 /// // The selection of MeshCoord depends on mesh unit
 /// let coord = MeshCoord::try_from_latitude(&36.103774791666666, &MeshUnit::One)?;
 /// assert_eq!(coord, MeshCoord::try_new(54, 1, 2).unwrap());
@@ -94,7 +94,7 @@ impl MeshUnit {
 /// // otherwise it returns None.
 /// assert_eq!(coord.try_next_up(&MeshUnit::Five), None);
 /// # Some(())}
-/// # fn main() -> () {run();()}
+/// # fn main() {wrapper();()}
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -151,13 +151,13 @@ impl MeshCoord {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshCoord;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
     /// assert_eq!(coord.first(), &1);
     /// assert_eq!(coord.second(), &2);
     /// assert_eq!(coord.third(), &3);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn try_new(first: u8, second: u8, third: u8) -> Option<Self> {
@@ -179,11 +179,11 @@ impl MeshCoord {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshCoord;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
     /// assert_eq!(coord.first(), &1);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn first(&self) -> &u8 {
@@ -197,11 +197,11 @@ impl MeshCoord {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshCoord;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
     /// assert_eq!(coord.second(), &2);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn second(&self) -> &u8 {
@@ -215,11 +215,11 @@ impl MeshCoord {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshCoord;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
     /// assert_eq!(coord.third(), &3);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn third(&self) -> &u8 {
@@ -235,12 +235,12 @@ impl MeshCoord {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
     /// assert_eq!(coord.is_mesh_unit(&MeshUnit::One), true);
     /// assert_eq!(coord.is_mesh_unit(&MeshUnit::Five), false);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
@@ -289,7 +289,7 @@ impl MeshCoord {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let degree = 36.103774791666666;
     ///
     /// assert_eq!(
@@ -301,7 +301,7 @@ impl MeshCoord {
     ///     MeshCoord::try_new(54, 1, 0).unwrap()
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn try_from_latitude(degree: &f64, mesh_unit: &MeshUnit) -> Option<Self> {
@@ -342,7 +342,7 @@ impl MeshCoord {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let degree = 140.08785504166664;
     ///
     /// assert_eq!(
@@ -354,10 +354,10 @@ impl MeshCoord {
     ///     MeshCoord::try_new(40, 0, 5).unwrap()
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     pub fn try_from_longitude(degree: &f64, mesh_unit: &MeshUnit) -> Option<Self> {
-        if degree.is_nan() || degree.lt(&100.0) || degree.gt(&180.0) {
+        if degree.lt(&100.0) || degree.gt(&180.0) || degree.is_nan() {
             return None;
         };
 
@@ -378,7 +378,7 @@ impl MeshCoord {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let degree = 36.103774791666666;
     ///
     /// // MeshCoord is a component of the greatest node less than `degree`
@@ -388,7 +388,7 @@ impl MeshCoord {
     /// let coord = MeshCoord::try_from_latitude(&degree, &MeshUnit::Five)?;
     /// assert_eq!(coord.to_latitude(), 36.083333333333336);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn to_latitude(&self) -> f64 {
@@ -404,7 +404,7 @@ impl MeshCoord {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let degree = 140.08785504166664;
     ///
     /// // MeshCoord is a component of the greatest node less than `degree`
@@ -414,7 +414,7 @@ impl MeshCoord {
     /// let coord = MeshCoord::try_from_longitude(&degree, &MeshUnit::Five)?;
     /// assert_eq!(coord.to_longitude(), 140.0625);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn to_longitude(&self) -> f64 {
@@ -434,12 +434,12 @@ impl MeshCoord {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(0, 0, 0)?;
     /// assert_eq!(coord.try_next_up(&MeshUnit::One)?, MeshCoord::try_new(0, 0, 1)?);
     /// assert_eq!(coord.try_next_up(&MeshUnit::Five)?, MeshCoord::try_new(0, 0, 5)?);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     pub const fn try_next_up(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         if !self.is_mesh_unit(mesh_unit) {
@@ -495,7 +495,7 @@ impl MeshCoord {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
     ///     MeshCoord::try_new(0, 0, 1)?.try_next_down(&MeshUnit::One)?,
     ///     MeshCoord::try_new(0, 0, 0)?
@@ -505,7 +505,7 @@ impl MeshCoord {
     ///     MeshCoord::try_new(0, 0, 0)?
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     pub const fn try_next_down(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         if !self.is_mesh_unit(mesh_unit) {
@@ -558,7 +558,7 @@ impl MeshCoord {
 /// ```
 /// # use jgdtrans::*;
 /// # use jgdtrans::mesh::*;
-/// # fn run() -> Option<()> {
+/// # fn wrapper() -> Option<()> {
 /// // Construct from latitude and longitude, altitude ignores
 /// let point = Point::new(36.10377479, 140.087855041, 0.0);
 /// let node = MeshNode::try_from_point(&point, &MeshUnit::One)?;
@@ -574,7 +574,7 @@ impl MeshCoord {
 /// // The position where the MeshNode locates
 /// assert_eq!(node.to_point(), Point::new(36.1, 140.0875, 0.0));
 /// # Some(())}
-/// # fn main() -> () {run();()}
+/// # fn main() {wrapper();()}
 /// ```
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -663,7 +663,7 @@ impl MeshNode {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
@@ -671,7 +671,7 @@ impl MeshNode {
     /// assert_eq!(node.latitude(), &latitude);
     /// assert_eq!(node.longitude(), &longitude);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn try_new(latitude: MeshCoord, longitude: MeshCoord) -> Option<Self> {
@@ -692,14 +692,14 @@ impl MeshNode {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
     /// let node = MeshNode::try_new(latitude.clone(), longitude)?;
     /// assert_eq!(node.latitude(), &latitude);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn latitude(&self) -> &MeshCoord {
@@ -713,14 +713,14 @@ impl MeshNode {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshCoord, MeshNode};
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
     /// let node = MeshNode::try_new(latitude, longitude.clone())?;
     /// assert_eq!(node.longitude(), &longitude);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn longitude(&self) -> &MeshCoord {
@@ -736,12 +736,12 @@ impl MeshNode {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let node = MeshNode::try_from_meshcode(&54401027)?;
     /// assert_eq!(node.is_mesh_unit(&MeshUnit::One), true);
     /// assert_eq!(node.is_mesh_unit(&MeshUnit::Five), false);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
@@ -767,7 +767,7 @@ impl MeshNode {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// assert_eq!(
@@ -785,7 +785,7 @@ impl MeshNode {
     ///     )?
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn try_from_point(point: &Point, mesh_unit: &MeshUnit) -> Option<Self> {
@@ -811,7 +811,7 @@ impl MeshNode {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
     ///     MeshNode::try_from_meshcode(&54401027)?,
     ///     MeshNode::try_new(
@@ -820,7 +820,7 @@ impl MeshNode {
     ///     )?
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     pub fn try_from_meshcode(meshcode: &u32) -> Option<Self> {
         #[allow(clippy::inconsistent_digit_grouping)]
@@ -865,7 +865,7 @@ impl MeshNode {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let node = MeshNode::try_new(
     ///     MeshCoord::try_new(54, 1, 2)?,
     ///     MeshCoord::try_new(40, 0, 7)?
@@ -873,7 +873,7 @@ impl MeshNode {
     ///
     /// assert_eq!(node.to_meshcode(), 54401027);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn to_meshcode(&self) -> u32 {
@@ -891,7 +891,7 @@ impl MeshNode {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let node = MeshNode::try_new(
     ///     MeshCoord::try_new(54, 1, 2)?,
     ///     MeshCoord::try_new(40, 0, 7)?
@@ -899,15 +899,15 @@ impl MeshNode {
     ///
     /// assert_eq!(node.to_point(), Point::new(36.1, 140.0875, 0.0));
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn to_point(&self) -> Point {
-        Point::new(
-            self.latitude.to_latitude(),
-            self.longitude.to_longitude(),
-            0.0,
-        )
+        Point {
+            latitude: self.latitude.to_latitude(),
+            longitude: self.longitude.to_longitude(),
+            altitude: 0.0,
+        }
     }
 }
 
@@ -922,7 +922,7 @@ impl MeshNode {
 /// ```
 /// # use jgdtrans::*;
 /// # use jgdtrans::mesh::*;
-/// # fn run() -> Option<()> {
+/// # fn wrapper() -> Option<()> {
 /// // Construct from latitude and longitude, altitude ignores
 /// // (The result depends on the selection of the mesh unit)
 /// let point = Point::new(36.10377479, 140.087855041, 0.0);
@@ -955,7 +955,7 @@ impl MeshNode {
 /// assert!((1.0 - latitude).abs() < 1e-12);
 /// assert!((1.0 - longitude).abs() < 1e-12);
 /// # Some(())}
-/// # fn main() -> () {run();()}
+/// # fn main() {wrapper();()}
 /// ```
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -985,7 +985,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let sw = MeshNode::try_from_meshcode(&54401027)?;
     /// let se = MeshNode::try_from_meshcode(&54401028)?;
     /// let nw = MeshNode::try_from_meshcode(&54401037)?;
@@ -998,7 +998,7 @@ impl MeshCell {
     /// assert_eq!(cell.north_east(), &ne);
     /// assert_eq!(cell.mesh_unit(), &MeshUnit::One);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     pub fn try_new(
         south_west: MeshNode,
@@ -1019,13 +1019,13 @@ impl MeshCell {
         let lat_next = south_west.latitude.try_next_up(&mesh_unit)?;
         let lng_next = south_west.longitude.try_next_up(&mesh_unit)?;
 
-        if lat_next.ne(&north_west.latitude) || south_west.longitude.ne(&north_west.longitude) {
-            return None;
-        }
-        if south_west.latitude.ne(&south_east.latitude) || lng_next.ne(&south_east.longitude) {
-            return None;
-        }
-        if lat_next.ne(&north_east.latitude) || lng_next.ne(&north_east.longitude) {
+        if lat_next.ne(&north_west.latitude)
+            || south_west.longitude.ne(&north_west.longitude)
+            || south_west.latitude.ne(&south_east.latitude)
+            || lng_next.ne(&south_east.longitude)
+            || lat_next.ne(&north_east.latitude)
+            || lng_next.ne(&north_east.longitude)
+        {
             return None;
         }
 
@@ -1045,7 +1045,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let sw = MeshNode::try_from_meshcode(&54401027)?;
     /// let se = MeshNode::try_from_meshcode(&54401028)?;
     /// let nw = MeshNode::try_from_meshcode(&54401037)?;
@@ -1054,7 +1054,7 @@ impl MeshCell {
     ///
     /// assert_eq!(cell.south_west(), &sw);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn south_west(&self) -> &MeshNode {
@@ -1068,7 +1068,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
@@ -1077,7 +1077,7 @@ impl MeshCell {
     ///
     /// assert_eq!(cell.south_east(), &south_east);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn south_east(&self) -> &MeshNode {
@@ -1091,7 +1091,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
@@ -1100,7 +1100,7 @@ impl MeshCell {
     ///
     /// assert_eq!(cell.north_west(), &north_west);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn north_west(&self) -> &MeshNode {
@@ -1114,7 +1114,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
@@ -1123,7 +1123,7 @@ impl MeshCell {
     ///
     /// assert_eq!(cell.north_east(), &north_east);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn north_east(&self) -> &MeshNode {
@@ -1137,7 +1137,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
@@ -1146,7 +1146,7 @@ impl MeshCell {
     ///
     /// assert_eq!(cell.mesh_unit(), &MeshUnit::One);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub const fn mesh_unit(&self) -> &MeshUnit {
@@ -1165,7 +1165,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
     ///     MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?,
     ///     MeshCell::try_new(
@@ -1182,11 +1182,10 @@ impl MeshCell {
     ///     )?
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     pub fn try_from_meshcode(meshcode: &u32, mesh_unit: MeshUnit) -> Option<Self> {
-        let sw = MeshNode::try_from_meshcode(meshcode)?;
-        Self::try_from_node(sw, mesh_unit)
+        MeshNode::try_from_meshcode(meshcode).and_then(|sw| Self::try_from_node(sw, mesh_unit))
     }
 
     /// Makes a [`MeshCell`] that has `node` as a south-west node.
@@ -1200,7 +1199,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let code = 54401027;
     /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
     ///
@@ -1209,7 +1208,7 @@ impl MeshCell {
     ///     MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     pub fn try_from_node(node: MeshNode, mesh_unit: MeshUnit) -> Option<Self> {
         let next_lat_coord = node.latitude.try_next_up(&mesh_unit)?;
@@ -1243,7 +1242,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let point: Point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// assert_eq!(
@@ -1267,11 +1266,11 @@ impl MeshCell {
     ///     )?
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     pub fn try_from_point(point: &Point, mesh_unit: MeshUnit) -> Option<Self> {
-        let node = MeshNode::try_from_point(point, &mesh_unit)?;
-        Self::try_from_node(node, mesh_unit)
+        MeshNode::try_from_point(point, &mesh_unit)
+            .and_then(|node| Self::try_from_node(node, mesh_unit))
     }
 
     /// Return the position in the cell.
@@ -1285,7 +1284,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// // sample latitude and longitude
     /// let point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
@@ -1307,7 +1306,7 @@ impl MeshCell {
     /// assert!((1.0 - latitude).abs() < 1e-12);
     /// assert!((1.0 - longitude).abs() < 1e-12);
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     ///
     /// # Example
@@ -1315,7 +1314,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn run() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
@@ -1331,7 +1330,7 @@ impl MeshCell {
     ///     (0.4905949600000099, 0.405680656000186)
     /// );
     /// # Some(())}
-    /// # fn main() -> () {run();()}
+    /// # fn main() {wrapper();()}
     /// ```
     #[inline]
     pub fn position(&self, point: &Point) -> (f64, f64) {
@@ -1354,7 +1353,14 @@ impl MeshCell {
 
 /// Error on the [`TryFrom`] trait of [`mesh`](mod@self) module.
 #[derive(Debug)]
-pub struct MeshTryFromError();
+pub struct MeshTryFromError {}
+
+impl MeshTryFromError {
+    #[cold]
+    const fn new() -> Self {
+        Self {}
+    }
+}
 
 impl Display for MeshTryFromError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
@@ -1365,13 +1371,6 @@ impl Display for MeshTryFromError {
 impl Error for MeshTryFromError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         None
-    }
-}
-
-impl MeshTryFromError {
-    #[cold]
-    const fn new() -> Self {
-        Self {}
     }
 }
 

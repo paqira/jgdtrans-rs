@@ -13,24 +13,23 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Make the origin of transformation
     let origin = Point::new(35.0, 135.0, 2.34);
-    // Prints Origin: Point { latitude: 35.0, longitude: 135.0, altitude: 2.34 }
-    println!("Origin: {origin:?}");
+    // Prints Point { latitude: 35.0, longitude: 135.0, altitude: 2.34 }
+    println!("{origin:?}");
 
     // Perform forward transformation resulting a Point
     let result = tf.forward(&origin)?;
-    // Prints Forward: Point { latitude: 34.99999831111111, longitude: 135.00000621666666, altitude: 2.33108 }
-    println!("Forward: {result:?}");
+    // Prints Point { latitude: 34.99999831111111, longitude: 135.00000621666666, altitude: 2.33108 }
+    println!("{result:?}");
 
     // Perform backward transformation
     let p = tf.backward(&result)?;
-    // Prints Backward: Point { latitude: 34.999999999999986, longitude: 135.0, altitude: 2.339999999105295 }
-    println!("Backward: {p:?}");
+    // Prints Point { latitude: 35.0, longitude: 135.0, altitude: 2.34 }
+    println!("{p:?}");
 
-    // Perform verified backward transformation
-    // that the error from the exact solution is less than GIAJ parameter error
-    let q = tf.backward_safe(&result)?;
-    // Prints Verified Backward: Point { latitude: 35.0, longitude: 135.0, altitude: 2.34 }
-    println!("Verified Backward: {q:?}");
+    // Perform backward transformation compatible to GIAJ web app/APIs
+    let q = tf.backward_compat(&result)?;
+    // Prints Point { latitude: 34.999999999999986, longitude: 135.0, altitude: 2.339999999105295 }
+    println!("{q:?}");
 
     Ok(())
 }

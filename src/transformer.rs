@@ -273,6 +273,9 @@ pub struct Transformer {
 }
 
 impl Transformer {
+    /// Max error of [`Transformer::backward`] and [`Transformer::backward_corr`].
+    pub const ERROR_MAX: f64 = 5e-14;
+
     /// Makes a [`Transformer`].
     ///
     /// We note that there is a builder, see [`TransformerBuilder`].
@@ -492,14 +495,14 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// let origin = Point::new(36.10377479, 140.087855041, 2.34);
-    /// let result = tf.forward(&origin)?;
+    /// let point = Point::new(36.10377479, 140.087855041, 2.34);
+    /// let result = tf.forward(&point)?;
     /// assert_eq!(result.latitude, 36.103773017086695);
     /// assert_eq!(result.longitude, 140.08785924333452);
     /// assert_eq!(result.altitude, 2.4363138578103);
     ///
-    /// // This is equivalent to adding the result of Transformer::forward_corr
-    /// assert_eq!(result, &origin + tf.forward_corr(&origin)?);
+    /// // Transformer::backward is equivalent to
+    /// assert_eq!(result, &point + tf.forward_corr(&point)?);
     /// # Ok(())}
     /// ```
     #[inline]
@@ -507,14 +510,10 @@ impl Transformer {
         self.forward_corr(point).map(|corr| point + corr)
     }
 
-    /// Returns the backward-transformed position from [`point`](Point).
+    /// Returns the backward-transformed position compatible to GIAJ web app/APIs.
     ///
-    /// This is *not* exact as the original _TKY2JGD for Windows Ver.1.3.79_
-    /// and the web APIs are (as far as we researched).
-    ///
-    /// There are points where unable to perform backward transformation
-    /// even if they are the results of the forward transformation,
-    /// because the forward transformation moves them to the area where the parameter does not support.
+    /// This is compatible to GIAJ web app/APIs,
+    /// and is **not** exact as the original as.
     ///
     /// # Example
     ///
@@ -534,15 +533,61 @@ impl Transformer {
     ///     ].into()
     /// );
     ///
-    /// // origin is forward trans. from 36.10377479, 140.087855041, 2.34
-    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
-    /// let result = tf.backward(&origin)?;
-    /// assert_eq!(result.latitude, 36.10377479000002);
-    /// assert_eq!(result.longitude, 140.087855041);
-    /// assert_eq!(result.altitude, 2.339999999578243);
+    /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
+    /// let result = tf.backward_compat(&point)?;
+    /// assert_eq!(result.latitude, 36.10377479000002);  // exact: 36.10377479
+    /// assert_eq!(result.longitude, 140.087855041);  // exact: 140.087855041
+    /// assert_eq!(result.altitude, 2.339999999578243);  // exact: 2.34
     ///
-    /// // This is equivalent to adding the result of Transformer::backward_corr
-    /// assert_eq!(result, &origin + tf.backward_corr(&origin)?);
+    /// // Transformer::backward is equivalent to
+    /// assert_eq!(result, &point + tf.backward_compat_corr(&point)?);
+    /// # Ok(())}
+    /// ```
+    #[inline]
+    pub fn backward_compat(&self, point: &Point) -> Result<Point> {
+        self.backward_compat_corr(point).map(|corr| point + corr)
+    }
+
+    /// Returns the backward-transformed position.
+    ///
+    /// Returns [`Err`] when the error from the exact solution
+    /// is larger than [`Transformer::ERROR_MAX`],
+    /// that is, the result's error is suppressed under [`Transformer::ERROR_MAX`].
+    ///
+    /// Notes, the error is less than 1e-9 \[deg\], which is
+    /// error of GIAJ latitude and longitude parameter.
+    /// This implies that altitude's error is less than 1e-5 \[m\],
+    /// which is error of the GIAJ altitude parameter.
+    ///
+    /// This is not compatible to GIAJ web app/APIs (but more accurate).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// # use jgdtrans::transformer::Parameter;
+    /// # fn main() -> Result<(), TransformError> {
+    /// // from SemiDynaEXE2023.par
+    /// let tf = Transformer::new(
+    ///     Format::SemiDynaEXE,
+    ///     [
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///     ].into()
+    /// );
+    ///
+    /// // In this case, no error remains
+    /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
+    /// let result = tf.backward(&point)?;
+    /// assert_eq!(result.latitude, 36.10377479);  // exact: 36.10377479
+    /// assert_eq!(result.longitude, 140.087855041);  // exact: 140.087855041
+    /// assert_eq!(result.altitude, 2.34);  // exact: 2.34
+    ///
+    /// // Transformer::backward is equivalent to
+    /// assert_eq!(result, &point + tf.backward_corr(&point)?);
     /// # Ok(())}
     /// ```
     #[inline]
@@ -550,80 +595,9 @@ impl Transformer {
         self.backward_corr(point).map(|corr| point + corr)
     }
 
-    /// Returns the validated backward-transformed position.
-    ///
-    /// The result's drafting from the exact solution
-    /// is less than error of the GIAJ latitude and longitude parameter,
-    /// 1e-9 \[deg\], for each latitude and longitude.
-    /// The altitude's drafting is less than 1e-5 which is error of the GIAJ altitude parameter.
-    ///     
-    /// # Example
-    ///
-    /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::Parameter;
-    /// # fn main() -> Result<(), TransformError> {
-    /// // from SemiDynaEXE2023.par
-    /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     [
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
-    /// );
-    ///
-    /// // The origin is forward trans. from 36.10377479, 140.087855041, 2.34
-    /// // In this case, no error remains
-    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
-    /// let result = tf.backward_safe(&origin)?;
-    /// assert_eq!(result.latitude, 36.10377479);
-    /// assert_eq!(result.longitude, 140.087855041);
-    /// assert_eq!(result.altitude, 2.34);
-    ///
-    /// // This is equivalent to adding the result of Transformer::backward_corr_safe
-    /// assert_eq!(result, &origin + tf.backward_safe_corr(&origin)?);
-    /// # Ok(())}
-    /// ```
-    #[inline]
-    pub fn backward_safe(&self, point: &Point) -> Result<Point> {
-        self.backward_safe_corr(point).map(|corr| point + corr)
-    }
-
-    fn parameter_quadruple(
-        &self,
-        cell: &MeshCell,
-    ) -> Result<(&Parameter, &Parameter, &Parameter, &Parameter)> {
-        let meshcode = cell.south_west.to_meshcode();
-        let sw = self
-            .parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthWest))?;
-
-        let meshcode = cell.south_east.to_meshcode();
-        let se = self
-            .parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthEast))?;
-
-        let meshcode = cell.north_west.to_meshcode();
-        let nw = self
-            .parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthWest))?;
-
-        let meshcode = cell.north_east.to_meshcode();
-        let ne = self
-            .parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthEast))?;
-
-        Ok((sw, se, nw, ne))
-    }
-
     /// Return the correction on forward-transformation.
+    ///
+    /// See [`Transformer::forward`] for detail.
     ///
     /// # Example
     ///
@@ -675,7 +649,9 @@ impl Transformer {
         })
     }
 
-    /// Return the correction on backward-transformation.
+    /// Return the correction on backward-transformation compatible to GIAJ web app/APIs.
+    ///
+    /// See [`Transformer::backward_compat`] for detail.
     ///
     /// # Example
     ///
@@ -696,15 +672,15 @@ impl Transformer {
     /// );
     ///
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
-    /// let corr = tf.backward_corr(&origin)?;
+    /// let corr = tf.backward_compat_corr(&origin)?;
     /// assert_eq!(corr.latitude, 1.7729133219831587e-6);
     /// assert_eq!(corr.longitude, -4.202334509042613e-6);
     /// assert_eq!(corr.altitude, -0.0963138582320569);
     ///
-    /// assert_eq!(&origin + corr, tf.backward(&origin)?);
+    /// assert_eq!(&origin + corr, tf.backward_compat(&origin)?);
     /// # Ok(())}
     /// ```
-    pub fn backward_corr(&self, point: &Point) -> Result<Correction> {
+    pub fn backward_compat_corr(&self, point: &Point) -> Result<Correction> {
         // 12. / 3600.
         const DELTA: f64 = 1. / 300.;
 
@@ -728,9 +704,9 @@ impl Transformer {
         })
     }
 
-    /// Return the verified correction on backward-transformation.
+    /// Return the correction on backward-transformation.
     ///
-    /// See [`Transformer::backward_safe`] for detail.
+    /// See [`Transformer::backward`] for detail.
     ///
     /// # Example
     ///
@@ -751,19 +727,18 @@ impl Transformer {
     /// );
     ///
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
-    /// let corr = tf.backward_safe_corr(&origin)?;
+    /// let corr = tf.backward_corr(&origin)?;
     /// assert_eq!(corr.latitude, 1.7729133100878255e-6);
     /// assert_eq!(corr.longitude, -4.202334510058886e-6);
     /// assert_eq!(corr.altitude, -0.09631385781030007);
     ///
-    /// assert_eq!(&origin + corr, tf.backward_safe(&origin)?);
+    /// assert_eq!(&origin + corr, tf.backward(&origin)?);
     /// # Ok(())}
     /// ```
-    pub fn backward_safe_corr(&self, point: &Point) -> Result<Correction> {
+    pub fn backward_corr(&self, point: &Point) -> Result<Correction> {
         // Newton's Method
 
         const SCALE: f64 = 3600.;
-        const CRITERIA: f64 = 5e-14;
         const ITERATION: usize = 4;
 
         let mut yn = point.latitude;
@@ -834,7 +809,7 @@ impl Transformer {
             let delta_x = delta!(point.longitude, xn, corr.longitude);
             let delta_y = delta!(point.latitude, yn, corr.latitude);
 
-            if delta_x.abs().lt(&CRITERIA) && delta_y.abs().lt(&CRITERIA) {
+            if delta_x.abs().lt(&Self::ERROR_MAX) && delta_y.abs().lt(&Self::ERROR_MAX) {
                 return Ok(Correction {
                     latitude: -corr.latitude,
                     longitude: -corr.longitude,
@@ -1309,7 +1284,7 @@ mod tests {
             assert_eq!(0.0, actual.altitude);
 
             let origin = Point::new(36.10696628160147, 140.08457686629436, 0.0);
-            let actual = tf.backward(&origin).unwrap();
+            let actual = tf.backward_compat(&origin).unwrap();
             assert!((36.103774792 - actual.latitude).abs() < DELTA);
             assert!((140.087855042 - actual.longitude).abs() < DELTA);
             assert_eq!(0.0, actual.altitude);
@@ -1341,7 +1316,7 @@ mod tests {
             assert!((-1.263 - actual.altitude).abs() < 0.001);
 
             let origin = Point::new(38.29849530463122, 141.55596301776936, 0.0);
-            let actual = tf.backward(&origin).unwrap();
+            let actual = tf.backward_compat(&origin).unwrap();
             assert!((38.298512058 - actual.latitude).abs() < DELTA);
             assert!((141.555900614 - actual.longitude).abs() < DELTA);
             assert!((1.264 - actual.altitude).abs() < 0.001);
@@ -1369,7 +1344,7 @@ mod tests {
             assert!((0.096 - actual.altitude).abs() < 0.001);
 
             let origin = Point::new(36.10377301875336, 140.08785924400115, 0.);
-            let actual = tf.backward(&origin).unwrap();
+            let actual = tf.backward_compat(&origin).unwrap();
             assert!((36.103774792 - actual.latitude).abs() < DELTA);
             assert!((140.087855042 - actual.longitude).abs() < DELTA);
             assert!((-0.096 - actual.altitude).abs() < 0.001);
@@ -1396,7 +1371,7 @@ mod tests {
             assert!((140.08785924400115 - actual.longitude).abs() < DELTA);
             assert!((0.09631385775572238 - actual.altitude).abs() < DELTA);
 
-            let actual = tf.backward(&actual).unwrap();
+            let actual = tf.backward_compat(&actual).unwrap();
             assert!((36.10377479166668 - actual.latitude).abs() < DELTA);
             assert!((140.08785504166664 - actual.longitude).abs() < DELTA);
             assert!((-4.2175864502150125955e-10 - actual.altitude).abs() < DELTA);

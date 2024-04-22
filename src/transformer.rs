@@ -475,7 +475,7 @@ impl Transformer {
         }
     }
 
-    /// Returns the forward-transformed position from [`point`](Point).
+    /// Returns the forward-transformed position.
     ///
     /// # Example
     ///

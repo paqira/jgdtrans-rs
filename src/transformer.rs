@@ -823,11 +823,11 @@ impl Transformer {
     }
 }
 
-pub struct Interpol<'a> {
-    pub sw: &'a Parameter,
-    pub se: &'a Parameter,
-    pub nw: &'a Parameter,
-    pub ne: &'a Parameter,
+struct Interpol<'a> {
+    sw: &'a Parameter,
+    se: &'a Parameter,
+    nw: &'a Parameter,
+    ne: &'a Parameter,
 }
 
 macro_rules! interpol {

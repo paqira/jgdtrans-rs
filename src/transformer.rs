@@ -2,12 +2,12 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 
-use crate::{Format, Point};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::mesh::MeshCell;
 use crate::par::ParseParError;
+use crate::{Format, Point};
 
 type Result<T> = std::result::Result<T, TransformError>;
 
@@ -457,14 +457,12 @@ impl Transformer {
             };
         }
 
-        // latitude
         let arr: Vec<f64> = extract!(latitude);
         let latitude = StatisticData::from_arr(&arr);
 
         let arr: Vec<f64> = extract!(longitude);
         let longitude = StatisticData::from_arr(&arr);
 
-        // altitude
         let arr: Vec<f64> = extract!(altitude);
         let altitude = StatisticData::from_arr(&arr);
 
@@ -741,8 +739,8 @@ impl Transformer {
         const SCALE: f64 = 3600.;
         const ITERATION: usize = 4;
 
-        let mut yn = point.latitude;
         let mut xn = point.longitude;
+        let mut yn = point.latitude;
 
         macro_rules! delta {
             ($x:expr, $xn:ident, $corr:expr) => {
@@ -760,8 +758,8 @@ impl Transformer {
 
             let (y, x) = cell.position(&current);
 
-            let corr_y = interpol.latitude(&y, &x) / SCALE;
             let corr_x = interpol.longitude(&y, &x) / SCALE;
+            let corr_y = interpol.latitude(&y, &x) / SCALE;
 
             let fx = delta!(point.longitude, xn, corr_x);
             let fy = delta!(point.latitude, yn, corr_y);
@@ -772,6 +770,7 @@ impl Transformer {
                     $a.longitude - $b.longitude
                 };
             }
+
             macro_rules! lat_sub {
                 ($a:expr, $b:expr) => {
                     $a.latitude - $b.latitude
@@ -791,16 +790,16 @@ impl Transformer {
             let fy_x = -(lat_sub!(interpol.se, interpol.sw) * (1. - yn)
                 + lat_sub!(interpol.ne, interpol.nw) * yn)
                 / SCALE;
-            // fx,y
+            // fy,y
             let fy_y = -1.
                 - (lat_sub!(interpol.nw, interpol.sw) * (1. - xn)
                     + lat_sub!(interpol.ne, interpol.se) * xn)
                     / SCALE;
 
-            // # and its determinant
+            // and its determinant
             let det = fx_x * fy_y - fy_x * fy_x;
 
-            // # update Xn
+            // update Xn
             xn -= (fy_y * fx - fx_y * fy) / det;
             yn -= (fx_x * fy - fy_x * fx) / det;
 
@@ -864,17 +863,17 @@ impl<'a> Interpol<'a> {
         Ok(Self { sw, se, nw, ne })
     }
 
-    #[inline]
+    #[inline(always)]
     fn latitude(&self, lat: &f64, lng: &f64) -> f64 {
         interpol!(self, latitude, lat, lng)
     }
 
-    #[inline]
+    #[inline(always)]
     fn longitude(&self, lat: &f64, lng: &f64) -> f64 {
         interpol!(self, longitude, lat, lng)
     }
 
-    #[inline]
+    #[inline(always)]
     fn altitude(&self, lat: &f64, lng: &f64) -> f64 {
         interpol!(self, altitude, lat, lng)
     }

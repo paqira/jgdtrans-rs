@@ -11,11 +11,6 @@ use crate::par::ParseParError;
 
 type Result<T> = std::result::Result<T, TransformError>;
 
-#[inline]
-fn bilinear_interpolation(sw: &f64, se: &f64, nw: &f64, ne: &f64, lat: &f64, lng: &f64) -> f64 {
-    sw * (1. - lng) * (1. - lat) + se * lng * (1. - lat) + nw * (1. - lng) * lat + ne * lng * lat
-}
-
 /// Improved Kahan–Babuška algorithm
 ///
 /// see: https://en.wikipedia.org/wiki/Kahan_summation_algorithm#Further_enhancements
@@ -661,41 +656,17 @@ impl Transformer {
         let cell = MeshCell::try_from_point(point, self.format.mesh_unit())
             .ok_or(TransformError::new_oob())?;
 
-        let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
-
         // Interpolation
+        let interpol = Interpol::from(&self.parameter, &cell)?;
 
         // y: latitude, x: longitude
         let (y, x) = cell.position(point);
 
         const SCALE: f64 = 3600.;
 
-        let latitude = bilinear_interpolation(
-            &sw.latitude,
-            &se.latitude,
-            &nw.latitude,
-            &ne.latitude,
-            &y,
-            &x,
-        ) / SCALE;
-
-        let longitude = bilinear_interpolation(
-            &sw.longitude,
-            &se.longitude,
-            &nw.longitude,
-            &ne.longitude,
-            &y,
-            &x,
-        ) / SCALE;
-
-        let altitude = bilinear_interpolation(
-            &sw.altitude,
-            &se.altitude,
-            &nw.altitude,
-            &ne.altitude,
-            &y,
-            &x,
-        );
+        let latitude = interpol.latitude(&y, &x) / SCALE;
+        let longitude = interpol.longitude(&y, &x) / SCALE;
+        let altitude = interpol.altitude(&y, &x);
 
         Ok(Correction {
             latitude,
@@ -810,51 +781,46 @@ impl Transformer {
             let cell = MeshCell::try_from_point(&current, self.format.mesh_unit())
                 .ok_or(TransformError::new_oob())?;
 
-            let (sw, se, nw, ne) = self.parameter_quadruple(&cell)?;
+            let interpol = Interpol::from(&self.parameter, &cell)?;
 
             let (y, x) = cell.position(&current);
 
-            let corr_y = bilinear_interpolation(
-                &sw.latitude,
-                &se.latitude,
-                &nw.latitude,
-                &ne.latitude,
-                &y,
-                &x,
-            ) / SCALE;
-
-            let corr_x = bilinear_interpolation(
-                &sw.longitude,
-                &se.longitude,
-                &nw.longitude,
-                &ne.longitude,
-                &y,
-                &x,
-            ) / SCALE;
+            let corr_y = interpol.latitude(&y, &x) / SCALE;
+            let corr_x = interpol.longitude(&y, &x) / SCALE;
 
             let fx = delta!(point.longitude, xn, corr_x);
             let fy = delta!(point.latitude, yn, corr_y);
 
             // for readability
             macro_rules! lng_sub {
-                ($a:ident, $b:ident) => {
+                ($a:expr, $b:expr) => {
                     $a.longitude - $b.longitude
                 };
             }
             macro_rules! lat_sub {
-                ($a:ident, $b:ident) => {
+                ($a:expr, $b:expr) => {
                     $a.latitude - $b.latitude
                 };
             }
 
             // fx,x
-            let fx_x = -1. - (lng_sub!(se, sw) * (1. - yn) + lng_sub!(ne, nw) * yn) / SCALE;
+            let fx_x = -1.
+                - (lng_sub!(interpol.se, interpol.sw) * (1. - yn)
+                    + lng_sub!(interpol.ne, interpol.nw) * yn)
+                    / SCALE;
             // fx,y
-            let fx_y = -(lng_sub!(nw, sw) * (1. - xn) + lng_sub!(ne, se) * xn) / SCALE;
+            let fx_y = -(lng_sub!(interpol.nw, interpol.sw) * (1. - xn)
+                + lng_sub!(interpol.ne, interpol.se) * xn)
+                / SCALE;
             // fy,x
-            let fy_x = -(lat_sub!(se, sw) * (1. - yn) + lat_sub!(ne, nw) * yn) / SCALE;
+            let fy_x = -(lat_sub!(interpol.se, interpol.sw) * (1. - yn)
+                + lat_sub!(interpol.ne, interpol.nw) * yn)
+                / SCALE;
             // fx,y
-            let fy_y = -1. - (lat_sub!(nw, sw) * (1. - xn) + lat_sub!(ne, se) * xn) / SCALE;
+            let fy_y = -1.
+                - (lat_sub!(interpol.nw, interpol.sw) * (1. - xn)
+                    + lat_sub!(interpol.ne, interpol.se) * xn)
+                    / SCALE;
 
             // # and its determinant
             let det = fx_x * fy_y - fy_x * fy_x;
@@ -878,6 +844,64 @@ impl Transformer {
         }
 
         Err(TransformError::new_cnf())
+    }
+}
+
+pub struct Interpol<'a> {
+    pub sw: &'a Parameter,
+    pub se: &'a Parameter,
+    pub nw: &'a Parameter,
+    pub ne: &'a Parameter,
+}
+
+macro_rules! interpol {
+    ($self:ident, $target:ident, $lat:ident, $lng:ident) => {
+        $self.sw.$target * (1. - $lng) * (1. - $lat)
+            + $self.se.$target * $lng * (1. - $lat)
+            + $self.nw.$target * (1. - $lng) * $lat
+            + $self.ne.$target * $lng * $lat
+    };
+}
+
+impl<'a> Interpol<'a> {
+    #[inline]
+    fn from(parameter: &'a BTreeMap<u32, Parameter>, cell: &MeshCell) -> Result<Self> {
+        let meshcode = cell.south_west.to_meshcode();
+        let sw = parameter
+            .get(&meshcode)
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthWest))?;
+
+        let meshcode = cell.south_east.to_meshcode();
+        let se = parameter
+            .get(&meshcode)
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthEast))?;
+
+        let meshcode = cell.north_west.to_meshcode();
+        let nw = parameter
+            .get(&meshcode)
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthWest))?;
+
+        let meshcode = cell.north_east.to_meshcode();
+        let ne = parameter
+            .get(&meshcode)
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthEast))?;
+
+        Ok(Self { sw, se, nw, ne })
+    }
+
+    #[inline]
+    fn latitude(&self, lat: &f64, lng: &f64) -> f64 {
+        interpol!(self, latitude, lat, lng)
+    }
+
+    #[inline]
+    fn longitude(&self, lat: &f64, lng: &f64) -> f64 {
+        interpol!(self, longitude, lat, lng)
+    }
+
+    #[inline]
+    fn altitude(&self, lat: &f64, lng: &f64) -> f64 {
+        interpol!(self, altitude, lat, lng)
     }
 }
 

@@ -25,6 +25,8 @@ Features:
     - It depends on [`serde`][serde] and [`serde_repr`][serde_repr] crates only if `serde` feature on
     - 依存パッケージなし
 
+`jdgtrans` requires nightly channel, it depends on a `float_next_up_down` feature.
+
 [TKY2JGD]: https://www.gsi.go.jp/sokuchikijun/tky2jgd.html
 [PatchJGD]: https://vldb.gsi.go.jp/sokuchi/surveycalc/patchjgd/index.html
 [PatchJGD(H)]: https://vldb.gsi.go.jp/sokuchi/surveycalc/patchjgd_h/index.html
@@ -38,12 +40,6 @@ Features:
 
 [serde]: https://crates.io/crates/serde
 [serde_repr]: https://crates.io/crates/serde_repr
-
-`jdgtrans` requires nightly channel, it depends on a `float_next_up_down` feature.
-
-This package does not contain parameter files, download it from GIAJ.
-
-このパッケージはパラメータファイルを提供しません。公式サイトよりダウンロードしてください。
 
 ## Optional Features
 

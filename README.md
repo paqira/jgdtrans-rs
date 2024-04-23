@@ -44,7 +44,7 @@ Features:
 ## Optional Features
 
 - `serde`: supports serialization/deserialization by [`serde` crate][serde].
-- `fma` (default): use [_fused multiply-add_][fma] ([`f64::mul_add`][mul_add]), few % fast.
+- `fma`: use [_fused multiply-add_][fma] ([`f64::mul_add`][mul_add]).
 
 [fma]: https://en.wikipedia.org/wiki/Multiply–accumulate_operation
 [mul_add]: https://doc.rust-lang.org/std/primitive.f64.html#method.mul_add

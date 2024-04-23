@@ -204,10 +204,11 @@ impl StatisticData {
             };
         }
 
+        let count = vs.len();
         let mut max = f64::MIN;
         let mut min = f64::MAX;
-        let mut std: Vec<f64> = Vec::new();
-        let mut abs: Vec<f64> = Vec::new();
+        let mut std: Vec<f64> = Vec::with_capacity(count);
+        let mut abs: Vec<f64> = Vec::with_capacity(count);
 
         for v in vs.iter() {
             max = v.max(max);
@@ -216,9 +217,9 @@ impl StatisticData {
             abs.push(v.abs());
         }
 
-        let length = vs.len() as f64;
+        let length = count as f64;
         Self {
-            count: Some(vs.len()),
+            count: Some(count),
             mean: Some(sum / length),
             std: Some((ksum(&std) / length).sqrt()),
             abs: Some(ksum(&abs) / length),

@@ -825,7 +825,7 @@ impl Transformer {
             };
 
             // and its determinant
-            let det = fx_x * fy_y - fy_x * fy_x;
+            let det = fx_x * fy_y - fx_y * fy_x;
 
             // update Xn
             // xn -= (fy_y * fx - fx_y * fy) / det;

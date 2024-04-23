@@ -1448,6 +1448,7 @@ mod tests {
 
     mod test_builder {
         use super::*;
+
         #[test]
         #[should_panic(expected = "format is not assigned")]
         fn test_panic() {

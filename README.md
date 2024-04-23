@@ -1,5 +1,62 @@
 # jgdtrans for Rust
 
+Unofficial coordinate transformer by _Gridded Correction Parameter_
+which Geospatial Information Authority of Japan (GIAJ, formerly GSIJ) distributing
+for Rust.
+
+国土地理院が公開している .par ファイルによる変換（逆変換）の非公式な実装です。
+
+Features:
+
+- Offline transformation (no web API)
+    - オフライン変換（web API 不使用）
+- Supports both original forward/backward transformation
+    - 順変換と逆変換の両方をサポート
+- Supports verified backward transformation
+    - 精度を保証した逆変換のサポート
+- Supports all [TKY2JGD], [PatchJGD], [PatchJGD(H)], [HyokoRev], [SemiDynaEXE]
+  and [POS2JGD] (geonetF3 and ITRF2014)
+    - For example, Tokyo Datum to JGD2000 ([EPSG:4301] to [EPSG:4612])
+      and JGD2000 to JGD2011 ([EPSG:4612] to [EPSG:6668])
+    - 上記の全てをサポート
+- Clean implementation
+    - 保守が容易な実装
+- No dependency
+    - It depends on [`serde`][serde] and [`serde_repr`][serde_repr] crates only if `serde` feature on
+    - 依存パッケージなし
+
+[TKY2JGD]: https://www.gsi.go.jp/sokuchikijun/tky2jgd.html
+[PatchJGD]: https://vldb.gsi.go.jp/sokuchi/surveycalc/patchjgd/index.html
+[PatchJGD(H)]: https://vldb.gsi.go.jp/sokuchi/surveycalc/patchjgd_h/index.html
+[HyokoRev]: https://vldb.gsi.go.jp/sokuchi/surveycalc/hyokorev/hyokorev.html
+[SemiDynaEXE]: https://vldb.gsi.go.jp/sokuchi/surveycalc/semidyna/web/index.html
+[POS2JGD]: https://positions.gsi.go.jp/cdcs
+
+[EPSG:4301]: https://epsg.io/4301
+[EPSG:4612]: https://epsg.io/4612
+[EPSG:6668]: https://epsg.io/6668
+
+[serde]: https://crates.io/crates/serde
+[serde_repr]: https://crates.io/crates/serde_repr
+
+`jdgtrans` requires nightly channel, it depends on a `float_next_up_down` feature.
+
+This package does not contain parameter files, download it from GIAJ.
+
+このパッケージはパラメータファイルを提供しません。公式サイトよりダウンロードしてください。
+
+## Optional Features
+
+- `serde`: supports serialization/deserialization by [`serde` crate][serde].
+
+## Usage
+
+This package does not contain parameter files, download it from GIAJ.
+
+このパッケージはパラメータファイルを提供しません。公式サイトよりダウンロードしてください。
+
+Sample code:
+
 ```rust
 use std::error::Error;
 use std::fs;
@@ -34,55 +91,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 ```
-
-Unofficial coordinate transformer by _Gridded Correction Parameter_
-which Geospatial Information Authority of Japan (GIAJ, formerly GSIJ) distributing
-for Rust.
-
-国土地理院が公開している .par ファイルによる変換（逆変換）の非公式な実装です。
-
-Features:
-
-- Offline transformation (no web API)
-  - オフライン変換（web API 不使用）
-- Supports both original forward/backward transformation
-  - 順変換と逆変換の両方をサポート
-- Supports verified backward transformation
-  - 精度を保証した逆変換のサポート
-- Supports all [TKY2JGD], [PatchJGD], [PatchJGD(H)], [HyokoRev], [SemiDynaEXE]
-  and [POS2JGD] (geonetF3 and ITRF2014)
-  - For example, Tokyo Datum to JGD2000 ([EPSG:4301] to [EPSG:4612])
-    and JGD2000 to JGD2011 ([EPSG:4612] to [EPSG:6668])
-  - 上記の全てをサポート
-- Clean implementation
-  - 保守が容易な実装
-- No dependency
-  - It depends on [`serde`][serde] and [`serde_repr`][serde_repr] crates only if `serde` feature on
-  - 依存パッケージなし
-
-[TKY2JGD]: https://www.gsi.go.jp/sokuchikijun/tky2jgd.html
-[PatchJGD]: https://vldb.gsi.go.jp/sokuchi/surveycalc/patchjgd/index.html
-[PatchJGD(H)]: https://vldb.gsi.go.jp/sokuchi/surveycalc/patchjgd_h/index.html
-[HyokoRev]: https://vldb.gsi.go.jp/sokuchi/surveycalc/hyokorev/hyokorev.html
-[SemiDynaEXE]: https://vldb.gsi.go.jp/sokuchi/surveycalc/semidyna/web/index.html
-[POS2JGD]: https://positions.gsi.go.jp/cdcs
-
-[EPSG:4301]: https://epsg.io/4301
-[EPSG:4612]: https://epsg.io/4612
-[EPSG:6668]: https://epsg.io/6668
-
-[serde]: https://crates.io/crates/serde
-[serde_repr]: https://crates.io/crates/serde_repr
-
-`jdgtrans` requires nightly channel, it depends on a `float_next_up_down` feature.
-
-This package does not contain parameter files, download it from GIAJ.
-
-このパッケージはパラメータファイルを提供しません。公式サイトよりダウンロードしてください。
-
-## Optional Features
-
-- `serde`: supports serialization/deserialization by [`serde` crate][serde].
 
 ## Licence
 

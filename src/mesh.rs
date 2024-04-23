@@ -1195,6 +1195,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
+    #[inline]
     pub fn try_from_meshcode(meshcode: &u32, mesh_unit: MeshUnit) -> Option<Self> {
         MeshNode::try_from_meshcode(meshcode).and_then(|sw| Self::try_from_node(sw, mesh_unit))
     }
@@ -1279,6 +1280,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
+    #[inline]
     pub fn try_from_point(point: &Point, mesh_unit: MeshUnit) -> Option<Self> {
         MeshNode::try_from_point(point, &mesh_unit)
             .and_then(|node| Self::try_from_node(node, mesh_unit))

@@ -464,6 +464,7 @@ impl Point {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
+    #[inline]
     pub fn try_to_cell(&self, mesh_unit: MeshUnit) -> Option<MeshCell> {
         MeshCell::try_from_point(self, mesh_unit)
     }

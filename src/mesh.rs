@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "serde")]
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use crate::Point;
+use crate::{mul_add, Point};
 
 /// Returns `ture` when `meshcode` is valid.
 ///
@@ -371,7 +371,9 @@ impl MeshCoord {
 
     #[inline]
     fn to_degree(&self) -> f64 {
-        self.first as f64 + self.second as f64 / 8. + self.third as f64 / 80.
+        // self.first as f64 + self.second as f64 / 8. + self.third as f64 / 80.
+        let r = mul_add!(self.second as f64, 1. / 8., self.first as f64);
+        mul_add!(self.third as f64, 1. / 80., r)
     }
 
     /// Returns the latitude that `self` converts into.

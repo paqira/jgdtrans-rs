@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::mesh::MeshCell;
 use crate::par::ParseParError;
-use crate::{Format, Point};
+use crate::{mul_add, Format, Point};
 
 type Result<T> = std::result::Result<T, TransformError>;
 
@@ -798,21 +798,40 @@ impl Transformer {
                 };
             }
 
-            // fx,x
-            let fx_x = -1. - (lng_sub!(se, sw) * (1. - yn) + lng_sub!(ne, nw) * yn) / SCALE;
-            // fx,y
-            let fx_y = -(lng_sub!(nw, sw) * (1. - xn) + lng_sub!(ne, se) * xn) / SCALE;
-            // fy,x
-            let fy_x = -(lat_sub!(se, sw) * (1. - yn) + lat_sub!(ne, nw) * yn) / SCALE;
-            // fy,y
-            let fy_y = -1. - (lat_sub!(nw, sw) * (1. - xn) + lat_sub!(ne, se) * xn) / SCALE;
+            // let fx_x = -1. - (lng_sub!(se, sw) * (1. - yn) + lng_sub!(ne, nw) * yn) / SCALE;
+            let fx_x = {
+                let r = lng_sub!(ne, nw) * yn;
+                let r = mul_add!(lng_sub!(se, sw), 1. - yn, r);
+                -mul_add!(r, 1. / SCALE, 1.)
+            };
+
+            // let fx_y = -(lng_sub!(nw, sw) * (1. - xn) + lng_sub!(ne, se) * xn) / SCALE;
+            let fx_y = {
+                let r = lng_sub!(ne, se) * xn;
+                -mul_add!(lng_sub!(nw, sw), 1. - xn, r) / SCALE
+            };
+
+            // let fy_x = -(lat_sub!(se, sw) * (1. - yn) + lat_sub!(ne, nw) * yn) / SCALE;
+            let fy_x = {
+                let r = lat_sub!(ne, nw) * yn;
+                -mul_add!(lat_sub!(se, sw), 1. - yn, r) / SCALE
+            };
+
+            // let fy_y = -1. - (lat_sub!(nw, sw) * (1. - xn) + lat_sub!(ne, se) * xn) / SCALE;
+            let fy_y = {
+                let r = lat_sub!(ne, se) * xn;
+                let r = mul_add!(lat_sub!(nw, sw), 1. - xn, r);
+                -mul_add!(r, 1. / SCALE, 1.)
+            };
 
             // and its determinant
             let det = fx_x * fy_y - fy_x * fy_x;
 
             // update Xn
-            xn -= (fy_y * fx - fx_y * fy) / det;
-            yn -= (fx_x * fy - fy_x * fx) / det;
+            // xn -= (fy_y * fx - fx_y * fy) / det;
+            // yn -= (fx_x * fy - fy_x * fx) / det;
+            xn = mul_add!(fy_y * fx - fx_y * fy, -1. / det, xn);
+            yn = mul_add!(fx_x * fy - fy_x * fx, -1. / det, yn);
 
             let corr = self.forward_corr(&Point::new(yn, xn, 0.0))?;
 
@@ -840,12 +859,12 @@ struct Interpol<'a> {
 }
 
 macro_rules! interpol {
-    ($self:ident, $target:ident, $lat:ident, $lng:ident) => {
-        $self.sw.$target * (1. - $lng) * (1. - $lat)
-            + $self.se.$target * $lng * (1. - $lat)
-            + $self.nw.$target * (1. - $lng) * $lat
-            + $self.ne.$target * $lng * $lat
-    };
+    ($self:ident, $target:ident, $lat:ident, $lng:ident) => {{
+        let r = $self.sw.$target * (1. - $lng) * (1. - $lat);
+        let r = mul_add!($self.se.$target, $lng * (1. - $lat), r);
+        let r = mul_add!($self.nw.$target, (1. - $lng) * $lat, r);
+        mul_add!($self.ne.$target, $lng * $lat, r)
+    }};
 }
 
 impl<'a> Interpol<'a> {

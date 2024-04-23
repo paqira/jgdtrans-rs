@@ -4,6 +4,8 @@ use std::fmt::{Display, Formatter};
 use std::num::IntErrorKind;
 use std::str::FromStr;
 
+use crate::mul_add;
+
 /// Returns a DMS notation [`str`] from a DD notation [`f64`].
 ///
 /// This returns [`None`] if conversion failed.
@@ -450,13 +452,13 @@ impl DMS {
     /// ```
     #[inline]
     pub fn to_degree(&self) -> f64 {
-        let res = (self.degree as f64)
-            + self.minute as f64 / 60.
-            + (self.second as f64 + self.fract) / 3600.0;
+        // let res = (self.degree as f64) + self.minute as f64 / 60. + (self.second as f64 + self.fract) / 3600.0;
+        let r = mul_add!(self.minute as f64, 1. / 60., self.degree as f64);
+        let r = mul_add!(self.second as f64 + self.fract, 1. / 3600.0, r);
 
         match self.sign {
-            Sign::Plus => res,
-            Sign::Minus => -res,
+            Sign::Plus => r,
+            Sign::Minus => -r,
         }
     }
 }

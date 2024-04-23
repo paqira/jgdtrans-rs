@@ -76,6 +76,10 @@
 //! ## Optional Features
 //!
 //! - `serde`: supports serialization/deserialization by [`serde` crate][serde].
+//! - `fma` (default): use [_fused multiply-add_][fma] ([`f64::mul_add`][mul_add]), few % fast.
+//
+// [fma]: https://en.wikipedia.org/wiki/Multiply–accumulate_operation
+// [mul_add]: https://doc.rust-lang.org/std/primitive.f64.html#method.mul_add
 //!
 //! ## Serialization and Deserialization
 //!
@@ -153,7 +157,8 @@
 //!       JavaScript/TypeScript <https://github.com/paqira/jgdtrans-js>.
 //!
 //! [国土地理院コンテンツ利用規約]: https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
-#![feature(float_next_up_down)] // For `Mesh::next_up` and `Mesh::next_down`.
+// For `Mesh::next_up` and `Mesh::next_down`.
+#![feature(float_next_up_down)]
 
 #[doc(inline)]
 pub use par::{from_str, Format};
@@ -166,6 +171,7 @@ pub use par::ParseParError;
 pub use transformer::TransformError;
 
 pub mod dms;
+mod internal;
 pub mod mesh;
 pub mod par;
 pub mod point;

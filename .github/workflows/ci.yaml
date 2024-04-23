@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  linux:
+  all-features:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -30,3 +30,14 @@ jobs:
         run: cargo build
       - name: Test
         run: cargo test --all-features
+  no-fma:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+      - name: Test
+        run: cargo test --no-default-features -F serde

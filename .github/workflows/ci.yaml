@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  all-features:
+  fma:
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: -C target-feature=+fma
@@ -31,8 +31,8 @@ jobs:
       - name: Build
         run: cargo build
       - name: Test
-        run: cargo test --all-features
-  no-fma:
+        run: cargo test --no-default-features -F serde -F fma
+  vanilla:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

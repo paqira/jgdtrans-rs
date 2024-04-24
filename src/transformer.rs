@@ -800,28 +800,28 @@ impl Transformer {
 
             // let fx_x = -1. - (lng_sub!(se, sw) * (1. - yn) + lng_sub!(ne, nw) * yn) / SCALE;
             let fx_x = {
-                let r = lng_sub!(ne, nw) * yn;
-                let r = mul_add!(lng_sub!(se, sw), 1. - yn, r);
-                -mul_add!(r, 1. / SCALE, 1.)
+                let temp = lng_sub!(ne, nw) * yn;
+                let temp = mul_add!(lng_sub!(se, sw), 1. - yn, temp);
+                -mul_add!(temp, 1. / SCALE, 1.)
             };
 
             // let fx_y = -(lng_sub!(nw, sw) * (1. - xn) + lng_sub!(ne, se) * xn) / SCALE;
             let fx_y = {
-                let r = lng_sub!(ne, se) * xn;
-                -mul_add!(lng_sub!(nw, sw), 1. - xn, r) / SCALE
+                let temp = lng_sub!(ne, se) * xn;
+                -mul_add!(lng_sub!(nw, sw), 1. - xn, temp) / SCALE
             };
 
             // let fy_x = -(lat_sub!(se, sw) * (1. - yn) + lat_sub!(ne, nw) * yn) / SCALE;
             let fy_x = {
-                let r = lat_sub!(ne, nw) * yn;
-                -mul_add!(lat_sub!(se, sw), 1. - yn, r) / SCALE
+                let temp = lat_sub!(ne, nw) * yn;
+                -mul_add!(lat_sub!(se, sw), 1. - yn, temp) / SCALE
             };
 
             // let fy_y = -1. - (lat_sub!(nw, sw) * (1. - xn) + lat_sub!(ne, se) * xn) / SCALE;
             let fy_y = {
-                let r = lat_sub!(ne, se) * xn;
-                let r = mul_add!(lat_sub!(nw, sw), 1. - xn, r);
-                -mul_add!(r, 1. / SCALE, 1.)
+                let temp = lat_sub!(ne, se) * xn;
+                let temp = mul_add!(lat_sub!(nw, sw), 1. - xn, temp);
+                -mul_add!(temp, 1. / SCALE, 1.)
             };
 
             // and its determinant
@@ -860,10 +860,10 @@ struct Interpol<'a> {
 
 macro_rules! interpol {
     ($self:ident, $target:ident, $lat:ident, $lng:ident) => {{
-        let r = $self.sw.$target * (1. - $lng) * (1. - $lat);
-        let r = mul_add!($self.se.$target, $lng * (1. - $lat), r);
-        let r = mul_add!($self.nw.$target, (1. - $lng) * $lat, r);
-        mul_add!($self.ne.$target, $lng * $lat, r)
+        let temp = $self.sw.$target * (1. - $lng) * (1. - $lat);
+        let temp = mul_add!($self.se.$target, $lng * (1. - $lat), temp);
+        let temp = mul_add!($self.nw.$target, (1. - $lng) * $lat, temp);
+        mul_add!($self.ne.$target, $lng * $lat, temp)
     }};
 }
 

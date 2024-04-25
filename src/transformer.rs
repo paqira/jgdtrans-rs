@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::mesh::MeshCell;
+use crate::mesh::{MeshCell, MeshCode, MeshUnit};
 use crate::par::ParseParError;
 use crate::{mul_add, Format, Point};
 
@@ -623,6 +623,127 @@ impl Transformer {
         self.backward_corr(point).map(|corr| point + corr)
     }
 
+    /// Unchecked forward-transformation.
+    ///
+    /// This does not check the bounds of `point`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the transformation fails.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// # use jgdtrans::transformer::Parameter;
+    /// // from SemiDynaEXE2023.par
+    /// let tf = Transformer::new(
+    ///     Format::SemiDynaEXE,
+    ///     [
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///     ].into()
+    /// );
+    ///
+    /// let point = Point::new(36.10377479, 140.087855041, 2.34);
+    ///
+    /// // Equivalent to Transformer::forward except checking
+    /// assert_eq!(
+    ///     tf.unchecked_forward(&point)?,
+    ///     tf.forward(&point)?
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[inline]
+    pub fn unchecked_forward(&self, point: &Point) -> Result<Point> {
+        self.unchecked_forward_corr(point).map(|corr| point + corr)
+    }
+
+    /// Unchecked backward-transformation compatible to GIAJ web app/APIs.
+    ///
+    /// This does not check the bounds of `point`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the transformation fails.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// # use jgdtrans::transformer::Parameter;
+    /// // from SemiDynaEXE2023.par
+    /// let tf = Transformer::new(
+    ///     Format::SemiDynaEXE,
+    ///     [
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///     ].into()
+    /// );
+    ///
+    /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
+    ///
+    /// // Equivalent to Transformer::backward_compat except checking
+    /// assert_eq!(
+    ///     tf.unchecked_backward_compat(&point)?,
+    ///     tf.backward_compat(&point)?
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[inline]
+    pub fn unchecked_backward_compat(&self, point: &Point) -> Result<Point> {
+        self.unchecked_backward_compat_corr(point)
+            .map(|corr| point + corr)
+    }
+
+    /// Unchecked backward-transformation.
+    ///
+    /// This does not check the bounds of `point`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the transformation fails.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// # use jgdtrans::transformer::Parameter;
+    /// // from SemiDynaEXE2023.par
+    /// let tf = Transformer::new(
+    ///     Format::SemiDynaEXE,
+    ///     [
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///     ].into()
+    /// );
+    ///
+    /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
+    ///
+    /// // Equivalent to Transformer::backward except checking
+    /// assert_eq!(
+    ///     tf.unchecked_backward(&point)?,
+    ///     tf.backward(&point)?
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[inline]
+    pub fn unchecked_backward(&self, point: &Point) -> Result<Point> {
+        self.unchecked_backward_corr(point).map(|corr| point + corr)
+    }
+
     /// Return the correction on forward-transformation.
     ///
     /// See [`Transformer::forward`] for detail.
@@ -873,6 +994,251 @@ impl Transformer {
 
         Err(TransformError::new_cnf())
     }
+
+    /// Unchecked returning the correction of the forward-transformation.
+    ///
+    /// This does not check the bounds of `point`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the solving correction fails.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// # use jgdtrans::transformer::{Parameter, Correction};
+    /// // from SemiDynaEXE2023.par
+    /// let tf = Transformer::new(
+    ///     Format::SemiDynaEXE,
+    ///     [
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///     ].into()
+    /// );
+    ///
+    /// let origin = Point::new(36.10377479, 140.087855041, 0.0);
+    /// let corr = tf.forward_corr(&origin)?;
+    ///
+    /// // Equivalent to Transformer::forward_corr except checking
+    /// assert_eq!(
+    ///     tf.unchecked_forward_corr(&origin)?,
+    ///     tf.forward_corr(&origin)?
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[inline]
+    pub fn unchecked_forward_corr(&self, point: &Point) -> Result<Correction> {
+        let mesh_unit = self.format.mesh_unit();
+
+        let code = MeshCode::from_point(point, &mesh_unit);
+
+        // Interpolation
+        let interpol = Interpol::unchecked_from(&self.parameter, &code, &mesh_unit)?;
+
+        // y: latitude, x: longitude
+        let (y, x) = code.position(point, &mesh_unit);
+
+        const SCALE: f64 = 3600.;
+
+        let latitude = interpol.latitude(&y, &x) / SCALE;
+        let longitude = interpol.longitude(&y, &x) / SCALE;
+        let altitude = interpol.altitude(&y, &x);
+
+        Ok(Correction {
+            latitude,
+            longitude,
+            altitude,
+        })
+    }
+
+    /// Unchecked returning the correction of the backward-transformation compatible to the GIAJ web app/APIs.
+    ///
+    /// This does not check the bounds of `point`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the solving correction fails.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// # use jgdtrans::transformer::{Parameter, Correction};
+    /// // from SemiDynaEXE2023.par
+    /// let tf = Transformer::new(
+    ///     Format::SemiDynaEXE,
+    ///     [
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///     ].into()
+    /// );
+    ///
+    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
+    ///
+    /// // Equivalent to Transformer::backward_compat_corr except checking
+    /// assert_eq!(
+    ///     tf.unchecked_backward_compat_corr(&origin)?,
+    ///     tf.backward_compat_corr(&origin)?,
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn unchecked_backward_compat_corr(&self, point: &Point) -> Result<Correction> {
+        // 12. / 3600.
+        const DELTA: f64 = 1. / 300.;
+
+        let corr = Correction {
+            latitude: -DELTA,
+            longitude: DELTA,
+            altitude: 0.0,
+        };
+
+        let temporal = point + corr;
+
+        let corr = self.unchecked_forward_corr(&temporal)?;
+        let reference = point - corr;
+
+        // actual correction
+        let corr = self.unchecked_forward_corr(&reference)?;
+        Ok(Correction {
+            latitude: -corr.latitude,
+            longitude: -corr.longitude,
+            altitude: -corr.altitude,
+        })
+    }
+
+    /// Unchecked returning the correction of the backward-transformation.
+    ///
+    /// This does not check the bounds of `point`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the solving correction fails.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// # use jgdtrans::transformer::{Parameter, Correction};
+    /// // from SemiDynaEXE2023.par
+    /// let tf = Transformer::new(
+    ///     Format::SemiDynaEXE,
+    ///     [
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///     ].into()
+    /// );
+    ///
+    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
+    ///
+    /// // Equivalent to Transformer::backward_corr except checking
+    /// assert_eq!(
+    ///     tf.unchecked_backward_corr(&origin)?,
+    ///     tf.backward_corr(&origin)?
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    pub fn unchecked_backward_corr(&self, point: &Point) -> Result<Correction> {
+        let mesh_unit = self.format.mesh_unit();
+
+        // Newton's Method
+
+        const SCALE: f64 = 3600.;
+        const ITERATION: usize = 4;
+
+        let mut xn = point.longitude;
+        let mut yn = point.latitude;
+
+        macro_rules! delta {
+            ($x:expr, $xn:ident, $corr:expr) => {
+                $x - ($xn + $corr)
+            };
+        }
+
+        for _ in 0..ITERATION {
+            let current = Point::new(yn, xn, 0.0);
+
+            let code = MeshCode::from_point(&current, &mesh_unit);
+
+            let interpol = Interpol::unchecked_from(&self.parameter, &code, &mesh_unit)?;
+
+            let (y, x) = code.position(&current, &mesh_unit);
+
+            let corr_x = interpol.longitude(&y, &x) / SCALE;
+            let corr_y = interpol.latitude(&y, &x) / SCALE;
+
+            let fx = delta!(point.longitude, xn, corr_x);
+            let fy = delta!(point.latitude, yn, corr_y);
+
+            macro_rules! lng_sub {
+                ($a:ident, $b:ident) => {
+                    interpol.$a.longitude - interpol.$b.longitude
+                };
+            }
+
+            macro_rules! lat_sub {
+                ($a:ident, $b:ident) => {
+                    interpol.$a.latitude - interpol.$b.latitude
+                };
+            }
+
+            let fx_x = {
+                let temp = lng_sub!(ne, nw) * yn;
+                let temp = mul_add!(lng_sub!(se, sw), 1. - yn, temp);
+                -mul_add!(temp, 1. / SCALE, 1.)
+            };
+
+            let fx_y = {
+                let temp = lng_sub!(ne, se) * xn;
+                -mul_add!(lng_sub!(nw, sw), 1. - xn, temp) / SCALE
+            };
+
+            let fy_x = {
+                let temp = lat_sub!(ne, nw) * yn;
+                -mul_add!(lat_sub!(se, sw), 1. - yn, temp) / SCALE
+            };
+
+            let fy_y = {
+                let temp = lat_sub!(ne, se) * xn;
+                let temp = mul_add!(lat_sub!(nw, sw), 1. - xn, temp);
+                -mul_add!(temp, 1. / SCALE, 1.)
+            };
+
+            // and its determinant
+            let det = fx_x * fy_y - fx_y * fy_x;
+
+            // update Xn
+            xn = mul_add!(fy_y * fx - fx_y * fy, -1. / det, xn);
+            yn = mul_add!(fx_x * fy - fy_x * fx, -1. / det, yn);
+
+            let corr = self.unchecked_forward_corr(&Point::new(yn, xn, 0.0))?;
+
+            let delta_x = delta!(point.longitude, xn, corr.longitude);
+            let delta_y = delta!(point.latitude, yn, corr.latitude);
+
+            if delta_x.abs().lt(&Self::ERROR_MAX) && delta_y.abs().lt(&Self::ERROR_MAX) {
+                return Ok(Correction {
+                    latitude: -corr.latitude,
+                    longitude: -corr.longitude,
+                    altitude: -corr.altitude,
+                });
+            }
+        }
+
+        Err(TransformError::new_cnf())
+    }
 }
 
 struct Interpol<'a> {
@@ -910,6 +1276,39 @@ impl<'a> Interpol<'a> {
             .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthWest))?;
 
         let meshcode = cell.north_east.to_meshcode();
+        let ne = parameter
+            .get(&meshcode)
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthEast))?;
+
+        Ok(Self { sw, se, nw, ne })
+    }
+
+    #[inline]
+    fn unchecked_from(
+        parameter: &'a HashMap<u32, Parameter>,
+        code: &MeshCode,
+        mesh_unit: &MeshUnit,
+    ) -> Result<Self> {
+        let east = code.next_east(mesh_unit);
+        let north = code.next_north(mesh_unit);
+        let north_east = north.next_east(mesh_unit);
+
+        let meshcode = code.to_u32();
+        let sw = parameter
+            .get(&meshcode)
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthWest))?;
+
+        let meshcode = east.to_u32();
+        let se = parameter
+            .get(&meshcode)
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthEast))?;
+
+        let meshcode = north.to_u32();
+        let nw = parameter
+            .get(&meshcode)
+            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthWest))?;
+
+        let meshcode = north_east.to_u32();
         let ne = parameter
             .get(&meshcode)
             .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthEast))?;
@@ -1470,6 +1869,155 @@ mod tests {
             assert!((36.10377479166668 - actual.latitude).abs() < DELTA);
             assert!((140.08785504166664 - actual.longitude).abs() < DELTA);
             assert!((-4.2175864502150125955e-10 - actual.altitude).abs() < DELTA);
+        }
+
+        #[test]
+        fn test_unchecked_forward_and_corr() {
+            // TKY2JGD
+            let tf = TransformerBuilder::new()
+                .format(Format::TKY2JGD)
+                .parameters([
+                    // forward
+                    (54401027, (11.49105, -11.80078, 0.0)),
+                    (54401027, (11.49105, -11.80078, 0.0)),
+                    (54401037, (11.48732, -11.80198, 0.0)),
+                    (54401028, (11.49096, -11.80476, 0.0)),
+                    (54401038, (11.48769, -11.80555, 0.0)),
+                    // backward
+                    (54401047, (11.48373, -11.80318, 0.0)),
+                    (54401048, (11.48438, -11.80689, 0.0)),
+                ])
+                .build();
+
+            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            assert_eq!(
+                tf.unchecked_forward(&origin).unwrap(),
+                tf.forward(&origin).unwrap()
+            );
+            assert_eq!(
+                tf.unchecked_forward_corr(&origin).unwrap(),
+                tf.forward_corr(&origin).unwrap()
+            );
+
+            // SemiDynaEXE
+            let tf = TransformerBuilder::new()
+                .format(Format::SemiDynaEXE)
+                .parameters([
+                    (54401005, (-0.00622, 0.01516, 0.0946)),
+                    (54401055, (-0.0062, 0.01529, 0.08972)),
+                    (54401100, (-0.00663, 0.01492, 0.10374)),
+                    (54401150, (-0.00664, 0.01506, 0.10087)),
+                ])
+                .build();
+
+            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            assert_eq!(
+                tf.unchecked_forward(&origin).unwrap(),
+                tf.forward(&origin).unwrap()
+            );
+            assert_eq!(
+                tf.unchecked_forward_corr(&origin).unwrap(),
+                tf.forward_corr(&origin).unwrap()
+            );
+        }
+
+        #[test]
+        fn test_unchecked_backward_compat_and_corr() {
+            // TKY2JGD
+            let tf = TransformerBuilder::new()
+                .format(Format::TKY2JGD)
+                .parameters([
+                    // forward
+                    (54401027, (11.49105, -11.80078, 0.0)),
+                    (54401027, (11.49105, -11.80078, 0.0)),
+                    (54401037, (11.48732, -11.80198, 0.0)),
+                    (54401028, (11.49096, -11.80476, 0.0)),
+                    (54401038, (11.48769, -11.80555, 0.0)),
+                    // backward
+                    (54401047, (11.48373, -11.80318, 0.0)),
+                    (54401048, (11.48438, -11.80689, 0.0)),
+                ])
+                .build();
+
+            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            assert_eq!(
+                tf.unchecked_backward_compat(&origin).unwrap(),
+                tf.backward_compat(&origin).unwrap()
+            );
+            assert_eq!(
+                tf.unchecked_backward_compat_corr(&origin).unwrap(),
+                tf.backward_compat_corr(&origin).unwrap()
+            );
+
+            // SemiDynaEXE
+            let tf = TransformerBuilder::new()
+                .format(Format::SemiDynaEXE)
+                .parameters([
+                    (54401005, (-0.00622, 0.01516, 0.0946)),
+                    (54401055, (-0.0062, 0.01529, 0.08972)),
+                    (54401100, (-0.00663, 0.01492, 0.10374)),
+                    (54401150, (-0.00664, 0.01506, 0.10087)),
+                ])
+                .build();
+
+            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            assert_eq!(
+                tf.unchecked_backward_compat(&origin).unwrap(),
+                tf.backward_compat(&origin).unwrap()
+            );
+            assert_eq!(
+                tf.unchecked_backward_compat_corr(&origin).unwrap(),
+                tf.backward_compat_corr(&origin).unwrap()
+            );
+        }
+        #[test]
+        fn test_unchecked_backward_checked_and_corr() {
+            // TKY2JGD
+            let tf = TransformerBuilder::new()
+                .format(Format::TKY2JGD)
+                .parameters([
+                    // forward
+                    (54401027, (11.49105, -11.80078, 0.0)),
+                    (54401027, (11.49105, -11.80078, 0.0)),
+                    (54401037, (11.48732, -11.80198, 0.0)),
+                    (54401028, (11.49096, -11.80476, 0.0)),
+                    (54401038, (11.48769, -11.80555, 0.0)),
+                    // backward
+                    (54401047, (11.48373, -11.80318, 0.0)),
+                    (54401048, (11.48438, -11.80689, 0.0)),
+                ])
+                .build();
+
+            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            assert_eq!(
+                tf.unchecked_backward(&origin).unwrap(),
+                tf.backward(&origin).unwrap()
+            );
+            assert_eq!(
+                tf.unchecked_backward_corr(&origin).unwrap(),
+                tf.backward_corr(&origin).unwrap()
+            );
+
+            // SemiDynaEXE
+            let tf = TransformerBuilder::new()
+                .format(Format::SemiDynaEXE)
+                .parameters([
+                    (54401005, (-0.00622, 0.01516, 0.0946)),
+                    (54401055, (-0.0062, 0.01529, 0.08972)),
+                    (54401100, (-0.00663, 0.01492, 0.10374)),
+                    (54401150, (-0.00664, 0.01506, 0.10087)),
+                ])
+                .build();
+
+            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            assert_eq!(
+                tf.unchecked_backward(&origin).unwrap(),
+                tf.backward(&origin).unwrap()
+            );
+            assert_eq!(
+                tf.unchecked_backward_corr(&origin).unwrap(),
+                tf.backward_corr(&origin).unwrap()
+            );
         }
     }
 

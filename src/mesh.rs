@@ -1393,6 +1393,154 @@ impl Error for MeshTryFromError {
     }
 }
 
+/// For unchecked transformation.
+#[derive(Debug)]
+pub(crate) struct MeshCode(u8, u8, u8, u8, u8, u8);
+
+impl MeshCode {
+    /// See [`MeshCoord::try_from_latitude`], [`MeshCoord::try_from_longitude`] and [`MeshCoord::from_degree`].
+    #[inline]
+    pub(crate) fn from_point(point: &Point, mesh_unit: &MeshUnit) -> Self {
+        let latitude = {
+            let temp = 3.0 * point.latitude / 2.0;
+            if (point.latitude.to_bits() % 2).eq(&1) {
+                temp.next_up()
+            } else {
+                temp
+            }
+        };
+
+        let longitude = point.longitude;
+
+        let integer = (latitude.floor() as u32, longitude.floor() as u32);
+        let first = (integer.0 % 100, integer.1 % 100);
+        let second = (
+            (8. * latitude).floor() as u32 - 8 * integer.0,
+            (8. * longitude).floor() as u32 - 8 * integer.1,
+        );
+        let third = (
+            (80. * latitude).floor() as u32 - 80 * integer.0 - 10 * second.0,
+            (80. * longitude).floor() as u32 - 80 * integer.1 - 10 * second.1,
+        );
+
+        Self(
+            first.0 as u8,
+            second.0 as u8,
+            match mesh_unit {
+                MeshUnit::One => third.0 as u8,
+                MeshUnit::Five => {
+                    if third.0 < 5 {
+                        0
+                    } else {
+                        5
+                    }
+                }
+            },
+            first.1 as u8,
+            second.1 as u8,
+            match mesh_unit {
+                MeshUnit::One => third.1 as u8,
+                MeshUnit::Five => {
+                    if third.1 < 5 {
+                        0
+                    } else {
+                        5
+                    }
+                }
+            },
+        )
+    }
+
+    /// See [`MeshNode::to_meshcode`].
+    #[inline]
+    pub(crate) fn to_u32(&self) -> u32 {
+        (self.0 as u32 * 100 + self.3 as u32) * 10_000
+            + (self.1 as u32 * 10 + self.4 as u32) * 100
+            + (self.2 as u32 * 10 + self.5 as u32)
+    }
+
+    /// See [`MeshCoord::to_latitude`], [`MeshCoord::to_longitude`] and [`MeshCoord::to_degree`].
+    #[inline]
+    fn to_pos(&self) -> (f64, f64) {
+        let temp = (
+            mul_add!(self.1 as f64, 1. / 8., self.0 as f64),
+            mul_add!(self.4 as f64, 1. / 8., self.3 as f64),
+        );
+        let temp = (
+            mul_add!(self.2 as f64, 1. / 80., temp.0),
+            mul_add!(self.5 as f64, 1. / 80., temp.1),
+        );
+
+        (2. * temp.0 / 3., 100. + temp.1)
+    }
+
+    /// See [`MeshCell::position`].
+    #[inline]
+    pub(crate) fn position(&self, point: &Point, mesh_unit: &MeshUnit) -> (f64, f64) {
+        let (latitude, longitude) = self.to_pos();
+
+        let lat = point.latitude - latitude;
+        let lng = point.longitude - longitude;
+
+        match mesh_unit {
+            MeshUnit::One => (120. * lat, 80. * lng),
+            MeshUnit::Five => (24. * lat, 16. * lng),
+        }
+    }
+
+    /// See [`MeshCoord::try_next_up`].
+    #[inline]
+    pub(crate) const fn next_east(&self, mesh_unit: &MeshUnit) -> Self {
+        let bound = match mesh_unit {
+            MeshUnit::One => 9,
+            MeshUnit::Five => 5,
+        };
+
+        if self.5 == bound {
+            if self.5 == 7 {
+                Self(self.0, self.1, self.2, self.3 + 1, 0, 0)
+            } else {
+                Self(self.0, self.1, self.2, self.3, self.4 + 1, 0)
+            }
+        } else {
+            Self(
+                self.0,
+                self.1,
+                self.2,
+                self.3,
+                self.4,
+                self.5 + mesh_unit.as_u8(),
+            )
+        }
+    }
+
+    /// See [`MeshCoord::try_next_up`].
+    #[inline]
+    pub(crate) const fn next_north(&self, mesh_unit: &MeshUnit) -> Self {
+        let bound = match mesh_unit {
+            MeshUnit::One => 9,
+            MeshUnit::Five => 5,
+        };
+
+        if self.2 == bound {
+            if self.1 == 7 {
+                Self(self.0 + 1, 0, 0, self.3, self.4, self.5)
+            } else {
+                Self(self.0, self.1 + 1, 0, self.3, self.4, self.5)
+            }
+        } else {
+            Self(
+                self.0,
+                self.1,
+                self.2 + mesh_unit.as_u8(),
+                self.3,
+                self.4,
+                self.5,
+            )
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

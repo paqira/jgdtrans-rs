@@ -613,15 +613,11 @@ impl Transformer {
 
     /// Unchecked forward-transformation.
     ///
-    /// This does not bounds-check of `point`.
+    /// This does not check the bounds of `point`.
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the parameter does not found.
-    ///
-    /// # Safety
-    ///
-    /// The `point` is in-bounds.
+    /// Returns [`Err`] when the transformation fails.
     ///
     /// # Example
     ///
@@ -657,15 +653,11 @@ impl Transformer {
 
     /// Unchecked backward-transformation compatible to GIAJ web app/APIs.
     ///
-    /// This does not bounds-check of `point`.
+    /// This does not check the bounds of `point`.
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the parameter does not found.
-    ///
-    /// # Safety
-    ///
-    /// The `point` is in-bounds.
+    /// Returns [`Err`] when the transformation fails.
     ///
     /// # Example
     ///
@@ -702,15 +694,11 @@ impl Transformer {
 
     /// Unchecked backward-transformation.
     ///
-    /// This does not bounds-check of `point`.
+    /// This does not check the bounds of `point`.
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the parameter does not found.
-    ///
-    /// # Safety
-    ///
-    /// The `point` is in-bounds.
+    /// Returns [`Err`] when the transformation fails.
     ///
     /// # Example
     ///
@@ -983,17 +971,13 @@ impl Transformer {
         Err(TransformError::new_cnf())
     }
 
-    /// Unchecked forward-transformation.
+    /// Unchecked returning the correction of the forward-transformation.
     ///
-    /// This does not bounds-check of `point`.
+    /// This does not check the bounds of `point`.
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the parameter does not found.
-    ///
-    /// # Safety
-    ///
-    /// The `point` is in-bounds.
+    /// Returns [`Err`] when the solving correction fails.
     ///
     /// # Example
     ///
@@ -1048,19 +1032,13 @@ impl Transformer {
         })
     }
 
-    /// Unchecked backward-transformation compatible to GIAJ web app/APIs.
+    /// Unchecked returning the correction of the backward-transformation compatible to the GIAJ web app/APIs.
     ///
-    /// This does not bounds-check of `point`.
-    ///
-    /// See [`Transformer::unchecked_backward_compat`] for detail.
+    /// This does not check the bounds of `point`.
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the parameter does not found.
-    ///
-    /// # Safety
-    ///
-    /// The `point` is in-bounds.
+    /// Returns [`Err`] when the solving correction fails.
     ///
     /// # Example
     ///
@@ -1113,19 +1091,13 @@ impl Transformer {
         })
     }
 
-    /// Unchecked backward-transformation.
+    /// Unchecked returning the correction of the backward-transformation.
     ///
-    /// This does not bounds-check of `point`.
-    ///
-    /// See [`Transformer::backward_corr`] for detail.
+    /// This does not check the bounds of `point`.
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the parameter does not found.
-    ///
-    /// # Safety
-    ///
-    /// The `point` is in-bounds.
+    /// Returns [`Err`] when the solving correction fails.
     ///
     /// # Example
     ///

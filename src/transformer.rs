@@ -1153,8 +1153,6 @@ impl Transformer {
     pub fn unchecked_backward_corr(&self, point: &Point) -> Result<Correction> {
         let mesh_unit = self.format.mesh_unit();
 
-        // Newton's Method
-
         const SCALE: f64 = 3600.;
         const ITERATION: usize = 4;
 

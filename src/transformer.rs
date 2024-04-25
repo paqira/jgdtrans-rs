@@ -345,7 +345,7 @@ impl Transformer {
     /// # use jgdtrans::mesh::MeshUnit;
     /// # use jgdtrans::transformer::{Parameter, StatisticData};
     /// # use std::collections::HashMap;
-    /// let tf = Transformer::new_with_description(
+    /// let tf = Transformer::with_description(
     ///     Format::TKY2JGD,
     ///     HashMap::new(),
     ///     "My Parameter".to_string()
@@ -356,7 +356,7 @@ impl Transformer {
     /// assert_eq!(tf.description, Some("My Parameter".to_string()));
     /// ```
     #[inline]
-    pub const fn new_with_description(
+    pub const fn with_description(
         format: Format,
         parameter: HashMap<u32, Parameter>,
         description: String,

@@ -528,9 +528,9 @@ impl Transformer {
         self.forward_corr(point).map(|corr| point + corr)
     }
 
-    /// Returns the backward-transformed position compatible to GIAJ web app/APIs.
+    /// Returns the backward-transformed position compatible to the GIAJ web app/APIs.
     ///
-    /// This is compatible to GIAJ web app/APIs,
+    /// This is compatible to the GIAJ web app/APIs,
     /// and is **not** exact as the original as.
     ///
     /// # Errors
@@ -578,11 +578,11 @@ impl Transformer {
     /// that is, the result's error is suppressed under [`Transformer::ERROR_MAX`].
     ///
     /// Notes, the error is less than 1e-9 \[deg\], which is
-    /// error of GIAJ latitude and longitude parameter.
+    /// error of the GIAJ latitude and longitude parameter.
     /// This implies that altitude's error is less than 1e-5 \[m\],
     /// which is error of the GIAJ altitude parameter.
     ///
-    /// This is not compatible to GIAJ web app/APIs (but more accurate).
+    /// This is not compatible to the GIAJ web app/APIs (but more accurate).
     ///
     /// # Errors
     ///
@@ -663,7 +663,7 @@ impl Transformer {
         self.unchecked_forward_corr(point).map(|corr| point + corr)
     }
 
-    /// Unchecked backward-transformation compatible to GIAJ web app/APIs.
+    /// Unchecked backward-transformation compatible to the GIAJ web app/APIs.
     ///
     /// This does not check the bounds of `point`.
     ///
@@ -744,13 +744,13 @@ impl Transformer {
         self.unchecked_backward_corr(point).map(|corr| point + corr)
     }
 
-    /// Return the correction on forward-transformation.
+    /// Return the correction of the forward-transformation.
     ///
     /// See [`Transformer::forward`] for detail.
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the transformation fails.
+    /// Returns [`Err`] when solving correction fails.
     ///
     /// # Example
     ///
@@ -803,13 +803,13 @@ impl Transformer {
         })
     }
 
-    /// Return the correction on backward-transformation compatible to GIAJ web app/APIs.
+    /// Return the correction of the backward-transformation compatible to the GIAJ web app/APIs.
     ///
     /// See [`Transformer::backward_compat`] for detail.
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the transformation fails.
+    /// Returns [`Err`] when solving correction fails.
     ///
     /// # Example
     ///
@@ -863,13 +863,13 @@ impl Transformer {
         })
     }
 
-    /// Return the correction on backward-transformation.
+    /// Return the correction on the backward-transformation.
     ///
-    /// See [`Transformer::backward`] for detail.
+    /// See [`Transformer::the backward`] for detail.
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the transformation fails.
+    /// Returns [`Err`] when solving correction fails.
     ///
     /// # Example
     ///
@@ -1001,7 +1001,7 @@ impl Transformer {
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the solving correction fails.
+    /// Returns [`Err`] when solving correction fails.
     ///
     /// # Example
     ///
@@ -1062,7 +1062,7 @@ impl Transformer {
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the solving correction fails.
+    /// Returns [`Err`] when solving correction fails.
     ///
     /// # Example
     ///
@@ -1121,7 +1121,7 @@ impl Transformer {
     ///
     /// # Errors
     ///
-    /// Returns [`Err`] when the solving correction fails.
+    /// Returns [`Err`] when solving correction fails.
     ///
     /// # Example
     ///

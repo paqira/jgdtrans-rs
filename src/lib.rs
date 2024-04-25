@@ -31,7 +31,7 @@
 //!     // Prints Point { latitude: 35.0, longitude: 135.0, altitude: 2.34 }
 //!     println!("{p:?}");
 //!
-//!     // Perform backward transformation compatible to GIAJ web app/APIs
+//!     // Perform backward transformation compatible to the GIAJ web app/APIs
 //!     let q = tf.backward_compat(&result)?;
 //!     // Prints Point { latitude: 34.999999999999986, longitude: 135.0, altitude: 2.339999999105295 }
 //!     println!("{q:?}");
@@ -79,7 +79,7 @@
 //! - `fma`: use [_fused multiply-add_][fma], [`f64::mul_add`][mul_add].
 //!
 //! Notes, `cargo` does not enable `fma` target-feature as default.
-//! To use CPU fma instructions, you need to set `fma` target-feature,
+//! To use CPU fma instruction, you need to set `fma` target-feature,
 //! i.e., `RUSTFLAGS='-C target-feature=+fma' cargo ...`.
 //!
 //! [fma]: https://en.wikipedia.org/wiki/Multiply–accumulate_operation

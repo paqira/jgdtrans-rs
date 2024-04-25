@@ -87,7 +87,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Prints Point { latitude: 35.0, longitude: 135.0, altitude: 2.34 }
     println!("{p:?}");
 
-    // Perform backward transformation compatible to GIAJ web app/APIs
+    // Perform backward transformation compatible to the GIAJ web app/APIs
     let q = tf.backward_compat(&result)?;
     // Prints Point { latitude: 34.999999999999986, longitude: 135.0, altitude: 2.339999999105295 }
     println!("{q:?}");

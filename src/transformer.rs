@@ -165,17 +165,17 @@ impl Correction {
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct StatisticData {
-    /// The count.
+    /// The count of parameters.
     pub count: Option<usize>,
-    /// The average (\[sec\] or \[m\]).
+    /// The mean, \[sec\] or \[m\].
     pub mean: Option<f64>,
-    /// The standard variance (\[sec\] or \[m\]).
+    /// The standard variance, \[sec\] or \[m\].
     pub std: Option<f64>,
-    /// The mean of abs value, 1/𝑛 ∑ᵢ | 𝑝𝑎𝑟𝑎𝑚𝑒𝑡𝑒𝑟ᵢ |, (\[sec\] or \[m\]).
+    /// The mean of abs value, 1/𝑛 ∑ᵢ | 𝑝𝑎𝑟𝑎𝑚𝑒𝑡𝑒𝑟ᵢ |, \[sec\] or \[m\].
     pub abs: Option<f64>,
-    /// The minimum (\[sec\] or \[m\]).
+    /// The minimum,\[sec\] or \[m\].
     pub min: Option<f64>,
-    /// The maximum (\[sec\] or \[m\]).
+    /// The maximum, \[sec\] or \[m\].
     pub max: Option<f64>,
 }
 

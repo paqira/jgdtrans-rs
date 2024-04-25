@@ -42,7 +42,7 @@ use crate::Transformer;
 ///
 /// # Errors
 ///
-/// If invalid data found.
+/// Returns [`Err`] when the invalid data found.
 ///
 /// # Example
 ///

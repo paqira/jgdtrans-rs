@@ -8,7 +8,9 @@ use crate::mul_add;
 
 /// Returns a DMS notation [`str`] from a DD notation [`f64`].
 ///
-/// This returns [`None`] if conversion failed.
+/// # Errors
+///
+/// Returns [`None`] when the conversion fails.
 ///
 /// # Example
 ///
@@ -24,7 +26,9 @@ pub fn to_dms(t: &f64) -> Option<String> {
 
 /// Returns a DD notation [`f64`] from a DMS notation [`str`].
 ///
-/// This returns [`None`] if conversion failed.
+/// # Errors
+///
+/// Returns [`None`] when the conversion fails.
 ///
 /// # Example
 ///

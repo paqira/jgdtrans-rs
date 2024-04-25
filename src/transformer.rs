@@ -398,7 +398,7 @@ impl Transformer {
     ///
     /// # Errors
     ///
-    /// If invalid data found.
+    /// Returns [`Err`] when the invalid data found.
     ///
     /// # Example
     ///
@@ -490,6 +490,10 @@ impl Transformer {
 
     /// Returns the forward-transformed position.
     ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when fails to transform.
+    ///
     /// # Example
     ///
     /// ```
@@ -528,6 +532,10 @@ impl Transformer {
     ///
     /// This is compatible to GIAJ web app/APIs,
     /// and is **not** exact as the original as.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the transformation fails.
     ///
     /// # Example
     ///
@@ -576,6 +584,10 @@ impl Transformer {
     ///
     /// This is not compatible to GIAJ web app/APIs (but more accurate).
     ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the transformation fails.
+    ///
     /// # Example
     ///
     /// ```
@@ -614,6 +626,10 @@ impl Transformer {
     /// Return the correction on forward-transformation.
     ///
     /// See [`Transformer::forward`] for detail.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the transformation fails.
     ///
     /// # Example
     ///
@@ -670,6 +686,10 @@ impl Transformer {
     ///
     /// See [`Transformer::backward_compat`] for detail.
     ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the transformation fails.
+    ///
     /// # Example
     ///
     /// ```
@@ -725,6 +745,10 @@ impl Transformer {
     /// Return the correction on backward-transformation.
     ///
     /// See [`Transformer::backward`] for detail.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the transformation fails.
     ///
     /// # Example
     ///

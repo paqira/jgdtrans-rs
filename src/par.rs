@@ -5,7 +5,6 @@ use std::fmt::{Display, Formatter};
 use std::num::{ParseFloatError, ParseIntError};
 use std::ops::Range;
 
-use crate::dms::DMS;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 

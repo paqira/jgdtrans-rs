@@ -5,7 +5,6 @@ use std::num::IntErrorKind;
 use std::str::FromStr;
 
 use crate::internal::mul_add;
-use crate::Transformer;
 
 /// Returns a DMS notation [`str`] from a DD notation [`f64`].
 ///

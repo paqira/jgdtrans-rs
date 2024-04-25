@@ -435,6 +435,79 @@ impl Transformer {
         format.parse(s)
     }
 
+    /// Deserialize par-formatted [`&str`] into a [`Transformer`] with description.
+    ///
+    /// See [`Transformer::from_str`] for detail.
+    ///
+    /// ```no_run
+    /// # use std::fs;
+    /// # use std::error::Error;
+    /// # use jgdtrans::{Transformer, Format, Point};
+    /// // deserialize SemiDynaEXE par file, e.g. SemiDyna2023.par
+    /// let s = fs::read_to_string("SemiDyna2023.par")?;
+    /// let tf = Transformer::from_str_with_description(
+    ///     &s,
+    ///     Format::SemiDynaEXE,
+    ///     "SemiDyna2023.par".to_string()
+    /// )?;
+    ///
+    /// // prints Format::SemiDynaEXE
+    /// println!("{:?}", tf.format);
+    /// // prints all parameter (long display)
+    /// println!("{:?}", tf.parameter);
+    /// // prints SemiDyna2023.par
+    /// println!("{:?}", tf.description);
+    ///
+    /// // transform coordinate
+    /// let point: Point = (35.0, 135.0).into();
+    /// let result = tf.forward(&point);
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the invalid data found.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::transformer::Parameter;
+    /// let s = r"<15 lines>
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// MeshCode dB(sec)  dL(sec) dH(m)
+    /// 12345678   0.00001   0.00002   0.00003";
+    /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
+    /// assert_eq!(
+    ///     tf.parameter.get(&12345678),
+    ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[inline]
+    pub fn from_str_with_description(
+        s: &str,
+        format: Format,
+        description: String,
+    ) -> std::result::Result<Self, ParseParError> {
+        let tf = format.parse(s)?;
+        Ok(Self::with_description(tf.format, tf.parameter, description))
+    }
+
     /// Returns the statistics of the parameter.
     ///
     /// See [`StatisticData`] for details of result's components.

@@ -5,6 +5,7 @@ use std::fmt::{Display, Formatter};
 use std::num::{ParseFloatError, ParseIntError};
 use std::ops::Range;
 
+use crate::dms::DMS;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -319,11 +320,14 @@ fn parse(
 // Error
 //
 
+/// An error which can be returned on parsing par-formatted text.
+///
+/// This error is used as the error type for the [`from_str`].
 #[derive(Debug)]
 pub struct ParseParError {
     /// Error kind
     kind: ParseParErrorKind,
-    // Error Column
+    /// Error Column
     pub column: Column,
     /// Lineno of the data
     pub lineno: usize,
@@ -333,6 +337,7 @@ pub struct ParseParError {
     pub end: usize,
 }
 
+/// An error kind of [`ParseParError`].
 #[derive(Debug)]
 pub enum ParseParErrorKind {
     ColumnNotFound,
@@ -340,6 +345,7 @@ pub enum ParseParErrorKind {
     ParseFloat(ParseFloatError),
 }
 
+/// A column that error occurs.
 #[derive(Debug)]
 pub enum Column {
     Meshcode,

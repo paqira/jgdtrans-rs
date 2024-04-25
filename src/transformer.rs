@@ -1613,7 +1613,9 @@ pub struct TransformError {
 #[derive(Debug)]
 pub enum TransformErrorKind {
     ParameterNotFound {
+        /// Meshcode where the parameter not found
         meshcode: u32,
+        /// Corner of the [`MeshCell`] where the parameter not found
         corner: MeshCellCorner,
     },
     CorrectionNotFound,

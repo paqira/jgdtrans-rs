@@ -1371,7 +1371,7 @@ impl MeshCell {
 // Error
 //
 
-/// Error on the [`TryFrom`] trait of [`mesh`](mod@self) module.
+/// An error on the [`TryFrom`] trait of [`mesh`](mod@self) module.
 #[derive(Debug)]
 pub struct MeshTryFromError;
 

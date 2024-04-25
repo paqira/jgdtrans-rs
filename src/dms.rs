@@ -5,6 +5,7 @@ use std::num::IntErrorKind;
 use std::str::FromStr;
 
 use crate::internal::mul_add;
+use crate::Transformer;
 
 /// Returns a DMS notation [`str`] from a DD notation [`f64`].
 ///
@@ -471,11 +472,15 @@ impl DMS {
 // Error
 //
 
+/// An error which can be returned on parsing DMS degree.
+///
+/// This error is used as the error type for the [`FromStr`] for [`DMS`].
 #[derive(Debug)]
 pub struct ParseDMSError {
     kind: ParseDMSErrorKind,
 }
 
+/// An error kind of [`ParseDMSError`].
 #[derive(Debug)]
 pub enum ParseDMSErrorKind {
     InvalidDigit,
@@ -527,11 +532,15 @@ impl Error for ParseDMSError {
     }
 }
 
+/// An error which can be returned on converting DMS degree.
+///
+/// This error is used as the error type for the [`TryFrom`] for [`DMS`].
 #[derive(Debug)]
 pub struct TryFromDMSError {
     kind: TryFromDMSErrorKind,
 }
 
+/// An error kind of [`TryFromDMSError`].
 #[derive(Debug)]
 pub enum TryFromDMSErrorKind {
     NAN,

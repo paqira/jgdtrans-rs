@@ -27,12 +27,12 @@ use crate::Transformer;
 /// let s = fs::read_to_string("SemiDyna2023.par")?;
 /// let tf = par::from_str(&s, Format::SemiDynaEXE)?;
 ///
-/// // prints first 16 lines
-/// println!("{:?}", tf.description);
 /// // prints Format::SemiDynaEXE
 /// println!("{:?}", tf.format);
 /// // prints all parameter (be careful, long display)
 /// println!("{:?}", tf.parameter);
+/// // prints first 16 lines
+/// println!("{:?}", tf.description);
 ///
 /// // transform coordinate
 /// let point: Point = (35.0, 135.0).try_into()?;

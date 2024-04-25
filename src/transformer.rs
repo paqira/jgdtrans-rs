@@ -492,7 +492,11 @@ impl Transformer {
     /// # ...
     /// MeshCode dB(sec)  dL(sec) dH(m)
     /// 12345678   0.00001   0.00002   0.00003";
-    /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
+    /// let tf = Transformer::from_str_with_description(
+    ///     &s,
+    ///     Format::SemiDynaEXE,
+    ///     "SemiDyna2023.par".to_string(),
+    /// )?;
     /// assert_eq!(
     ///     tf.parameter.get(&12345678),
     ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
@@ -1596,11 +1600,16 @@ impl TransformerBuilder {
 // Error
 //
 
+/// An error which can be returned on coordinate transforming.
+///
+/// This error is used as the error type for the [`Transformer::forward`],
+/// [`Transformer::forward_corr`] etc.
 #[derive(Debug)]
 pub struct TransformError {
     kind: TransformErrorKind,
 }
 
+/// An error kind used by [`TransformError`].
 #[derive(Debug)]
 pub enum TransformErrorKind {
     ParameterNotFound {
@@ -1611,6 +1620,7 @@ pub enum TransformErrorKind {
     OutOfBounds,
 }
 
+/// An error corner of mesh used by [`TransformErrorKind`].
 #[derive(Debug)]
 pub enum MeshCellCorner {
     NorthWest,

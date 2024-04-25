@@ -1293,8 +1293,8 @@ impl MeshCell {
     /// This returns from 0.0 to 1.0 for each latitude and longitude
     /// if `point` is inside `self`.
     ///
-    /// We note that the result is a $(\\text{latitude}, \\text{longitude})$ pair,
-    /// not a (right-handed) $(y, x)$ pair.
+    /// We note that the result is a (𝑙𝑎𝑡𝑖𝑡𝑢𝑑𝑒, 𝑙𝑜𝑛𝑔𝑖𝑡𝑢𝑑𝑒) pair,
+    /// not a right-handed (𝑦, 𝑥) pair.
     ///
     /// ```
     /// # use jgdtrans::*;

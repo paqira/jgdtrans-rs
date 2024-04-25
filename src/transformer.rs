@@ -98,7 +98,7 @@ impl Parameter {
         }
     }
 
-    /// Returns $\\sqrt{\\text{latitude}^2 + \\text{longitude}^2}$.
+    /// Returns √𝑙𝑎𝑡𝑖𝑡𝑢𝑑𝑒² + 𝑙𝑜𝑛𝑔𝑖𝑡𝑢𝑑𝑒².
     #[inline]
     pub fn horizontal(&self) -> f64 {
         f64::hypot(self.latitude, self.longitude)
@@ -152,7 +152,7 @@ impl Correction {
         }
     }
 
-    /// Returns $\\sqrt{\\text{latitude}^2 + \\text{longitude}^2}$.
+    /// Returns √𝑙𝑎𝑡𝑖𝑡𝑢𝑑𝑒² + 𝑙𝑜𝑛𝑔𝑖𝑡𝑢𝑑𝑒².
     #[inline]
     pub fn horizontal(&self) -> f64 {
         f64::hypot(self.latitude, self.longitude)
@@ -171,7 +171,7 @@ pub struct StatisticData {
     pub mean: Option<f64>,
     /// The standard variance (\[sec\] or \[m\]).
     pub std: Option<f64>,
-    /// $(1/n) \\sum_{i=1}^n \\left| \\text{parameter}_i \\right|$ (\[sec\] or \[m\]).
+    /// The mean of abs value, 1/𝑛 ∑ᵢ | 𝑝𝑎𝑟𝑎𝑚𝑒𝑡𝑒𝑟ᵢ |, (\[sec\] or \[m\]).
     pub abs: Option<f64>,
     /// The minimum (\[sec\] or \[m\]).
     pub min: Option<f64>,

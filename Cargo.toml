@@ -26,7 +26,3 @@ serde_json = { version = "1" }
 default = []
 serde = ["dep:serde", "dep:serde_repr"]
 fma = []
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--html-in-header", "doc/katex.html"]

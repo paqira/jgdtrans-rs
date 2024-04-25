@@ -59,6 +59,7 @@ pub struct Parameter {
 }
 
 impl From<(f64, f64, f64)> for Parameter {
+    #[inline]
     fn from(value: (f64, f64, f64)) -> Self {
         Self {
             latitude: value.0,
@@ -69,6 +70,7 @@ impl From<(f64, f64, f64)> for Parameter {
 }
 
 impl From<[f64; 3]> for Parameter {
+    #[inline]
     fn from(value: [f64; 3]) -> Self {
         Self {
             latitude: value[0],

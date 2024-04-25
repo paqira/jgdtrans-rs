@@ -1,4 +1,3 @@
-#[macro_export]
 macro_rules! mul_add {
     ($a:expr, $b:expr, $c:expr) => {
         if cfg!(feature = "fma") {
@@ -8,3 +7,5 @@ macro_rules! mul_add {
         }
     };
 }
+
+pub(crate) use mul_add;

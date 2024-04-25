@@ -16,7 +16,8 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "serde")]
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use crate::{mul_add, Point};
+use crate::internal::mul_add;
+use crate::Point;
 
 /// Returns `ture` when `meshcode` is valid.
 ///

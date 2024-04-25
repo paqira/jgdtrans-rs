@@ -6,9 +6,10 @@ use std::fmt::{Display, Formatter};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use crate::internal::mul_add;
 use crate::mesh::{MeshCell, MeshCode, MeshUnit};
 use crate::par::ParseParError;
-use crate::{mul_add, Format, Point};
+use crate::{Format, Point};
 
 type Result<T> = std::result::Result<T, TransformError>;
 

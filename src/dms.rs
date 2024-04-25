@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::num::IntErrorKind;
 use std::str::FromStr;
 
-use crate::mul_add;
+use crate::internal::mul_add;
 
 /// Returns a DMS notation [`str`] from a DD notation [`f64`].
 ///

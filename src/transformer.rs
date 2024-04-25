@@ -1393,17 +1393,17 @@ impl<'a> Interpol<'a> {
         Ok(Self { sw, se, nw, ne })
     }
 
-    #[inline(always)]
+    #[inline]
     fn latitude(&self, lat: &f64, lng: &f64) -> f64 {
         interpol!(self, latitude, lat, lng)
     }
 
-    #[inline(always)]
+    #[inline]
     fn longitude(&self, lat: &f64, lng: &f64) -> f64 {
         interpol!(self, longitude, lat, lng)
     }
 
-    #[inline(always)]
+    #[inline]
     fn altitude(&self, lat: &f64, lng: &f64) -> f64 {
         interpol!(self, altitude, lat, lng)
     }

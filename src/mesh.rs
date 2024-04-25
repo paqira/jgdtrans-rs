@@ -1372,7 +1372,7 @@ impl MeshCell {
 
 /// Error on the [`TryFrom`] trait of [`mesh`](mod@self) module.
 #[derive(Debug)]
-pub struct MeshTryFromError {}
+pub struct MeshTryFromError;
 
 impl MeshTryFromError {
     #[cold]

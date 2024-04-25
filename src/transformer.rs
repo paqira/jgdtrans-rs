@@ -853,6 +853,7 @@ impl Transformer {
     /// assert_eq!(&origin + corr, tf.forward(&origin)?);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
+    #[inline]
     pub fn forward_corr(&self, point: &Point) -> Result<Correction> {
         let cell = MeshCell::try_from_point(point, self.format.mesh_unit())
             .ok_or(TransformError::new_oob())?;
@@ -1729,12 +1730,7 @@ mod tests {
         fn test_stats() {
             let stats = TransformerBuilder::new()
                 .format(Format::SemiDynaEXE)
-                .parameters([
-                    (54401005, (-0.00622, 0.01516, 0.0946)),
-                    (54401055, (-0.0062, 0.01529, 0.08972)),
-                    (54401100, (-0.00663, 0.01492, 0.10374)),
-                    (54401150, (-0.00664, 0.01506, 0.10087)),
-                ])
+                .parameters(SemiDynaEXE)
                 .build()
                 .statistics();
 

@@ -244,6 +244,8 @@ pub struct Statistics {
     pub longitude: StatisticData,
     /// The statistics of altitude.
     pub altitude: StatisticData,
+    /// The statistics of horizontal.
+    pub horizontal: StatisticData,
 }
 
 /// The coordinate Transformer, and represents a deserializing result of par-formatted data.
@@ -561,10 +563,18 @@ impl Transformer {
         let arr: Vec<f64> = extract!(altitude);
         let altitude = StatisticData::from_arr(&arr);
 
+        let arr: Vec<f64> = self
+            .parameter
+            .values()
+            .map(|v| v.horizontal())
+            .collect::<Vec<_>>();
+        let horizontal = StatisticData::from_arr(&arr);
+
         Statistics {
             latitude,
             longitude,
             altitude,
+            horizontal,
         }
     }
 
@@ -1782,6 +1792,17 @@ mod tests {
                     max: Some(0.10374)
                 }
             );
+            assert_eq!(
+                stats.horizontal,
+                StatisticData {
+                    count: Some(4),
+                    mean: Some(0.0164178029479055),
+                    std: Some(0.04925345347374168),
+                    abs: Some(0.0164178029479055),
+                    min: Some(0.016326766366920303),
+                    max: Some(0.016499215132847987)
+                }
+            );
 
             let stats = TransformerBuilder::new()
                 .format(Format::TKY2JGD)
@@ -1811,6 +1832,17 @@ mod tests {
             );
             assert_eq!(
                 stats.altitude,
+                StatisticData {
+                    count: None,
+                    mean: None,
+                    std: None,
+                    abs: None,
+                    min: None,
+                    max: None
+                }
+            );
+            assert_eq!(
+                stats.horizontal,
                 StatisticData {
                     count: None,
                     mean: None,
@@ -1855,6 +1887,17 @@ mod tests {
             assert!(stats.altitude.abs.unwrap().is_nan());
             assert!(stats.altitude.min.unwrap().is_nan());
             assert!(stats.altitude.max.unwrap().is_nan());
+            assert_eq!(
+                stats.horizontal,
+                StatisticData {
+                    count: Some(1),
+                    mean: Some(1.0),
+                    std: Some(0.0),
+                    abs: Some(1.0),
+                    min: Some(1.0),
+                    max: Some(1.0)
+                }
+            );
         }
 
         #[test]

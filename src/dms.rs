@@ -162,7 +162,7 @@ impl FromStr for DMS {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    fn from_str(s: &str) -> Result<Self, ParseDMSError> {
+    fn from_str(s: &str) -> Result<Self, Self::Error> {
         // float-like
         let mut parts = s.split('.');
 
@@ -242,7 +242,7 @@ impl TryFrom<&f64> for DMS {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    fn try_from(value: &f64) -> Result<Self, TryFromDMSError> {
+    fn try_from(value: &f64) -> Result<Self, Self::Error> {
         if value.is_nan() {
             return Err(TryFromDMSError::new_nan());
         } else if value.lt(&-180.0) || value.gt(&180.0) {

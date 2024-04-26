@@ -162,7 +162,7 @@ impl FromStr for DMS {
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    fn from_str(s: &str) -> Result<Self, Self::Error> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         // float-like
         let mut parts = s.split('.');
 

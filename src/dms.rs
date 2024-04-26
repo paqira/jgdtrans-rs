@@ -456,13 +456,13 @@ impl DMS {
     /// ```
     #[inline]
     pub fn to_degree(&self) -> f64 {
-        // let res = (self.degree as f64) + self.minute as f64 / 60. + (self.second as f64 + self.fract) / 3600.0;
-        let r = mul_add!(self.minute as f64, 1. / 60., self.degree as f64);
-        let r = mul_add!(self.second as f64 + self.fract, 1. / 3600.0, r);
+        // let temp = (self.degree as f64) + self.minute as f64 / 60. + (self.second as f64 + self.fract) / 3600.0;
+        let temp = mul_add!(self.minute as f64, 1. / 60., self.degree as f64);
+        let temp = mul_add!(self.second as f64 + self.fract, 1. / 3600.0, temp);
 
         match self.sign {
-            Sign::Plus => r,
-            Sign::Minus => -r,
+            Sign::Plus => temp,
+            Sign::Minus => -temp,
         }
     }
 }

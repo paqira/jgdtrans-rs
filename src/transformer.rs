@@ -1015,11 +1015,11 @@ impl Transformer {
 
             let (y, x) = cell.position(&current);
 
-            let corr_x = interpol.longitude(&y, &x) / SCALE;
-            let corr_y = interpol.latitude(&y, &x) / SCALE;
+            let drift_x = interpol.longitude(&y, &x) / SCALE;
+            let drift_y = interpol.latitude(&y, &x) / SCALE;
 
-            let fx = delta!(point.longitude, xn, corr_x);
-            let fy = delta!(point.latitude, yn, corr_y);
+            let fx = delta!(point.longitude, xn, drift_x);
+            let fy = delta!(point.latitude, yn, drift_y);
 
             // for readability
             macro_rules! lng_sub {
@@ -1265,11 +1265,11 @@ impl Transformer {
 
             let (y, x) = code.position(&current, &mesh_unit);
 
-            let corr_x = interpol.longitude(&y, &x) / SCALE;
-            let corr_y = interpol.latitude(&y, &x) / SCALE;
+            let drift_x = interpol.longitude(&y, &x) / SCALE;
+            let drift_y = interpol.latitude(&y, &x) / SCALE;
 
-            let fx = delta!(point.longitude, xn, corr_x);
-            let fy = delta!(point.latitude, yn, corr_y);
+            let fx = delta!(point.longitude, xn, drift_x);
+            let fy = delta!(point.latitude, yn, drift_y);
 
             macro_rules! lng_sub {
                 ($a:ident, $b:ident) => {

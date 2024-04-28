@@ -548,26 +548,19 @@ impl Transformer {
     /// assert_eq!(stats.latitude.max, Some(-0.0062));
     /// ```
     pub fn statistics(&self) -> Statistics {
-        macro_rules! extract {
-            ($name:ident) => {
-                self.parameter.values().map(|v| v.$name).collect::<Vec<_>>()
-            };
-        }
+        let mut sorted: Vec<_> = self.parameter.iter().collect();
+        sorted.sort_by_key(|t| t.0);
 
-        let arr: Vec<f64> = extract!(latitude);
+        let arr: Vec<f64> = sorted.iter().map(|t| t.1.latitude).collect();
         let latitude = StatisticData::from_arr(&arr);
 
-        let arr: Vec<f64> = extract!(longitude);
+        let arr: Vec<f64> = sorted.iter().map(|t| t.1.longitude).collect();
         let longitude = StatisticData::from_arr(&arr);
 
-        let arr: Vec<f64> = extract!(altitude);
+        let arr: Vec<f64> = sorted.iter().map(|t| t.1.altitude).collect();
         let altitude = StatisticData::from_arr(&arr);
 
-        let arr: Vec<f64> = self
-            .parameter
-            .values()
-            .map(|v| v.horizontal())
-            .collect::<Vec<_>>();
+        let arr: Vec<f64> = sorted.iter().map(|t| t.1.horizontal()).collect();
         let horizontal = StatisticData::from_arr(&arr);
 
         Statistics {

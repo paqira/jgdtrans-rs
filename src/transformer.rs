@@ -1801,7 +1801,11 @@ mod tests {
                     } else {
                         0.0164178029479055
                     }),
-                    std: Some(0.04925345347374168),
+                    std: Some(if cfg!(target_os = "linux") {
+                        0.04925345347374167
+                    } else {
+                        0.04925345347374168
+                    }),
                     abs: Some(if cfg!(target_os = "linux") {
                         0.016417802947905496
                     } else {

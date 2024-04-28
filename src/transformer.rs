@@ -548,6 +548,7 @@ impl Transformer {
     /// assert_eq!(stats.latitude.max, Some(-0.0062));
     /// ```
     pub fn statistics(&self) -> Statistics {
+        // ensure summation order
         let mut sorted: Vec<_> = self.parameter.iter().collect();
         sorted.sort_by_key(|t| t.0);
 

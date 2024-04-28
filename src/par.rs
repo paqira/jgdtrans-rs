@@ -116,63 +116,48 @@ impl Format {
         }
     }
 
-    pub(crate) fn parse(&self, s: &str) -> Result<Transformer, ParseParError> {
-        use crate::par::*;
-        match self {
-            Self::TKY2JGD => parse(
-                s,
-                2,
-                Some(0..8),
-                Some(9..18),
-                Some(19..28),
-                None,
-                self.clone(),
-            ),
-            Self::PatchJGD => parse(
-                s,
-                16,
-                Some(0..8),
-                Some(9..18),
-                Some(19..28),
-                None,
-                self.clone(),
-            ),
-            Self::PatchJGD_H => parse(s, 16, Some(0..8), None, None, Some(9..18), self.clone()),
-            Self::HyokoRev => parse(s, 16, Some(0..8), None, None, Some(12..21), self.clone()),
-            Self::PatchJGD_HV | Self::SemiDynaEXE => parse(
-                s,
-                16,
-                Some(0..8),
-                Some(9..18),
-                Some(19..28),
-                Some(29..38),
-                self.clone(),
-            ),
-            Self::geonetF3 | Self::ITRF2014 => parse(
-                s,
-                18,
-                Some(0..8),
-                Some(12..21),
-                Some(22..31),
-                Some(32..41),
-                self.clone(),
-            ),
-        }
+    pub(crate) fn parse(self, s: &str) -> Result<Transformer, ParseParError> {
+        let (parameter, description) = match self {
+            Self::TKY2JGD => parse(s, 2, 0..8, Some(9..18), Some(19..28), None),
+            Self::PatchJGD => parse(s, 16, 0..8, Some(9..18), Some(19..28), None),
+            Self::PatchJGD_H => parse(s, 16, 0..8, None, None, Some(9..18)),
+            Self::HyokoRev => parse(s, 16, 0..8, None, None, Some(12..21)),
+            Self::PatchJGD_HV | Self::SemiDynaEXE => {
+                parse(s, 16, 0..8, Some(9..18), Some(19..28), Some(29..38))
+            }
+            Self::geonetF3 | Self::ITRF2014 => {
+                parse(s, 18, 0..8, Some(12..21), Some(22..31), Some(32..41))
+            }
+        }?;
+
+        Ok(Transformer {
+            format: self,
+            parameter,
+            description,
+        })
     }
 }
 
 fn parse(
     text: &str,
     header: usize,
-    meshcode: Option<Range<usize>>,
+    meshcode: Range<usize>,
     latitude: Option<Range<usize>>,
     longitude: Option<Range<usize>>,
     altitude: Option<Range<usize>>,
-    format: Format,
-) -> Result<Transformer, ParseParError> {
-    let mut iter = text.lines().enumerate();
+) -> Result<(HashMap<u32, Parameter>, Option<String>), ParseParError> {
+    if text.lines().count().lt(&header) {
+        return Err(ParseParError::new(
+            0,
+            text.lines().by_ref().last().map_or(0, str::len),
+            text.lines().count(),
+            ParseParErrorKind::Header,
+            Column::Meshcode,
+        ));
+    }
 
-    let description = iter
+    let mut lines = text.lines().enumerate();
+    let description = lines
         .by_ref()
         .take(header)
         .map(|(_, s)| s)
@@ -180,30 +165,27 @@ fn parse(
         .join("\n");
 
     let mut parameter: HashMap<u32, Parameter> = HashMap::new();
-    for (lineno, line) in iter {
-        let meshcode: u32 = match meshcode {
-            None => 0,
-            Some(ref range) => line
-                .get(range.clone())
-                .ok_or(ParseParError::new(
-                    range.start,
-                    range.end,
+    for (lineno, line) in lines {
+        let code: u32 = line
+            .get(meshcode.clone())
+            .ok_or(ParseParError::new(
+                meshcode.start,
+                meshcode.end,
+                lineno + 1,
+                ParseParErrorKind::ColumnNotFound,
+                Column::Meshcode,
+            ))?
+            .trim()
+            .parse()
+            .map_err(|e| {
+                ParseParError::new(
+                    meshcode.start,
+                    meshcode.end,
                     lineno + 1,
-                    ParseParErrorKind::ColumnNotFound,
+                    ParseParErrorKind::ParseInt(e),
                     Column::Meshcode,
-                ))?
-                .trim()
-                .parse()
-                .map_err(|e| {
-                    ParseParError::new(
-                        range.start,
-                        range.end,
-                        lineno + 1,
-                        ParseParErrorKind::ParseInt(e),
-                        Column::Meshcode,
-                    )
-                })?,
-        };
+                )
+            })?;
 
         let latitude: f64 = match latitude {
             None => 0.0,
@@ -278,7 +260,7 @@ fn parse(
         };
 
         parameter.insert(
-            meshcode,
+            code,
             Parameter {
                 latitude,
                 longitude,
@@ -287,11 +269,7 @@ fn parse(
         );
     }
 
-    Ok(Transformer {
-        format,
-        parameter,
-        description: Some(description),
-    })
+    Ok((parameter, Some(description)))
 }
 
 //
@@ -318,6 +296,7 @@ pub struct ParseParError {
 /// An error kind of [`ParseParError`].
 #[derive(Debug)]
 pub enum ParseParErrorKind {
+    Header,
     ColumnNotFound,
     ParseInt(ParseIntError),
     ParseFloat(ParseFloatError),
@@ -330,6 +309,7 @@ pub enum Column {
     Latitude,
     Longitude,
     Altitude,
+    Other,
 }
 
 impl ParseParError {
@@ -358,20 +338,27 @@ impl ParseParError {
 
 impl Display for ParseParError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "parse error: {} at l{}:{}:{}",
-            self.column, self.lineno, self.start, self.end
-        )
+        match self.kind {
+            ParseParErrorKind::Header => write!(
+                f,
+                "parse error: header at l{}:{}:{}",
+                self.lineno, self.start, self.end
+            ),
+            _ => write!(
+                f,
+                "parse error: {} at l{}:{}:{}",
+                self.column, self.lineno, self.start, self.end
+            ),
+        }
     }
 }
 
 impl Error for ParseParError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match &self.kind {
-            ParseParErrorKind::ColumnNotFound => None,
             ParseParErrorKind::ParseInt(e) => Some(e),
             ParseParErrorKind::ParseFloat(e) => Some(e),
+            _ => None,
         }
     }
 }
@@ -383,6 +370,7 @@ impl Display for Column {
             Self::Latitude => write!(f, "latitude"),
             Self::Longitude => write!(f, "longitude"),
             Self::Altitude => write!(f, "altitude"),
+            Self::Other => write!(f, "other"),
         }
     }
 }
@@ -390,6 +378,81 @@ impl Display for Column {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    mod tests_error {
+        use super::*;
+        #[test]
+        fn test_empty() {
+            let text = "JGD2000-TokyoDatum Ver.2.1.2
+MeshCode   dB(sec)   dL(sec)";
+            let actual = from_str(&text, Format::TKY2JGD);
+            assert!(actual.is_ok());
+
+            let text = "JGD2000-TokyoDatum Ver.2.1.2";
+            let actual = from_str(&text, Format::TKY2JGD);
+            assert!(actual.is_err());
+
+            let text = "";
+            let actual = from_str(&text, Format::TKY2JGD);
+            assert!(actual.is_err());
+        }
+
+        #[test]
+        fn test_meshcode() {
+            let text = "\n".repeat(15)
+                + "MeshCode dB(sec)  dL(sec) dH(m)
+000x0000   0.00001   0.00002   0.00003
+10000000 -10.00001 -10.00002 -10.00003";
+            let actual = from_str(&text, Format::SemiDynaEXE).unwrap_err();
+
+            assert_eq!(actual.start, 0);
+            assert_eq!(actual.end, 8);
+            assert_eq!(actual.lineno, 17);
+            assert!(matches!(actual.column, Column::Meshcode));
+        }
+
+        #[test]
+        fn test_latitude() {
+            let text = "\n".repeat(15)
+                + "MeshCode dB(sec)  dL(sec) dH(m)
+00000000   0.0000x   0.00002   0.00003
+10000000 -10.00001 -10.00002 -10.00003";
+            let actual = from_str(&text, Format::SemiDynaEXE).unwrap_err();
+
+            assert_eq!(actual.start, 9);
+            assert_eq!(actual.end, 18);
+            assert_eq!(actual.lineno, 17);
+            assert!(matches!(actual.column, Column::Latitude));
+        }
+
+        #[test]
+        fn test_longitude() {
+            let text = "\n".repeat(15)
+                + "MeshCode dB(sec)  dL(sec) dH(m)
+00000000   0.00001   0.0000x   0.00003
+10000000 -10.00001 -10.00002 -10.00003";
+            let actual = from_str(&text, Format::SemiDynaEXE).unwrap_err();
+
+            assert_eq!(actual.start, 19);
+            assert_eq!(actual.end, 28);
+            assert_eq!(actual.lineno, 17);
+            assert!(matches!(actual.column, Column::Longitude));
+        }
+
+        #[test]
+        fn test_altitude() {
+            let text = "\n".repeat(15)
+                + "MeshCode dB(sec)  dL(sec) dH(m)
+00000000   0.00001   0.00002   0.0000x
+10000000 -10.00001 -10.00002 -10.00003";
+            let actual = from_str(&text, Format::SemiDynaEXE).unwrap_err();
+
+            assert_eq!(actual.start, 29);
+            assert_eq!(actual.end, 38);
+            assert_eq!(actual.lineno, 17);
+            assert!(matches!(actual.column, Column::Altitude));
+        }
+    }
 
     mod tests_tky2jgd {
         use super::*;

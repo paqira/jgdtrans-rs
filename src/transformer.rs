@@ -1797,15 +1797,15 @@ mod tests {
                 StatisticData {
                     count: Some(4),
                     mean: Some(if cfg!(target_os = "linux") {
-                        0.065671211791622
-                    } else {
                         0.016417802947905496
+                    } else {
+                        0.0164178029479055
                     }),
-                    std: Some(0.04925345347374167),
+                    std: Some(0.04925345347374168),
                     abs: Some(if cfg!(target_os = "linux") {
-                        0.065671211791622
-                    } else {
                         0.016417802947905496
+                    } else {
+                        0.0164178029479055
                     }),
                     min: Some(0.016326766366920303),
                     max: Some(0.016499215132847987)

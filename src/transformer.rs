@@ -1786,6 +1786,8 @@ mod tests {
                     max: Some(0.10374)
                 }
             );
+            // The difference comes from libc?
+            // It's up to 1 ulp.
             assert_eq!(
                 stats.horizontal,
                 StatisticData {

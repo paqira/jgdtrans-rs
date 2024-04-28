@@ -1792,23 +1792,30 @@ mod tests {
                     max: Some(0.10374)
                 }
             );
-            // FIXME:
-            //  The return values are different
-            //  between local (macOS) and CI (linux)...
-            assert!((0.016417802947905496 - stats.horizontal.mean.unwrap())
-                .abs()
-                .lt(&1e-15));
-            assert!((0.04925345347374167 - stats.horizontal.std.unwrap())
-                .abs()
-                .lt(&1e-15));
-            assert!((0.016417802947905496 - stats.horizontal.abs.unwrap())
-                .abs()
-                .lt(&1e-15));
-            assert!((0.016417802947905496 - stats.horizontal.abs.unwrap())
-                .abs()
-                .lt(&1e-15));
-            assert_eq!(stats.horizontal.min.unwrap(), 0.016326766366920303);
-            assert_eq!(stats.horizontal.max.unwrap(), 0.016499215132847987);
+            assert_eq!(
+                stats.horizontal,
+                StatisticData {
+                    count: Some(4),
+                    mean: Some(if cfg!(target_os = "linux") {
+                        0.016417802947905496
+                    } else {
+                        0.0164178029479055
+                    }),
+                    std: Some(if cfg!(target_os = "linux") {
+                        0.04925345347374167
+                    } else {
+                        0.04925345347374168
+                    }),
+                    abs: Some(if cfg!(target_os = "linux") {
+                        0.016417802947905496
+                    } else {
+                        0.0164178029479055
+                    }),
+                    min: Some(0.016326766366920303),
+                    max: Some(0.016499215132847987)
+                }
+            );
+            // 0.016417802947905496
 
             let stats = TransformerBuilder::new()
                 .format(Format::TKY2JGD)

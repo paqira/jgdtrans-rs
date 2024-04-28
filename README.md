@@ -44,7 +44,7 @@ Features:
 ## Optional Features
 
 - `serde`: supports serialization/deserialization by [`serde` crate][serde].
-- `fma`: use [fused multiply-add][fma], [`f64::mul_add`][mul_add].
+- `fma`: uses [fused multiply-add][fma].
 
 Notes, `cargo` does not enable `fma` target-feature as default.
 To use CPU FMA instructions, you need to set `fma` target-feature,

@@ -76,7 +76,7 @@
 //! ## Optional Features
 //!
 //! - `serde`: supports serialization/deserialization by [`serde` crate][serde].
-//! - `fma`: use [_fused multiply-add_][fma], [`f64::mul_add`][mul_add].
+//! - `fma`: uses [_fused multiply-add_][fma].
 //!
 //! Notes, `cargo` does not enable `fma` target-feature as default.
 //! To use CPU fma instruction, you need to set `fma` target-feature,
@@ -112,7 +112,6 @@
 //! We show a (de)serialization example to/from json;
 //!
 //! ```
-//! use std::error::Error;
 //! use serde_json;
 //! use jgdtrans::{
 //!     Format,

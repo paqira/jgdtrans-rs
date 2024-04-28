@@ -256,7 +256,7 @@ impl Point {
 
     /// Makes a [`Point`] with checking.
     ///
-    /// `latitude` satisfies -90.0 <= and <= 90.0
+    /// The resulting `latitude` satisfies -90.0 <= and <= 90.0
     /// and `longitude` does -180.0 <= and <= 180.0.
     ///
     /// # Errors

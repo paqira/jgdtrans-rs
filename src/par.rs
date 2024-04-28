@@ -19,27 +19,6 @@ use crate::Transformer;
 /// This fills by 0.0 for altitude parameter when [`Format::TKY2JGD`] or [`Format::PatchJGD`] given,
 /// and for latitude and longitude when [`Format::PatchJGD_H`] or [`Format::HyokoRev`] given.
 ///
-/// ```no_run
-/// # use std::fs;
-/// # use std::error::Error;
-/// # use jgdtrans::{Transformer, Format, Point, par};
-/// // deserialize SemiDynaEXE par file, e.g. SemiDyna2023.par
-/// let s = fs::read_to_string("SemiDyna2023.par")?;
-/// let tf = par::from_str(&s, Format::SemiDynaEXE)?;
-///
-/// // prints Format::SemiDynaEXE
-/// println!("{:?}", tf.format);
-/// // prints all parameter (be careful, long display)
-/// println!("{:?}", tf.parameter);
-/// // prints first 16 lines
-/// println!("{:?}", tf.description);
-///
-/// // transform coordinate
-/// let point: Point = (35.0, 135.0).try_into()?;
-/// let result = tf.forward(&point);
-/// # Ok::<(), Box<dyn Error>>(())
-/// ```
-///
 /// # Errors
 ///
 /// Returns [`Err`] when the invalid data found.

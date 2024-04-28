@@ -36,7 +36,7 @@ fn ksum(vs: &[f64]) -> f64 {
 /// We emphasize that the unit of latitude and longitude is \[sec\], not \[deg\].
 ///
 /// It should fill with 0.0 instead of [`NAN`](f64::NAN)
-/// if the parameter does not exist, as parsers does.
+/// if the parameter does not exist, as the parser does.
 ///
 /// # Example
 ///
@@ -110,8 +110,8 @@ impl Parameter {
 
 /// The transformation correction.
 ///
-/// We emphasize that the unit is \[deg\], not \[sec\]
-/// for latitude and longitude.
+/// We emphasize that the unit of latitude and longitude
+/// is \[deg\], not \[sec\].
 ///
 /// It should fill with 0.0 instead of [`NAN`](f64::NAN).
 ///
@@ -299,7 +299,10 @@ pub struct Transformer {
 }
 
 impl Transformer {
-    /// Max error of [`Transformer::backward`] and [`Transformer::backward_corr`].
+    /// Max error of backward transformation.
+    ///
+    /// Used by [`Transformer::backward`], [`Transformer::backward_corr`]
+    /// [`Transformer::unchecked_backward`], [`Transformer::unchecked_backward_corr`].
     pub const ERROR_MAX: f64 = 5e-14;
 
     /// Makes a [`Transformer`].
@@ -380,27 +383,6 @@ impl Transformer {
     /// This fills by 0.0 for altitude parameter when [`Format::TKY2JGD`] or [`Format::PatchJGD`] given,
     /// and for latitude and longitude when [`Format::PatchJGD_H`] or [`Format::HyokoRev`] given.
     ///
-    /// ```no_run
-    /// # use std::fs;
-    /// # use std::error::Error;
-    /// # use jgdtrans::{Transformer, Format, Point};
-    /// // deserialize SemiDynaEXE par file, e.g. SemiDyna2023.par
-    /// let s = fs::read_to_string("SemiDyna2023.par")?;
-    /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
-    ///
-    /// // prints Format::SemiDynaEXE
-    /// println!("{:?}", tf.format);
-    /// // prints all parameter (long display)
-    /// println!("{:?}", tf.parameter);
-    /// // prints first 16 lines
-    /// println!("{:?}", tf.description);
-    ///
-    /// // transform coordinate
-    /// let point: Point = (35.0, 135.0).into();
-    /// let result = tf.forward(&point);
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
-    ///
     /// # Errors
     ///
     /// Returns [`Err`] when the invalid data found.
@@ -429,6 +411,8 @@ impl Transformer {
     /// MeshCode dB(sec)  dL(sec) dH(m)
     /// 12345678   0.00001   0.00002   0.00003";
     /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
+    ///
+    /// assert_eq!(tf.format, Format::SemiDynaEXE);
     /// assert_eq!(
     ///     tf.parameter.get(&12345678),
     ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
@@ -443,32 +427,6 @@ impl Transformer {
     /// Deserialize par-formatted [`&str`] into a [`Transformer`] with description.
     ///
     /// See [`Transformer::from_str`] for detail.
-    ///
-    /// ```no_run
-    /// # use std::fs;
-    /// # use std::error::Error;
-    /// # use jgdtrans::{Transformer, Format, Point};
-    /// // deserialize SemiDynaEXE par file, e.g. SemiDyna2023.par
-    /// let s = fs::read_to_string("SemiDyna2023.par")?;
-    /// let tf = Transformer::from_str_with_description(
-    ///     &s,
-    ///     Format::SemiDynaEXE,
-    ///     "SemiDyna2023.par".to_string()
-    /// )?;
-    ///
-    /// // prints Format::SemiDynaEXE
-    /// println!("{:?}", tf.format);
-    /// // prints all parameter (long display)
-    /// println!("{:?}", tf.parameter);
-    /// // prints SemiDyna2023.par
-    /// println!("{:?}", tf.description);
-    ///
-    /// // transform coordinate
-    /// let point: Point = (35.0, 135.0).into();
-    /// let result = tf.forward(&point);
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
-    ///
     /// # Errors
     ///
     /// Returns [`Err`] when the invalid data found.
@@ -501,10 +459,13 @@ impl Transformer {
     ///     Format::SemiDynaEXE,
     ///     "SemiDyna2023.par".to_string(),
     /// )?;
+    ///
+    /// assert_eq!(tf.format, Format::SemiDynaEXE);
     /// assert_eq!(
     ///     tf.parameter.get(&12345678),
     ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
     /// );
+    /// assert_eq!(tf.description, Some("SemiDyna2023.par".to_string()));
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[inline]
@@ -603,7 +564,7 @@ impl Transformer {
     /// assert_eq!(result.longitude, 140.08785924333452);
     /// assert_eq!(result.altitude, 2.4363138578103);
     ///
-    /// // Transformer::backward is equivalent to
+    /// // Transformer::forward is equivalent to
     /// assert_eq!(result, &point + tf.forward_corr(&point)?);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -646,7 +607,7 @@ impl Transformer {
     /// assert_eq!(result.longitude, 140.087855041);  // exact: 140.087855041
     /// assert_eq!(result.altitude, 2.339999999578243);  // exact: 2.34
     ///
-    /// // Transformer::backward is equivalent to
+    /// // Transformer::backward_compat is equivalent to
     /// assert_eq!(result, &point + tf.backward_compat_corr(&point)?);
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -666,7 +627,7 @@ impl Transformer {
     /// This implies that altitude's error is less than 1e-5 \[m\],
     /// which is error of the GIAJ altitude parameter.
     ///
-    /// This is not compatible to the GIAJ web app/APIs (but more accurate).
+    /// This is not compatible to the GIAJ web app/APIs, but more accurate.
     ///
     /// # Errors
     ///

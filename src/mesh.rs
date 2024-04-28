@@ -70,7 +70,7 @@ impl MeshUnit {
 /// The first takes values from 0 to 99, the second does from 0 to 7
 /// and the third does from 0 to 9 inclusive.
 ///
-/// We note that the third digits takes either 0 or 5 only
+/// We note that the third digit takes either 0 or 5 only
 /// on the mesh with mesh unit [`MeshUnit::Five`].
 ///
 /// # Example
@@ -80,9 +80,9 @@ impl MeshUnit {
 /// # use jgdtrans::mesh::*;
 /// # fn wrapper() -> Option<()> {
 /// // The selection of MeshCoord depends on mesh unit
+/// // Every fifth MeshCoord is taken, when MeshUnit::Five given
 /// let coord = MeshCoord::try_from_latitude(&36.103774791666666, &MeshUnit::One)?;
 /// assert_eq!(coord, MeshCoord::try_new(54, 1, 2).unwrap());
-/// // Every fifth MeshCoord is taken, when MeshUnit::Five given
 /// let coord = MeshCoord::try_from_latitude(&36.103774791666666, &MeshUnit::Five)?;
 /// assert_eq!(coord, MeshCoord::try_new(54, 1, 0).unwrap());
 ///
@@ -433,8 +433,7 @@ impl MeshCoord {
     ///
     /// # Errors
     ///
-    /// Returns [`None`] when `mesh_unit` is [`MeshUnit::Five`]
-    /// although `self.third` is either `0` or `5`,
+    /// Returns [`None`] when `self` is incompatible to `mesh_unit`
     /// or `self` is `MeshCoord { first: 99, second: 7, third: 9 }`.
     ///
     /// # Example
@@ -445,8 +444,14 @@ impl MeshCoord {
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(0, 0, 0)?;
     ///
-    /// assert_eq!(coord.try_next_up(&MeshUnit::One)?, MeshCoord::try_new(0, 0, 1)?);
-    /// assert_eq!(coord.try_next_up(&MeshUnit::Five)?, MeshCoord::try_new(0, 0, 5)?);
+    /// assert_eq!(
+    ///     coord.try_next_up(&MeshUnit::One)?,
+    ///     MeshCoord::try_new(0, 0, 1).unwrap()
+    /// );
+    /// assert_eq!(
+    ///     coord.try_next_up(&MeshUnit::Five)?,
+    ///     MeshCoord::try_new(0, 0, 5).unwrap()
+    /// );
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
@@ -495,8 +500,7 @@ impl MeshCoord {
     ///
     /// # Errors
     ///
-    /// Returns [`None`] when `mesh_unit` is [`MeshUnit::Five`]
-    /// although `self.third` is either `0` or `5`,
+    /// Returns [`None`] when `self` is incompatible to `mesh_unit`
     /// or `self` is `MeshCoord { first: 0, second: 0, third: 0 }`.
     ///
     /// # Example
@@ -507,11 +511,11 @@ impl MeshCoord {
     /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
     ///     MeshCoord::try_new(0, 0, 1)?.try_next_down(&MeshUnit::One)?,
-    ///     MeshCoord::try_new(0, 0, 0)?
+    ///     MeshCoord::try_new(0, 0, 0).unwrap()
     /// );
     /// assert_eq!(
     ///     MeshCoord::try_new(0, 0, 5)?.try_next_down(&MeshUnit::Five)?,
-    ///     MeshCoord::try_new(0, 0, 0)?
+    ///     MeshCoord::try_new(0, 0, 0).unwrap()
     /// );
     /// # Some(())}
     /// # fn main() {wrapper();()}
@@ -573,7 +577,7 @@ impl MeshCoord {
 /// let node = MeshNode::try_from_point(&point, &MeshUnit::One)?;
 /// assert_eq!(node.to_meshcode(), 54401027);
 ///
-/// // The result depends on the selection of the mesh unit
+/// // The result depends on the mesh_unit
 /// let node = MeshNode::try_from_point(&point, &MeshUnit::Five)?;
 /// assert_eq!(node.to_meshcode(), 54401005);
 ///
@@ -592,8 +596,7 @@ pub struct MeshNode {
     pub(crate) latitude: MeshCoord,
     /// The mesh coord of longitude
     ///
-    /// This satisfies `MeshCoord { first: 0, second: 0, third: 0 }` <=
-    /// and <= `MeshCoord { first: 80, second: 0, third: 0 }`
+    /// This satisfies <= `MeshCoord { first: 80, second: 0, third: 0 }`
     pub(crate) longitude: MeshCoord,
 }
 
@@ -666,8 +669,7 @@ impl MeshNode {
 
     /// Makes a [`MeshNode`].
     ///
-    /// `longitude` satisfies `MeshCoord { first: 0, second: 0, third: 0 }` <=
-    /// and <= `MeshCoord { first: 80, second: 0, third: 0 }`.
+    /// `longitude` satisfies <= `MeshCoord { first: 80, second: 0, third: 0 }`.
     ///
     /// # Errors
     ///
@@ -938,7 +940,7 @@ impl MeshNode {
 /// # use jgdtrans::mesh::*;
 /// # fn wrapper() -> Option<()> {
 /// // Construct from latitude and longitude, altitude ignores
-/// // (The result depends on the selection of the mesh unit)
+/// // (The result depends on the mesh unit)
 /// let point = Point::new(36.10377479, 140.087855041, 0.0);
 /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
 /// assert_eq!(cell.south_west(), &MeshNode::try_from_meshcode(&54401027)?);
@@ -954,7 +956,7 @@ impl MeshNode {
 /// assert_eq!(MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?, cell);
 ///
 /// // Find the position within cell, from 0.0 to 1.0
-/// // (Again, the result depends on the selection of the mesh unit)
+/// // (Again, the result depends on the mesh unit)
 /// let (latitude, longitude) = cell.position(&point);
 /// assert_eq!(latitude, 0.4529748000001632);
 /// assert_eq!(longitude, 0.028403280000475206);
@@ -1343,7 +1345,7 @@ impl MeshCell {
     ///     (0.4529748000001632, 0.028403280000475206)
     /// );
     ///
-    /// // the result depends on unit
+    /// // the result depends on the mesh unit
     /// let cell = MeshCell::try_from_point(&point, MeshUnit::Five)?;
     /// assert_eq!(
     ///     cell.position(&point),

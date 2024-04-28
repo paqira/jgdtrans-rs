@@ -1,3 +1,6 @@
+// For `Mesh::next_up` and `Mesh::next_down`.
+#![feature(float_next_up_down)]
+
 //! # jgdtrans
 //!
 //! Unofficial coordinate transformer by _Gridded Correction Parameter_
@@ -160,9 +163,6 @@
 //!       JavaScript/TypeScript <https://github.com/paqira/jgdtrans-js>.
 //!
 //! [国土地理院コンテンツ利用規約]: https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
-// For `Mesh::next_up` and `Mesh::next_down`.
-#![feature(float_next_up_down)]
-
 #[doc(inline)]
 pub use par::{from_str, Format};
 #[doc(inline)]

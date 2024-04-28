@@ -78,7 +78,7 @@ macro_rules! impl_assign_ops {
 
 macro_rules! mul_add {
     ($a:expr, $b:expr, $c:expr) => {
-        if cfg!(feature = "fma") {
+        if cfg!(target_feature = "fma") {
             f64::mul_add($a, $b, $c)
         } else {
             $a * $b + $c

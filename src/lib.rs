@@ -79,14 +79,9 @@
 //! ## Optional Features
 //!
 //! - `serde`: supports serialization/deserialization by [`serde` crate][serde].
-//! - `fma`: uses [_fused multiply-add_][fma].
 //!
-//! Notes, `cargo` does not enable `fma` target-feature as default.
-//! To use CPU fma instruction, you need to set `fma` target-feature,
-//! i.e., `RUSTFLAGS='-C target-feature=+fma' cargo ...`.
-//!
-//! [fma]: https://en.wikipedia.org/wiki/Multiply–accumulate_operation
-//! [mul_add]: https://doc.rust-lang.org/std/primitive.f64.html#method.mul_add
+//! Notes, this supports [fused multiply-add][fma]. To use FMA instructions, set `fma` target-feature,
+//! e.g., `RUSTFLAGS='-C target-feature=+fma' cargo ...`.
 //!
 //! ## Serialization and Deserialization
 //!
@@ -163,15 +158,14 @@
 //!       JavaScript/TypeScript <https://github.com/paqira/jgdtrans-js>.
 //!
 //! [国土地理院コンテンツ利用規約]: https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
+pub use par::ParseParError;
 #[doc(inline)]
 pub use par::{from_str, Format};
 #[doc(inline)]
 pub use point::Point;
+pub use transformer::TransformError;
 #[doc(inline)]
 pub use transformer::{Correction, Parameter, Transformer, TransformerBuilder};
-
-pub use par::ParseParError;
-pub use transformer::TransformError;
 
 pub mod dms;
 mod internal;

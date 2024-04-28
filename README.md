@@ -44,14 +44,11 @@ Features:
 ## Optional Features
 
 - `serde`: supports serialization/deserialization by [`serde` crate][serde].
-- `fma`: uses [fused multiply-add][fma].
 
-Notes, `cargo` does not enable `fma` target-feature as default.
-To use CPU FMA instructions, you need to set `fma` target-feature,
+Notes, this supports [fused multiply-add][fma]. To use FMA instructions, set `fma` target-feature,
 e.g., `RUSTFLAGS='-C target-feature=+fma' cargo ...`.
 
 [fma]: https://en.wikipedia.org/wiki/Multiply–accumulate_operation
-[mul_add]: https://doc.rust-lang.org/std/primitive.f64.html#method.mul_add
 
 ## Usage
 

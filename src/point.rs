@@ -4,6 +4,7 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use crate::internal::{impl_assign_ops, impl_ops};
 use crate::mesh::{MeshCell, MeshNode, MeshUnit};
 use crate::transformer::Correction;
 
@@ -90,145 +91,11 @@ impl From<MeshNode> for Point {
     }
 }
 
-impl Add<Correction> for Point {
-    type Output = Self;
+impl_ops!(Add, add, Point, Correction);
+impl_ops!(Sub, sub, Point, Correction);
 
-    #[inline]
-    fn add(self, rhs: Correction) -> Self::Output {
-        Self::Output::new(
-            self.latitude + rhs.latitude,
-            self.longitude + rhs.longitude,
-            self.altitude + rhs.altitude,
-        )
-    }
-}
-
-impl Add<&Correction> for Point {
-    type Output = Self;
-
-    #[inline]
-    fn add(self, rhs: &Correction) -> Self::Output {
-        Self::Output::new(
-            self.latitude + rhs.latitude,
-            self.longitude + rhs.longitude,
-            self.altitude + rhs.altitude,
-        )
-    }
-}
-
-impl Add<Correction> for &Point {
-    type Output = Point;
-
-    #[inline]
-    fn add(self, rhs: Correction) -> Self::Output {
-        Self::Output::new(
-            self.latitude + rhs.latitude,
-            self.longitude + rhs.longitude,
-            self.altitude + rhs.altitude,
-        )
-    }
-}
-
-impl Add<&Correction> for &Point {
-    type Output = Point;
-
-    #[inline]
-    fn add(self, rhs: &Correction) -> Self::Output {
-        Self::Output::new(
-            self.latitude + rhs.latitude,
-            self.longitude + rhs.longitude,
-            self.altitude + rhs.altitude,
-        )
-    }
-}
-
-impl AddAssign<Correction> for Point {
-    #[inline]
-    fn add_assign(&mut self, rhs: Correction) {
-        self.latitude += rhs.latitude;
-        self.longitude += rhs.longitude;
-        self.altitude += rhs.altitude;
-    }
-}
-
-impl AddAssign<&Correction> for Point {
-    #[inline]
-    fn add_assign(&mut self, rhs: &Correction) {
-        self.latitude += rhs.latitude;
-        self.longitude += rhs.longitude;
-        self.altitude += rhs.altitude;
-    }
-}
-
-impl Sub<Correction> for Point {
-    type Output = Self;
-
-    #[inline]
-    fn sub(self, rhs: Correction) -> Self::Output {
-        Self::Output::new(
-            self.latitude - rhs.latitude,
-            self.longitude - rhs.longitude,
-            self.altitude - rhs.altitude,
-        )
-    }
-}
-
-impl Sub<&Correction> for Point {
-    type Output = Self;
-
-    #[inline]
-    fn sub(self, rhs: &Correction) -> Self::Output {
-        Self::Output::new(
-            self.latitude - rhs.latitude,
-            self.longitude - rhs.longitude,
-            self.altitude - rhs.altitude,
-        )
-    }
-}
-
-impl Sub<Correction> for &Point {
-    type Output = Point;
-
-    #[inline]
-    fn sub(self, rhs: Correction) -> Self::Output {
-        Self::Output::new(
-            self.latitude - rhs.latitude,
-            self.longitude - rhs.longitude,
-            self.altitude - rhs.altitude,
-        )
-    }
-}
-
-impl Sub<&Correction> for &Point {
-    type Output = Point;
-
-    #[inline]
-    fn sub(self, rhs: &Correction) -> Self::Output {
-        Self::Output::new(
-            self.latitude - rhs.latitude,
-            self.longitude - rhs.longitude,
-            self.altitude - rhs.altitude,
-        )
-    }
-}
-
-impl SubAssign<Correction> for Point {
-    #[inline]
-    fn sub_assign(&mut self, rhs: Correction) {
-        self.latitude -= rhs.latitude;
-        self.longitude -= rhs.longitude;
-        self.altitude -= rhs.altitude;
-    }
-}
-
-impl SubAssign<&Correction> for Point {
-    #[inline]
-    fn sub_assign(&mut self, rhs: &Correction) {
-        self.latitude -= rhs.latitude;
-        self.longitude -= rhs.longitude;
-        self.altitude -= rhs.altitude;
-    }
-}
+impl_assign_ops!(AddAssign, add_assign, Point, Correction);
+impl_assign_ops!(SubAssign, sub_assign, Point, Correction);
 
 impl Point {
     /// Makes a [`Point`].

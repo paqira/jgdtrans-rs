@@ -302,7 +302,7 @@ impl Transformer {
     /// Max error of backward transformation.
     ///
     /// Used by [`Transformer::backward`], [`Transformer::backward_corr`]
-    /// [`Transformer::unchecked_backward`], [`Transformer::unchecked_backward_corr`].
+    /// [`Transformer::unchecked_backward`] and [`Transformer::unchecked_backward_corr`].
     pub const ERROR_MAX: f64 = 5e-14;
 
     /// Makes a [`Transformer`].

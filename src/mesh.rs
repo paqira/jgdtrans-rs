@@ -1559,6 +1559,21 @@ mod tests {
         }
 
         #[test]
+        fn test_try_from() {
+            let coord: Result<MeshCoord, _> = (0, 0, 0).try_into();
+            assert!(coord.is_ok());
+
+            let coord: Result<MeshCoord, _> = (100, 0, 0).try_into();
+            assert!(coord.is_err());
+
+            let coord: Result<MeshCoord, _> = (99, 8, 0).try_into();
+            assert!(coord.is_err());
+
+            let coord: Result<MeshCoord, _> = (99, 7, 10).try_into();
+            assert!(coord.is_err());
+        }
+
+        #[test]
         fn test_getter() {
             let coord = MeshCoord::try_new(99, 7, 9).unwrap();
             assert_eq!(coord.first(), &99);

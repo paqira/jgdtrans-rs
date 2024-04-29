@@ -298,6 +298,13 @@ pub struct Transformer {
     pub description: Option<String>,
 }
 
+// TODO: impl SIMD
+//   We found that it does not become fast
+//   with portable SIMD + target-feature=native + LTO
+//   except backward_corr.
+//   Notes, the benefit of the portable SIMD
+//   for backward_corr is few % speed up...,
+//   the true bottleneck is hashing.
 impl Transformer {
     /// Max error of backward transformation.
     ///

@@ -54,7 +54,6 @@
 //!     and JGD2000 to JGD2011 ([EPSG:4612] to [EPSG:6668])
 //! - Clean implementation
 //! - No dependency
-//!   - It depends on [`serde`][serde] and [`serde_repr`][serde_repr] crates only when `serde` feature on
 //!
 //! [TKY2JGD]: https://www.gsi.go.jp/sokuchikijun/tky2jgd.html
 //! [PatchJGD]: https://vldb.gsi.go.jp/sokuchi/surveycalc/patchjgd/index.html
@@ -67,9 +66,6 @@
 //! [EPSG:4612]: https://epsg.io/4612
 //! [EPSG:6668]: https://epsg.io/6668
 //!
-//! [serde]: https://crates.io/crates/serde
-//! [serde_repr]: https://crates.io/crates/serde_repr
-//!
 //! This package does not contain parameter files, download it from GIAJ [^2].
 //!
 //! <span lang="ja">このパッケージはパラメータファイルを提供しません。公式サイトよりダウンロードしてください [^2]。</span>
@@ -78,10 +74,15 @@
 //!
 //! ## Optional Features
 //!
-//! - `serde`: supports serialization/deserialization by [`serde` crate][serde].
+//! - `serde`: supports serialization/deserialization by [`serde` crate][serde],
+//!            this requires dependency on [`serde`][serde] and [`serde_repr`][serde_repr].
 //!
 //! Notes, this supports [fused multiply-add][fma]. To use FMA instructions, set `fma` target-feature,
 //! e.g., `RUSTFLAGS='-C target-feature=+fma' cargo ...`.
+//!
+//! [serde]: https://crates.io/crates/serde
+//! [serde_repr]: https://crates.io/crates/serde_repr
+//! [fma]: https://en.wikipedia.org/wiki/Multiply–accumulate_operation
 //!
 //! ## Serialization and Deserialization
 //!

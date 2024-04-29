@@ -22,7 +22,6 @@ Features:
 - Clean implementation
     - 保守が容易な実装
 - No dependency
-    - It depends on [`serde`][serde] and [`serde_repr`][serde_repr] crates only if `serde` feature on
     - 依存パッケージなし
 
 `jdgtrans` requires nightly channel, it depends on a `float_next_up_down` feature.
@@ -38,16 +37,16 @@ Features:
 [EPSG:4612]: https://epsg.io/4612
 [EPSG:6668]: https://epsg.io/6668
 
-[serde]: https://crates.io/crates/serde
-[serde_repr]: https://crates.io/crates/serde_repr
-
 ## Optional Features
 
-- `serde`: supports serialization/deserialization by [`serde` crate][serde].
+- `serde`: supports serialization/deserialization by [`serde` crate][serde],
+           this requires dependency on [`serde`][serde] and [`serde_repr`][serde_repr].
 
 Notes, this supports [fused multiply-add][fma]. To use FMA instructions, set `fma` target-feature,
 e.g., `RUSTFLAGS='-C target-feature=+fma' cargo ...`.
 
+[serde]: https://crates.io/crates/serde
+[serde_repr]: https://crates.io/crates/serde_repr
 [fma]: https://en.wikipedia.org/wiki/Multiply–accumulate_operation
 
 ## Usage

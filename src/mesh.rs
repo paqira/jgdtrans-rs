@@ -53,7 +53,7 @@ impl From<&MeshUnit> for u8 {
 }
 
 impl MeshUnit {
-    #[inline(always)]
+    #[inline]
     const fn as_u8(&self) -> u8 {
         match self {
             Self::One => 1,

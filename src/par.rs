@@ -166,7 +166,7 @@ fn parse(
 
     let mut parameter: HashMap<u32, Parameter> = HashMap::new();
     for (lineno, line) in lines {
-        let code: u32 = line
+        let meshcode: u32 = line
             .get(meshcode.clone())
             .ok_or(ParseParError::new(
                 meshcode.start,
@@ -260,7 +260,7 @@ fn parse(
         };
 
         parameter.insert(
-            code,
+            meshcode,
             Parameter {
                 latitude,
                 longitude,

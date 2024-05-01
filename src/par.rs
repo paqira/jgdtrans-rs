@@ -162,7 +162,8 @@ fn parse(
         .take(header)
         .map(|(_, s)| s)
         .collect::<Vec<_>>()
-        .join("\n");
+        .join("\n")
+        + "\n";
 
     let mut parameter: HashMap<u32, Parameter> = HashMap::new();
     for (lineno, line) in lines {
@@ -386,7 +387,14 @@ mod tests {
             let text = "JGD2000-TokyoDatum Ver.2.1.2
 MeshCode   dB(sec)   dL(sec)";
             let actual = from_str(&text, Format::TKY2JGD);
-            assert!(actual.is_ok());
+            let expected = Transformer {
+                format: Format::TKY2JGD,
+                parameter: [].into_iter().collect(),
+                description: Some(
+                    ("JGD2000-TokyoDatum Ver.2.1.2\nMeshCode   dB(sec)   dL(sec)\n").to_string(),
+                ),
+            };
+            assert_eq!(expected, actual.unwrap());
 
             let text = "JGD2000-TokyoDatum Ver.2.1.2";
             let actual = from_str(&text, Format::TKY2JGD);
@@ -486,7 +494,7 @@ MeshCode   dB(sec)   dL(sec)";
                 ]
                 .into_iter()
                 .collect(),
-                description: Some(("\n".repeat(1) + "MeshCode   dB(sec)   dL(sec)").to_string()),
+                description: Some(("\n".repeat(1) + "MeshCode   dB(sec)   dL(sec)\n").to_string()),
             };
 
             assert_eq!(expected, actual.unwrap());
@@ -502,7 +510,7 @@ MeshCode   dB(sec)   dL(sec)
                 format: Format::TKY2JGD,
                 parameter: HashMap::new(),
                 description: Some(
-                    "JGD2000-TokyoDatum Ver.2.1.2\nMeshCode   dB(sec)   dL(sec)".to_string(),
+                    "JGD2000-TokyoDatum Ver.2.1.2\nMeshCode   dB(sec)   dL(sec)\n".to_string(),
                 ),
             };
 
@@ -542,7 +550,7 @@ MeshCode   dB(sec)   dL(sec)
                 ]
                 .into_iter()
                 .collect(),
-                description: Some(("\n".repeat(15) + "MeshCode   dB(sec)   dL(sec)").to_string()),
+                description: Some(("\n".repeat(15) + "MeshCode   dB(sec)   dL(sec)\n").to_string()),
             };
 
             assert_eq!(expected, actual.unwrap());
@@ -581,7 +589,7 @@ MeshCode   dB(sec)   dL(sec)
                 ]
                 .into_iter()
                 .collect(),
-                description: Some(("\n".repeat(15) + "MeshCode   dH(m)     0.00000").to_string()),
+                description: Some(("\n".repeat(15) + "MeshCode   dH(m)     0.00000\n").to_string()),
             };
 
             assert_eq!(expected, actual.unwrap());
@@ -621,7 +629,7 @@ MeshCode   dB(sec)   dL(sec)
                 .into_iter()
                 .collect(),
                 description: Some(
-                    ("\n".repeat(15) + "MeshCode   dB(sec)   dL(sec)   dH(m)").to_string(),
+                    ("\n".repeat(15) + "MeshCode   dB(sec)   dL(sec)   dH(m)\n").to_string(),
                 ),
             };
 
@@ -662,7 +670,7 @@ MeshCode   dB(sec)   dL(sec)
                 .into_iter()
                 .collect(),
                 description: Some(
-                    ("\n".repeat(15) + "MeshCode      dH(m)     0.00000").to_string(),
+                    ("\n".repeat(15) + "MeshCode      dH(m)     0.00000\n").to_string(),
                 ),
             };
 
@@ -703,7 +711,7 @@ MeshCode   dB(sec)   dL(sec)
                 .into_iter()
                 .collect(),
                 description: Some(
-                    ("\n".repeat(15) + "MeshCode dB(sec)  dL(sec) dH(m)").to_string(),
+                    ("\n".repeat(15) + "MeshCode dB(sec)  dL(sec) dH(m)\n").to_string(),
                 ),
             };
 
@@ -743,7 +751,7 @@ MeshCode   dB(sec)   dL(sec)
                 ]
                 .into_iter()
                 .collect(),
-                description: Some(("\n".repeat(17) + "END OF HEADER").to_string()),
+                description: Some(("\n".repeat(17) + "END OF HEADER\n").to_string()),
             };
 
             assert_eq!(expected, actual.unwrap());
@@ -782,7 +790,7 @@ MeshCode   dB(sec)   dL(sec)
                 ]
                 .into_iter()
                 .collect(),
-                description: Some(("\n".repeat(17) + "END OF HEADER").to_string()),
+                description: Some(("\n".repeat(17) + "END OF HEADER\n").to_string()),
             };
 
             assert_eq!(expected, actual.unwrap());

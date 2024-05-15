@@ -1555,6 +1555,14 @@ impl TransformerBuilder {
         self
     }
 
+    /// Shrinks the capacity of the [`HashMap`] of the parameter as much as possible.
+    ///
+    /// See [`HashMap::shrink_to_fit`] for detail.
+    pub fn shrink_to_fit(mut self) -> Self {
+        self.parameter.shrink_to_fit();
+        self
+    }
+
     /// Builds [`Transformer`].
     ///
     /// # Safety

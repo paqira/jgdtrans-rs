@@ -905,7 +905,7 @@ impl<
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn backward_compat_corr(&self, point: &Point) -> Result<Correction> {
-        const DELTA: f64 = 0.0033333333333333335; // 12. / 3600.
+        const DELTA: f64 = 1. / 300.; // 12. / 3600.
 
         let corr = Correction {
             latitude: -DELTA,
@@ -1156,7 +1156,7 @@ impl<
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn unchecked_backward_compat_corr(&self, point: &Point) -> Result<Correction> {
-        const DELTA: f64 = 0.0033333333333333335; // 12. / 3600.
+        const DELTA: f64 = 1. / 300.; // 12. / 3600.
 
         let corr = Correction {
             latitude: -DELTA,

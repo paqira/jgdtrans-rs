@@ -1326,25 +1326,25 @@ impl<'a> Interpol<'a> {
         parameter: &'a HashMap<u32, Parameter, S>,
         cell: &MeshCell,
     ) -> Result<Self> {
+        macro_rules! get {
+            ($meshcode:ident, $corner:expr) => {
+                parameter
+                    .get(&$meshcode)
+                    .ok_or(TransformError::new_pnf($meshcode, $corner))
+            };
+        }
+
         let meshcode = cell.south_west.to_meshcode();
-        let sw = parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthWest))?;
+        let sw = get!(meshcode, MeshCellCorner::SouthWest)?;
 
         let meshcode = cell.south_east.to_meshcode();
-        let se = parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthEast))?;
+        let se = get!(meshcode, MeshCellCorner::SouthEast)?;
 
         let meshcode = cell.north_west.to_meshcode();
-        let nw = parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthWest))?;
+        let nw = get!(meshcode, MeshCellCorner::NorthWest)?;
 
         let meshcode = cell.north_east.to_meshcode();
-        let ne = parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthEast))?;
+        let ne = get!(meshcode, MeshCellCorner::NorthEast)?;
 
         Ok(Self { sw, se, nw, ne })
     }
@@ -1359,25 +1359,25 @@ impl<'a> Interpol<'a> {
         let north = code.next_north(mesh_unit);
         let north_east = north.next_east(mesh_unit);
 
+        macro_rules! get {
+            ($meshcode:ident, $corner:expr) => {
+                parameter
+                    .get(&$meshcode)
+                    .ok_or(TransformError::new_pnf($meshcode, $corner))
+            };
+        }
+
         let meshcode = code.to_u32();
-        let sw = parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthWest))?;
+        let sw = get!(meshcode, MeshCellCorner::SouthWest)?;
 
         let meshcode = east.to_u32();
-        let se = parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::SouthEast))?;
+        let se = get!(meshcode, MeshCellCorner::SouthEast)?;
 
         let meshcode = north.to_u32();
-        let nw = parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthWest))?;
+        let nw = get!(meshcode, MeshCellCorner::NorthWest)?;
 
         let meshcode = north_east.to_u32();
-        let ne = parameter
-            .get(&meshcode)
-            .ok_or(TransformError::new_pnf(meshcode, MeshCellCorner::NorthEast))?;
+        let ne = get!(meshcode, MeshCellCorner::NorthEast)?;
 
         Ok(Self { sw, se, nw, ne })
     }

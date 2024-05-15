@@ -111,6 +111,7 @@
 //! We show a (de)serialization example to/from json;
 //!
 //! ```
+//! use std::collections::HashMap;
 //! use serde_json;
 //! use jgdtrans::{
 //!     Format,
@@ -135,8 +136,9 @@
 //!
 //!     // Deserialize from json
 //!     let result: Transformer = serde_json::from_str(&json)?;
-//!     assert_eq!(result, tf);
-//!
+//!     assert_eq!(result.format, Format::TKY2JGD);
+//!     assert_eq!(result.parameter, HashMap::<_, _>::from([(12345678, Parameter::new(1., 2., 3.)), ]));
+//!     assert_eq!(result.description, None);
 //!     Ok(())
 //! }
 //! ```

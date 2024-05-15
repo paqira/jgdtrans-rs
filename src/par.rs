@@ -2,6 +2,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
+use std::hash::{BuildHasher, Hash, RandomState};
 use std::num::{ParseFloatError, ParseIntError};
 use std::ops::Range;
 
@@ -56,7 +57,7 @@ use crate::Transformer;
 /// ```
 #[inline]
 pub fn from_str(s: &str, format: Format) -> Result<Transformer, ParseParError> {
-    format.parse(s)
+    Parser::new(format).parse(s)
 }
 
 /// Represents format of par-formatted text.
@@ -115,37 +116,18 @@ impl Format {
             Self::SemiDynaEXE | Self::geonetF3 | Self::ITRF2014 => MeshUnit::Five,
         }
     }
-
-    pub(crate) fn parse(self, s: &str) -> Result<Transformer, ParseParError> {
-        let (parameter, description) = match self {
-            Self::TKY2JGD => parse(s, 2, 0..8, Some(9..18), Some(19..28), None),
-            Self::PatchJGD => parse(s, 16, 0..8, Some(9..18), Some(19..28), None),
-            Self::PatchJGD_H => parse(s, 16, 0..8, None, None, Some(9..18)),
-            Self::HyokoRev => parse(s, 16, 0..8, None, None, Some(12..21)),
-            Self::PatchJGD_HV | Self::SemiDynaEXE => {
-                parse(s, 16, 0..8, Some(9..18), Some(19..28), Some(29..38))
-            }
-            Self::geonetF3 | Self::ITRF2014 => {
-                parse(s, 18, 0..8, Some(12..21), Some(22..31), Some(32..41))
-            }
-        }?;
-
-        Ok(Transformer {
-            format: self,
-            parameter,
-            description,
-        })
-    }
 }
 
-fn parse(
+#[allow(clippy::type_complexity)]
+fn parse<S: BuildHasher>(
     text: &str,
     header: usize,
     meshcode: Range<usize>,
     latitude: Option<Range<usize>>,
     longitude: Option<Range<usize>>,
     altitude: Option<Range<usize>>,
-) -> Result<(HashMap<u32, Parameter>, Option<String>), ParseParError> {
+    hash_builder: S,
+) -> Result<(HashMap<u32, Parameter, S>, Option<String>), ParseParError> {
     if text.lines().count().lt(&header) {
         return Err(ParseParError::new(
             0,
@@ -165,7 +147,7 @@ fn parse(
         .join("\n")
         + "\n";
 
-    let mut parameter: HashMap<u32, Parameter> = HashMap::new();
+    let mut parameter = HashMap::with_hasher(hash_builder);
     for (lineno, line) in lines {
         let meshcode: u32 = line
             .get(meshcode.clone())
@@ -275,6 +257,175 @@ fn parse(
     Ok((parameter, Some(description)))
 }
 
+/// Parser of par-formatted [`&str`].
+///
+/// # Example
+///
+/// ```
+/// # use std::error::Error;
+/// # use jgdtrans::*;
+/// # use jgdtrans::par::Parser;
+/// # use jgdtrans::transformer::Parameter;
+/// let s = r"<15 lines>
+/// # ...
+/// # ...
+/// # ...
+/// # ...
+/// # ...
+/// # ...
+/// # ...
+/// # ...
+/// # ...
+/// # ...
+/// # ...
+/// # ...
+/// # ...
+/// # ...
+/// MeshCode dB(sec)  dL(sec) dH(m)
+/// 12345678   0.00001   0.00002   0.00003";
+/// let tf = Parser::new(Format::SemiDynaEXE).parse(&s)?;
+///
+/// assert_eq!(
+///     tf.parameter.get(&12345678),
+///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
+/// );
+/// # Ok::<(), Box<dyn Error>>(())
+/// ```
+pub struct Parser<S = RandomState> {
+    format: Format,
+    hash_builder: S,
+}
+
+impl Parser<RandomState> {
+    /// Makes a parser.
+    #[inline]
+    pub fn new(format: Format) -> Self {
+        Self::with_hahser(format, RandomState::new())
+    }
+}
+
+impl<
+        #[cfg(feature = "serde")] S: BuildHasher + Default,
+        #[cfg(not(feature = "serde"))] S: BuildHasher,
+    > Parser<S>
+{
+    /// Makes a parser reuslting [`Transformer`] which uses the given hash builder to hash meshcode.
+    ///
+    /// This may improve performance of transformation.
+    /// See [`HashMap::with_hasher`], for detail.
+    #[inline]
+    pub fn with_hahser(format: Format, hash_builder: S) -> Self {
+        Self {
+            format,
+            hash_builder,
+        }
+    }
+
+    /// Deserialize par-formatted [`&str`] into a [`Transformer`].
+    #[inline]
+    pub fn parse(self, s: &str) -> Result<Transformer<S>, ParseParError> {
+        let (parameter, description) = match self.format {
+            Format::TKY2JGD => self::parse(
+                s,
+                2,
+                0..8,
+                Some(9..18),
+                Some(19..28),
+                None,
+                self.hash_builder,
+            ),
+            Format::PatchJGD => self::parse(
+                s,
+                16,
+                0..8,
+                Some(9..18),
+                Some(19..28),
+                None,
+                self.hash_builder,
+            ),
+            Format::PatchJGD_H => {
+                self::parse(s, 16, 0..8, None, None, Some(9..18), self.hash_builder)
+            }
+            Format::HyokoRev => {
+                self::parse(s, 16, 0..8, None, None, Some(12..21), self.hash_builder)
+            }
+            Format::PatchJGD_HV | Format::SemiDynaEXE => self::parse(
+                s,
+                16,
+                0..8,
+                Some(9..18),
+                Some(19..28),
+                Some(29..38),
+                self.hash_builder,
+            ),
+            Format::geonetF3 | Format::ITRF2014 => self::parse(
+                s,
+                18,
+                0..8,
+                Some(12..21),
+                Some(22..31),
+                Some(32..41),
+                self.hash_builder,
+            ),
+        }?;
+
+        Ok(Transformer {
+            format: self.format.clone(),
+            parameter,
+            description,
+        })
+    }
+
+    /// Deserialize par-formatted [`&str`] into a [`Transformer`] with `description`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::par::Parser;
+    /// # use jgdtrans::transformer::Parameter;
+    /// let s = r"<15 lines>
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// MeshCode dB(sec)  dL(sec) dH(m)
+    /// 12345678   0.00001   0.00002   0.00003";
+    /// let tf = Parser::new(Format::SemiDynaEXE)
+    ///     .parse_with_description(&s, "My parameter".to_string())?;
+    ///
+    /// assert_eq!(
+    ///     tf.description,
+    ///     Some("My parameter".to_string())
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[inline]
+    pub fn parse_with_description(
+        self,
+        s: &str,
+        description: String,
+    ) -> Result<Transformer<S>, ParseParError> {
+        let tf = self.parse(s)?;
+        Ok(Transformer {
+            format: tf.format,
+            parameter: tf.parameter,
+            description: Some(description),
+        })
+    }
+}
+
 //
 // Error
 //
@@ -382,13 +533,22 @@ impl Display for Column {
 mod tests {
     use super::*;
 
+    macro_rules! transformer_eq {
+        ($expected:ident, $actual:expr) => {
+            assert_eq!($expected.format, $actual.format);
+            assert_eq!($expected.parameter, $actual.parameter);
+            assert_eq!($expected.description, $actual.description);
+        };
+    }
+
     mod tests_error {
         use super::*;
+
         #[test]
         fn test_empty() {
             let text = "JGD2000-TokyoDatum Ver.2.1.2
 MeshCode   dB(sec)   dL(sec)";
-            let actual = from_str(&text, Format::TKY2JGD);
+            let actual = from_str(&text, Format::TKY2JGD).unwrap();
             let expected = Transformer {
                 format: Format::TKY2JGD,
                 parameter: [].into_iter().collect(),
@@ -396,7 +556,7 @@ MeshCode   dB(sec)   dL(sec)";
                     ("JGD2000-TokyoDatum Ver.2.1.2\nMeshCode   dB(sec)   dL(sec)\n").to_string(),
                 ),
             };
-            assert_eq!(expected, actual.unwrap());
+            transformer_eq!(expected, actual);
 
             let text = "JGD2000-TokyoDatum Ver.2.1.2";
             let actual = from_str(&text, Format::TKY2JGD);
@@ -473,7 +633,7 @@ MeshCode   dB(sec)   dL(sec)";
                 + "MeshCode   dB(sec)   dL(sec)
 00000000   0.00001   0.00002
 10000000 -10.00001 -10.00002";
-            let actual = from_str(&text, Format::TKY2JGD);
+            let actual = from_str(&text, Format::TKY2JGD).unwrap();
             let expected = Transformer {
                 format: Format::TKY2JGD,
                 parameter: [
@@ -499,7 +659,7 @@ MeshCode   dB(sec)   dL(sec)";
                 description: Some(("\n".repeat(1) + "MeshCode   dB(sec)   dL(sec)\n").to_string()),
             };
 
-            assert_eq!(expected, actual.unwrap());
+            transformer_eq!(expected, actual);
         }
 
         #[test]
@@ -507,7 +667,7 @@ MeshCode   dB(sec)   dL(sec)";
             let text = r"JGD2000-TokyoDatum Ver.2.1.2
 MeshCode   dB(sec)   dL(sec)
 ";
-            let actual = from_str(&text, Format::TKY2JGD);
+            let actual = from_str(&text, Format::TKY2JGD).unwrap();
             let expected = Transformer {
                 format: Format::TKY2JGD,
                 parameter: HashMap::new(),
@@ -516,7 +676,7 @@ MeshCode   dB(sec)   dL(sec)
                 ),
             };
 
-            assert_eq!(expected, actual.unwrap());
+            transformer_eq!(expected, actual);
         }
     }
 
@@ -529,7 +689,7 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode   dB(sec)   dL(sec)
 00000000   0.00001   0.00002
 10000000 -10.00001 -10.00002";
-            let actual = from_str(&text, Format::PatchJGD);
+            let actual = from_str(&text, Format::PatchJGD).unwrap();
             let expected = Transformer {
                 format: Format::PatchJGD,
                 parameter: [
@@ -555,7 +715,7 @@ MeshCode   dB(sec)   dL(sec)
                 description: Some(("\n".repeat(15) + "MeshCode   dB(sec)   dL(sec)\n").to_string()),
             };
 
-            assert_eq!(expected, actual.unwrap());
+            transformer_eq!(expected, actual);
         }
     }
 
@@ -568,7 +728,7 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode   dH(m)     0.00000
 00000000   0.00003   0.00000
 10000000 -10.00003   0.00000";
-            let actual = from_str(&text, Format::PatchJGD_H);
+            let actual = from_str(&text, Format::PatchJGD_H).unwrap();
             let expected = Transformer {
                 format: Format::PatchJGD_H,
                 parameter: [
@@ -594,7 +754,7 @@ MeshCode   dB(sec)   dL(sec)
                 description: Some(("\n".repeat(15) + "MeshCode   dH(m)     0.00000\n").to_string()),
             };
 
-            assert_eq!(expected, actual.unwrap());
+            transformer_eq!(expected, actual);
         }
     }
 
@@ -607,7 +767,7 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode   dB(sec)   dL(sec)   dH(m)
 00000000   0.00001   0.00002   0.00003
 10000000 -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::PatchJGD_HV);
+            let actual = from_str(&text, Format::PatchJGD_HV).unwrap();
             let expected = Transformer {
                 format: Format::PatchJGD_HV,
                 parameter: [
@@ -635,7 +795,7 @@ MeshCode   dB(sec)   dL(sec)
                 ),
             };
 
-            assert_eq!(expected, actual.unwrap());
+            transformer_eq!(expected, actual);
         }
     }
 
@@ -648,7 +808,7 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode      dH(m)     0.00000
 00000000      0.00003   0.00000
 10000000    -10.00003   0.00000";
-            let actual = from_str(&text, Format::HyokoRev);
+            let actual = from_str(&text, Format::HyokoRev).unwrap();
             let expected = Transformer {
                 format: Format::HyokoRev,
                 parameter: [
@@ -676,7 +836,7 @@ MeshCode   dB(sec)   dL(sec)
                 ),
             };
 
-            assert_eq!(expected, actual.unwrap());
+            transformer_eq!(expected, actual);
         }
     }
 
@@ -689,7 +849,7 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode dB(sec)  dL(sec) dH(m)
 00000000   0.00001   0.00002   0.00003
 10000000 -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::SemiDynaEXE);
+            let actual = from_str(&text, Format::SemiDynaEXE).unwrap();
             let expected = Transformer {
                 format: Format::SemiDynaEXE,
                 parameter: [
@@ -717,7 +877,7 @@ MeshCode   dB(sec)   dL(sec)
                 ),
             };
 
-            assert_eq!(expected, actual.unwrap());
+            transformer_eq!(expected, actual);
         }
     }
 
@@ -730,7 +890,7 @@ MeshCode   dB(sec)   dL(sec)
                 + "END OF HEADER
 00000000      0.00001   0.00002   0.00003
 10000000    -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::geonetF3);
+            let actual = from_str(&text, Format::geonetF3).unwrap();
             let expected = Transformer {
                 format: Format::geonetF3,
                 parameter: [
@@ -756,7 +916,7 @@ MeshCode   dB(sec)   dL(sec)
                 description: Some(("\n".repeat(17) + "END OF HEADER\n").to_string()),
             };
 
-            assert_eq!(expected, actual.unwrap());
+            transformer_eq!(expected, actual);
         }
     }
 
@@ -769,7 +929,7 @@ MeshCode   dB(sec)   dL(sec)
                 + "END OF HEADER
 00000000      0.00001   0.00002   0.00003
 10000000    -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::ITRF2014);
+            let actual = from_str(&text, Format::ITRF2014).unwrap();
             let expected = Transformer {
                 format: Format::ITRF2014,
                 parameter: [
@@ -795,7 +955,7 @@ MeshCode   dB(sec)   dL(sec)
                 description: Some(("\n".repeat(17) + "END OF HEADER\n").to_string()),
             };
 
-            assert_eq!(expected, actual.unwrap());
+            transformer_eq!(expected, actual);
         }
     }
 }

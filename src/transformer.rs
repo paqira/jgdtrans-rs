@@ -2,6 +2,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
+use std::hash::{BuildHasher, RandomState};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -283,106 +284,32 @@ pub struct Statistics {
 /// assert_eq!(result.altitude, 2.4363138578103);
 /// # Ok::<(), TransformError>(())
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Transformer {
+pub struct Transformer<
+    #[cfg(feature = "serde")] S: BuildHasher + Default = RandomState,
+    #[cfg(not(feature = "serde"))] S: BuildHasher = RandomState,
+> {
     /// The format of par file.
     pub format: Format,
     /// The transformation parameter.
     ///
     /// The entry represents single line of par-formatted file's parameter section,
     /// the key is meshcode, and the value parameter.
-    pub parameter: HashMap<u32, Parameter>,
+    #[cfg_attr(
+        feature = "serde",
+        serde(bound(
+            serialize = "HashMap<u32, Parameter, S>: Serialize",
+            deserialize = "HashMap<u32, Parameter, S>: Deserialize<'de>"
+        ))
+    )]
+    pub parameter: HashMap<u32, Parameter, S>,
     /// The description, or the header of par-formatted data.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     pub description: Option<String>,
 }
 
-// TODO: impl SIMD
-//   We found that it does not become fast
-//   with portable SIMD + target-feature=native + LTO
-//   except backward_corr.
-//   Notes, the benefit of the portable SIMD
-//   for backward_corr is few % speed up...,
-//   the true bottleneck is hashing.
-impl Transformer {
-    /// Max error of backward transformation.
-    ///
-    /// Used by [`Transformer::backward`], [`Transformer::backward_corr`]
-    /// [`Transformer::unchecked_backward`] and [`Transformer::unchecked_backward_corr`].
-    pub const ERROR_MAX: f64 = 5e-14;
-
-    /// Makes a [`Transformer`].
-    ///
-    /// We note that there is a builder, see [`TransformerBuilder`].
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, StatisticData};
-    /// // from SemiDynaEXE2023.par
-    /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     [
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///     ].into()
-    /// );
-    ///
-    /// assert_eq!(tf.format, Format::SemiDynaEXE);
-    /// assert_eq!(tf.format.mesh_unit(), MeshUnit::Five);
-    /// assert_eq!(
-    ///     tf.parameter,
-    ///     [
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///     ].into()
-    /// );
-    /// assert_eq!(tf.description, None);
-    /// ```
-    #[inline]
-    pub const fn new(format: Format, parameter: HashMap<u32, Parameter>) -> Self {
-        Self {
-            format,
-            parameter,
-            description: None,
-        }
-    }
-
-    /// Makes a [`Transformer`] with [`description`](Transformer::description).
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, StatisticData};
-    /// # use std::collections::HashMap;
-    /// let tf = Transformer::with_description(
-    ///     Format::TKY2JGD,
-    ///     HashMap::new(),
-    ///     "My Parameter".to_string()
-    /// );
-    /// assert_eq!(tf.format, Format::TKY2JGD);
-    /// assert_eq!(tf.format.mesh_unit(), MeshUnit::One);
-    /// assert_eq!(tf.parameter, HashMap::new());
-    /// assert_eq!(tf.description, Some("My Parameter".to_string()));
-    /// ```
-    #[inline]
-    pub const fn with_description(
-        format: Format,
-        parameter: HashMap<u32, Parameter>,
-        description: String,
-    ) -> Self {
-        Self {
-            format,
-            parameter,
-            description: Some(description),
-        }
-    }
-
+impl Transformer<RandomState> {
     /// Deserialize par-formatted [`&str`] into a [`Transformer`].
     ///
     /// Use `format` argument to specify the format of `s`.
@@ -428,7 +355,7 @@ impl Transformer {
     /// ```
     #[inline]
     pub fn from_str(s: &str, format: Format) -> std::result::Result<Self, ParseParError> {
-        format.parse(s)
+        crate::par::from_str(s, format)
     }
 
     /// Deserialize par-formatted [`&str`] into a [`Transformer`] with description.
@@ -481,8 +408,97 @@ impl Transformer {
         format: Format,
         description: String,
     ) -> std::result::Result<Self, ParseParError> {
-        let tf = format.parse(s)?;
-        Ok(Self::with_description(tf.format, tf.parameter, description))
+        crate::par::Parser::new(format).parse_with_description(s, description)
+    }
+}
+
+// TODO: impl SIMD
+//   We found that it does not become fast
+//   with portable SIMD + target-feature=native + LTO
+//   except backward_corr.
+//   Notes, the benefit of the portable SIMD
+//   for backward_corr is few % speed up...,
+//   the true bottleneck is hashing.
+impl<
+        #[cfg(feature = "serde")] S: BuildHasher + Default,
+        #[cfg(not(feature = "serde"))] S: BuildHasher,
+    > Transformer<S>
+{
+    /// Max error of backward transformation.
+    ///
+    /// Used by [`Transformer::backward`], [`Transformer::backward_corr`]
+    /// [`Transformer::unchecked_backward`] and [`Transformer::unchecked_backward_corr`].
+    pub const ERROR_MAX: f64 = 5e-14;
+
+    /// Makes a [`Transformer`].
+    ///
+    /// We note that there is a builder, see [`TransformerBuilder`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// # use jgdtrans::transformer::{Parameter, StatisticData};
+    /// // from SemiDynaEXE2023.par
+    /// let tf = Transformer::new(
+    ///     Format::SemiDynaEXE,
+    ///     [
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///     ].into()
+    /// );
+    ///
+    /// assert_eq!(tf.format, Format::SemiDynaEXE);
+    /// assert_eq!(tf.format.mesh_unit(), MeshUnit::Five);
+    /// assert_eq!(
+    ///     tf.parameter,
+    ///     [
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///     ].into()
+    /// );
+    /// assert_eq!(tf.description, None);
+    /// ```
+    #[inline]
+    pub const fn new(format: Format, parameter: HashMap<u32, Parameter, S>) -> Self {
+        Self {
+            format,
+            parameter,
+            description: None,
+        }
+    }
+
+    /// Makes a [`Transformer`] with [`description`](Transformer::description).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// # use jgdtrans::transformer::{Parameter, StatisticData};
+    /// # use std::collections::HashMap;
+    /// let tf = Transformer::with_description(
+    ///     Format::TKY2JGD,
+    ///     HashMap::new(),
+    ///     "My Parameter".to_string()
+    /// );
+    /// assert_eq!(tf.format, Format::TKY2JGD);
+    /// assert_eq!(tf.format.mesh_unit(), MeshUnit::One);
+    /// assert_eq!(tf.parameter, HashMap::new());
+    /// assert_eq!(tf.description, Some("My Parameter".to_string()));
+    /// ```
+    #[inline]
+    pub const fn with_description(
+        format: Format,
+        parameter: HashMap<u32, Parameter, S>,
+        description: String,
+    ) -> Self {
+        Self {
+            format,
+            parameter,
+            description: Some(description),
+        }
     }
 
     /// Returns the statistics of the parameter.
@@ -1310,7 +1326,10 @@ macro_rules! interpol {
 
 impl<'a> Interpol<'a> {
     #[inline]
-    fn from(parameter: &'a HashMap<u32, Parameter>, cell: &MeshCell) -> Result<Self> {
+    fn from<S: BuildHasher>(
+        parameter: &'a HashMap<u32, Parameter, S>,
+        cell: &MeshCell,
+    ) -> Result<Self> {
         let meshcode = cell.south_west.to_meshcode();
         let sw = parameter
             .get(&meshcode)
@@ -1335,8 +1354,8 @@ impl<'a> Interpol<'a> {
     }
 
     #[inline]
-    fn unchecked_from(
-        parameter: &'a HashMap<u32, Parameter>,
+    fn unchecked_from<S: BuildHasher>(
+        parameter: &'a HashMap<u32, Parameter, S>,
         code: &MeshCode,
         mesh_unit: &MeshUnit,
     ) -> Result<Self> {
@@ -1416,13 +1435,16 @@ impl<'a> Interpol<'a> {
 /// assert_eq!(tf.description, Some("My parameter".to_string()));
 /// ```
 #[derive(Debug, Clone)]
-pub struct TransformerBuilder {
+pub struct TransformerBuilder<
+    #[cfg(feature = "serde")] S: BuildHasher + Default = RandomState,
+    #[cfg(not(feature = "serde"))] S: BuildHasher = RandomState,
+> {
     format: Option<Format>,
-    parameter: HashMap<u32, Parameter>,
+    parameter: HashMap<u32, Parameter, S>,
     description: Option<String>,
 }
 
-impl TransformerBuilder {
+impl TransformerBuilder<RandomState> {
     /// Makes a [`TransformerBuilder`].
     ///
     /// # Example
@@ -1446,6 +1468,24 @@ impl TransformerBuilder {
         Self {
             format: None,
             parameter: HashMap::new(),
+            description: None,
+        }
+    }
+}
+
+impl<
+        #[cfg(feature = "serde")] S: BuildHasher + Default,
+        #[cfg(not(feature = "serde"))] S: BuildHasher,
+    > TransformerBuilder<S>
+{
+    /// Makes a [`TransformerBuilder`] wich uses the given hash builder to hash meshcode.
+    ///
+    /// See [`HashMap::with_hasher`] for detail.
+    #[inline]
+    pub fn with_hasher(hash_builder: S) -> Self {
+        Self {
+            format: None,
+            parameter: HashMap::with_hasher(hash_builder),
             description: None,
         }
     }
@@ -1569,7 +1609,7 @@ impl TransformerBuilder {
     ///
     /// Panics when `format` is not assigned.
     #[inline]
-    pub fn build(self) -> Transformer {
+    pub fn build(self) -> Transformer<S> {
         Transformer {
             format: self.format.expect("format is not assigned"),
             parameter: self.parameter,

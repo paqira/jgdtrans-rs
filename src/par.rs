@@ -624,7 +624,8 @@ MeshCode   dB(sec)   dL(sec)";
         }
     }
 
-    mod tests_tky2jgd {
+    #[allow(non_snake_case)]
+    mod tests_TKY2JGD {
         use super::*;
 
         #[test]
@@ -680,7 +681,8 @@ MeshCode   dB(sec)   dL(sec)
         }
     }
 
-    mod tests_patch_jgd {
+    #[allow(non_snake_case)]
+    mod tests_PatchJGD {
         use super::*;
 
         #[test]
@@ -719,7 +721,8 @@ MeshCode   dB(sec)   dL(sec)
         }
     }
 
-    mod tests_patch_jgd_h {
+    #[allow(non_snake_case)]
+    mod tests_PatchJGD_H {
         use super::*;
 
         #[test]
@@ -758,7 +761,8 @@ MeshCode   dB(sec)   dL(sec)
         }
     }
 
-    mod tests_patch_jgd_hv {
+    #[allow(non_snake_case)]
+    mod tests_PatchJGD_HV {
         use super::*;
 
         #[test]
@@ -799,7 +803,8 @@ MeshCode   dB(sec)   dL(sec)
         }
     }
 
-    mod tests_hyoko_rev {
+    #[allow(non_snake_case)]
+    mod tests_HyokoRev {
         use super::*;
 
         #[test]
@@ -840,7 +845,8 @@ MeshCode   dB(sec)   dL(sec)
         }
     }
 
-    mod tests_semi_dyna_exe {
+    #[allow(non_snake_case)]
+    mod tests_SemiDynaEXE {
         use super::*;
 
         #[test]
@@ -881,7 +887,8 @@ MeshCode   dB(sec)   dL(sec)
         }
     }
 
-    mod tests_geonet_f3 {
+    #[allow(non_snake_case)]
+    mod tests_geonetF3 {
         use super::*;
 
         #[test]
@@ -920,7 +927,8 @@ MeshCode   dB(sec)   dL(sec)
         }
     }
 
-    mod tests_itrf_2014 {
+    #[allow(non_snake_case)]
+    mod tests_ITRF2014 {
         use super::*;
 
         #[test]

@@ -1920,7 +1920,8 @@ mod tests {
         }
 
         #[test]
-        fn test_on_tky2jgd() {
+        #[allow(non_snake_case)]
+        fn test_on_TKY2JGD() {
             let tf = TransformerBuilder::new()
                 .format(Format::TKY2JGD)
                 .parameters(TKY2JGD)
@@ -1945,7 +1946,8 @@ mod tests {
         }
 
         #[test]
-        fn test_on_patch_jgd_hv() {
+        #[allow(non_snake_case)]
+        fn test_on_PatchJGD_HV() {
             let tf = TransformerBuilder::new()
                 .format(Format::PatchJGD_HV)
                 .parameters(PatchJGD_HV)
@@ -1969,7 +1971,8 @@ mod tests {
         }
 
         #[test]
-        fn test_on_semi_nyna_exe() {
+        #[allow(non_snake_case)]
+        fn test_on_SemiDynaEXE() {
             let tf = TransformerBuilder::new()
                 .format(Format::SemiDynaEXE)
                 .parameters(SemiDynaEXE)
@@ -1993,7 +1996,8 @@ mod tests {
         }
 
         #[test]
-        fn test_on_semi_nyna_exe_exact() {
+        #[allow(non_snake_case)]
+        fn test_on_SemiDynaEXE_exact() {
             let tf = TransformerBuilder::new()
                 .format(Format::SemiDynaEXE)
                 .parameters(SemiDynaEXE)
@@ -2084,6 +2088,7 @@ mod tests {
                 tf.backward_compat_corr(&origin).unwrap()
             );
         }
+
         #[test]
         fn test_unchecked_backward_checked_and_corr() {
             // TKY2JGD

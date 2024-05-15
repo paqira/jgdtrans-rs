@@ -412,13 +412,9 @@ impl Transformer<RandomState> {
     }
 }
 
-// TODO: impl SIMD
-//   We found that it does not become fast
-//   with portable SIMD + target-feature=native + LTO
-//   except backward_corr.
-//   Notes, the benefit of the portable SIMD
-//   for backward_corr is few % speed up...,
-//   the true bottleneck is hashing.
+// TODO: impl with SIMD
+//  Notes, the performance may depends on hash builder.
+//  Measure.
 impl<
         #[cfg(feature = "serde")] S: BuildHasher + Default,
         #[cfg(not(feature = "serde"))] S: BuildHasher,

@@ -270,6 +270,8 @@ fn parse(
         );
     }
 
+    parameter.shrink_to_fit();
+
     Ok((parameter, Some(description)))
 }
 

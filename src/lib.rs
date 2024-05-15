@@ -77,9 +77,6 @@
 //! - `serde`: supports serialization/deserialization by [`serde` crate][serde],
 //!            this requires dependency on [`serde`][serde] and [`serde_repr`][serde_repr].
 //!
-//! Notes, this supports [fused multiply-add][fma]. To use FMA instructions, set `fma` target-feature,
-//! e.g., `RUSTFLAGS='-C target-feature=+fma' cargo ...`.
-//!
 //! [serde]: https://crates.io/crates/serde
 //! [serde_repr]: https://crates.io/crates/serde_repr
 //! [fma]: https://en.wikipedia.org/wiki/Multiply–accumulate_operation

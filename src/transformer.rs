@@ -855,10 +855,10 @@ impl<
         // y: latitude, x: longitude
         let (y, x) = cell.position(point);
 
-        const SCALE: f64 = 3600.;
+        const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
 
-        let latitude = interpol.latitude(&y, &x) / SCALE;
-        let longitude = interpol.longitude(&y, &x) / SCALE;
+        let latitude = interpol.latitude(&y, &x) * SCALE;
+        let longitude = interpol.longitude(&y, &x) * SCALE;
         let altitude = interpol.altitude(&y, &x);
 
         Ok(Correction {
@@ -905,8 +905,7 @@ impl<
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn backward_compat_corr(&self, point: &Point) -> Result<Correction> {
-        // 12. / 3600.
-        const DELTA: f64 = 1. / 300.;
+        const DELTA: f64 = 0.0033333333333333335; // 12. / 3600.
 
         let corr = Correction {
             latitude: -DELTA,
@@ -967,7 +966,7 @@ impl<
     pub fn backward_corr(&self, point: &Point) -> Result<Correction> {
         // Newton's Method
 
-        const SCALE: f64 = 3600.;
+        const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
         const ITERATION: usize = 4;
 
         let mut xn = point.longitude;
@@ -989,8 +988,8 @@ impl<
 
             let (y, x) = cell.position(&current);
 
-            let drift_x = interpol.longitude(&y, &x) / SCALE;
-            let drift_y = interpol.latitude(&y, &x) / SCALE;
+            let drift_x = interpol.longitude(&y, &x) * SCALE;
+            let drift_y = interpol.latitude(&y, &x) * SCALE;
 
             let fx = delta!(point.longitude, xn, drift_x);
             let fy = delta!(point.latitude, yn, drift_y);
@@ -1012,26 +1011,26 @@ impl<
             let fx_x = {
                 let temp = lng_sub!(ne, nw) * yn;
                 let temp = mul_add!(lng_sub!(se, sw), 1. - yn, temp);
-                -mul_add!(temp, 1. / SCALE, 1.)
+                -mul_add!(temp, SCALE, 1.)
             };
 
             // let fx_y = -(lng_sub!(nw, sw) * (1. - xn) + lng_sub!(ne, se) * xn) / SCALE;
             let fx_y = {
                 let temp = lng_sub!(ne, se) * xn;
-                -mul_add!(lng_sub!(nw, sw), 1. - xn, temp) / SCALE
+                -mul_add!(lng_sub!(nw, sw), 1. - xn, temp) * SCALE
             };
 
             // let fy_x = -(lat_sub!(se, sw) * (1. - yn) + lat_sub!(ne, nw) * yn) / SCALE;
             let fy_x = {
                 let temp = lat_sub!(ne, nw) * yn;
-                -mul_add!(lat_sub!(se, sw), 1. - yn, temp) / SCALE
+                -mul_add!(lat_sub!(se, sw), 1. - yn, temp) * SCALE
             };
 
             // let fy_y = -1. - (lat_sub!(nw, sw) * (1. - xn) + lat_sub!(ne, se) * xn) / SCALE;
             let fy_y = {
                 let temp = lat_sub!(ne, se) * xn;
                 let temp = mul_add!(lat_sub!(nw, sw), 1. - xn, temp);
-                -mul_add!(temp, 1. / SCALE, 1.)
+                -mul_add!(temp, SCALE, 1.)
             };
 
             // and its determinant
@@ -1108,10 +1107,10 @@ impl<
         // y: latitude, x: longitude
         let (y, x) = code.position(point, &mesh_unit);
 
-        const SCALE: f64 = 3600.;
+        const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
 
-        let latitude = interpol.latitude(&y, &x) / SCALE;
-        let longitude = interpol.longitude(&y, &x) / SCALE;
+        let latitude = interpol.latitude(&y, &x) * SCALE;
+        let longitude = interpol.longitude(&y, &x) * SCALE;
         let altitude = interpol.altitude(&y, &x);
 
         Ok(Correction {
@@ -1157,8 +1156,7 @@ impl<
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn unchecked_backward_compat_corr(&self, point: &Point) -> Result<Correction> {
-        // 12. / 3600.
-        const DELTA: f64 = 1. / 300.;
+        const DELTA: f64 = 0.0033333333333333335; // 12. / 3600.
 
         let corr = Correction {
             latitude: -DELTA,
@@ -1218,7 +1216,7 @@ impl<
     pub fn unchecked_backward_corr(&self, point: &Point) -> Result<Correction> {
         let mesh_unit = self.format.mesh_unit();
 
-        const SCALE: f64 = 3600.;
+        const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
         const ITERATION: usize = 4;
 
         let mut xn = point.longitude;
@@ -1239,8 +1237,8 @@ impl<
 
             let (y, x) = code.position(&current, &mesh_unit);
 
-            let drift_x = interpol.longitude(&y, &x) / SCALE;
-            let drift_y = interpol.latitude(&y, &x) / SCALE;
+            let drift_x = interpol.longitude(&y, &x) * SCALE;
+            let drift_y = interpol.latitude(&y, &x) * SCALE;
 
             let fx = delta!(point.longitude, xn, drift_x);
             let fy = delta!(point.latitude, yn, drift_y);
@@ -1260,23 +1258,23 @@ impl<
             let fx_x = {
                 let temp = lng_sub!(ne, nw) * yn;
                 let temp = mul_add!(lng_sub!(se, sw), 1. - yn, temp);
-                -mul_add!(temp, 1. / SCALE, 1.)
+                -mul_add!(temp, SCALE, 1.)
             };
 
             let fx_y = {
                 let temp = lng_sub!(ne, se) * xn;
-                -mul_add!(lng_sub!(nw, sw), 1. - xn, temp) / SCALE
+                -mul_add!(lng_sub!(nw, sw), 1. - xn, temp) * SCALE
             };
 
             let fy_x = {
                 let temp = lat_sub!(ne, nw) * yn;
-                -mul_add!(lat_sub!(se, sw), 1. - yn, temp) / SCALE
+                -mul_add!(lat_sub!(se, sw), 1. - yn, temp) * SCALE
             };
 
             let fy_y = {
                 let temp = lat_sub!(ne, se) * xn;
                 let temp = mul_add!(lat_sub!(nw, sw), 1. - xn, temp);
-                -mul_add!(temp, 1. / SCALE, 1.)
+                -mul_add!(temp, SCALE, 1.)
             };
 
             // and its determinant

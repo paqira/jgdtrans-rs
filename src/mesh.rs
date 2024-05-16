@@ -1394,33 +1394,6 @@ impl MeshCell {
     }
 }
 
-//
-// Error
-//
-
-/// An error on the [`TryFrom`] trait of [`mesh`](mod@self) module.
-#[derive(Debug)]
-pub struct MeshTryFromError;
-
-impl MeshTryFromError {
-    #[cold]
-    const fn new() -> Self {
-        Self {}
-    }
-}
-
-impl Display for MeshTryFromError {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "the value would be out-of-bounds of the output",)
-    }
-}
-
-impl Error for MeshTryFromError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
-    }
-}
-
 /// For unchecked transformation.
 #[derive(Debug)]
 pub(crate) struct MeshCode(u8, u8, u8, u8, u8, u8);
@@ -1566,6 +1539,33 @@ impl MeshCode {
                 self.5,
             )
         }
+    }
+}
+
+//
+// Error
+//
+
+/// An error on the [`TryFrom`] trait of [`mesh`](mod@self) module.
+#[derive(Debug)]
+pub struct MeshTryFromError;
+
+impl MeshTryFromError {
+    #[cold]
+    const fn new() -> Self {
+        Self {}
+    }
+}
+
+impl Display for MeshTryFromError {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "the value would be out-of-bounds of the output",)
+    }
+}
+
+impl Error for MeshTryFromError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        None
     }
 }
 

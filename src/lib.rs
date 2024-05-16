@@ -171,5 +171,5 @@ pub mod dms;
 mod internal;
 pub mod mesh;
 pub mod par;
-pub mod point;
+mod point;
 pub mod transformer;

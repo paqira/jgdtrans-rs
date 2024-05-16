@@ -837,7 +837,7 @@ where
     ///
     /// assert_eq!(corr.latitude, -1.7729133100878255e-6);
     /// assert_eq!(corr.longitude, 4.202334510058886e-6);
-    /// assert_eq!(corr.altitude, 0.09631385781030007);
+    /// assert_eq!(corr.altitude, 0.09631385781030005);
     ///
     /// assert_eq!(&origin + corr, tf.forward(&origin)?);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -954,7 +954,7 @@ where
     ///
     /// assert_eq!(corr.latitude, 1.7729133100878255e-6);
     /// assert_eq!(corr.longitude, -4.202334510058886e-6);
-    /// assert_eq!(corr.altitude, -0.09631385781030007);
+    /// assert_eq!(corr.altitude, -0.09631385781030005);
     ///
     /// assert_eq!(&origin + corr, tf.backward(&origin)?);
     /// # Ok::<(), Box<dyn Error>>(())

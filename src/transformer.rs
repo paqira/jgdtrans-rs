@@ -546,9 +546,6 @@ impl Transformer<RandomState> {
     }
 }
 
-// TODO: impl with SIMD
-//  Notes, the performance may depends on hash builder.
-//  Measure.
 impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Transformer<S>
 where
     S: BuildHasher,

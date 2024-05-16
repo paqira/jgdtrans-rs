@@ -166,7 +166,7 @@ impl Correction {
 /// The statistics of parameter.
 ///
 /// This is a component of the result that [`Transformer::statistics()`] returns.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct StatisticData {
     /// The count of parameters.
@@ -236,7 +236,7 @@ impl StatisticData {
 /// The statistical summary of parameter.
 ///
 /// This is a result that [`Transformer::statistics()`] returns.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Statistics {
     /// The statistics of latitude.

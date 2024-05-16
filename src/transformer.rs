@@ -930,7 +930,7 @@ where
 
     /// Return the correction on the backward-transformation.
     ///
-    /// See [`Transformer::the backward`] for detail.
+    /// See [`Transformer::backward`] for detail.
     ///
     /// # Errors
     ///

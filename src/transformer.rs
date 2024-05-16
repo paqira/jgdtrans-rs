@@ -197,9 +197,10 @@ impl StatisticData {
         }
 
         let sum = ksum(vs);
+        let count = vs.len();
         if sum.is_nan() {
             return Self {
-                count: Some(vs.len()),
+                count: Some(count),
                 mean: Some(f64::NAN),
                 std: Some(f64::NAN),
                 abs: Some(f64::NAN),
@@ -208,7 +209,6 @@ impl StatisticData {
             };
         }
 
-        let count = vs.len();
         let mut max = f64::MIN;
         let mut min = f64::MAX;
         let mut std: Vec<f64> = Vec::with_capacity(count);

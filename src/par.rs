@@ -140,6 +140,7 @@ where
     }
 
     let mut lines = text.lines().enumerate();
+
     let description = lines
         .by_ref()
         .take(header)

@@ -1467,7 +1467,7 @@ impl<'a> Interpol<'a> {
 /// );
 /// assert_eq!(tf.description, Some("My parameter".to_string()));
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct TransformerBuilder<
     #[cfg(not(feature = "serde"))] S = RandomState,
     #[cfg(feature = "serde")] S: Default = RandomState,
@@ -1495,7 +1495,6 @@ impl TransformerBuilder<RandomState> {
     /// assert_eq!(tf.parameter, HashMap::new());
     /// assert_eq!(tf.description, None);
     /// ```
-    #[allow(clippy::new_without_default)]
     #[inline]
     pub fn new() -> Self {
         Self {

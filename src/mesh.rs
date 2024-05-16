@@ -1454,7 +1454,7 @@ impl MeshCode {
 
     /// See [`MeshNode::to_meshcode`].
     #[inline]
-    pub(crate) fn to_u32(&self) -> u32 {
+    pub(crate) const fn to_u32(&self) -> u32 {
         (self.0 as u32 * 100 + self.3 as u32) * 10_000
             + (self.1 as u32 * 10 + self.4 as u32) * 100
             + (self.2 as u32 * 10 + self.5 as u32)

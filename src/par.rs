@@ -430,6 +430,25 @@ where
     }
 }
 
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Clone for Parser<S>
+where
+    S: Clone,
+{
+    #[inline]
+    fn clone(&self) -> Self {
+        Self {
+            format: self.format.clone(),
+            hash_builder: self.hash_builder.clone(),
+        }
+    }
+
+    #[inline]
+    fn clone_from(&mut self, source: &Self) {
+        self.format.clone_from(&source.format);
+        self.hash_builder.clone_from(&source.hash_builder)
+    }
+}
+
 //
 // Error
 //

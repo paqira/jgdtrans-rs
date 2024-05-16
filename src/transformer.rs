@@ -1303,6 +1303,41 @@ where
     }
 }
 
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> PartialEq
+    for Transformer<S>
+where
+    S: BuildHasher,
+{
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.format.eq(&other.format)
+            && self.description.eq(&other.description)
+            && self.parameter.eq(&other.parameter)
+    }
+}
+
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Clone
+    for Transformer<S>
+where
+    S: Clone,
+{
+    #[inline]
+    fn clone(&self) -> Self {
+        Self {
+            format: self.format.clone(),
+            parameter: self.parameter.clone(),
+            description: self.description.clone(),
+        }
+    }
+
+    #[inline]
+    fn clone_from(&mut self, source: &Self) {
+        self.format.clone_from(&source.format);
+        self.parameter.clone_from(&source.parameter);
+        self.description.clone_from(&source.description);
+    }
+}
+
 struct Interpol<'a> {
     sw: &'a Parameter,
     se: &'a Parameter,
@@ -1432,7 +1467,7 @@ impl<'a> Interpol<'a> {
 /// );
 /// assert_eq!(tf.description, Some("My parameter".to_string()));
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct TransformerBuilder<
     #[cfg(not(feature = "serde"))] S = RandomState,
     #[cfg(feature = "serde")] S: Default = RandomState,
@@ -1617,7 +1652,27 @@ where
     }
 }
 
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Clone
+    for TransformerBuilder<S>
+where
+    S: Clone,
+{
+    #[inline]
+    fn clone(&self) -> Self {
+        Self {
+            format: self.format.clone(),
+            parameter: self.parameter.clone(),
+            description: self.description.clone(),
+        }
+    }
 
+    #[inline]
+    fn clone_from(&mut self, source: &Self) {
+        self.format.clone_from(&source.format);
+        self.parameter.clone_from(&source.parameter);
+        self.description.clone_from(&source.description);
+    }
+}
 
 //
 // Error

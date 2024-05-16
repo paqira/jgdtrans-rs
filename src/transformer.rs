@@ -1645,6 +1645,7 @@ where
     /// Shrinks the capacity of the [`HashMap`] of the parameter as much as possible.
     ///
     /// See [`HashMap::shrink_to_fit`] for detail.
+    #[inline]
     pub fn shrink_to_fit(mut self) -> Self {
         self.parameter.shrink_to_fit();
         self

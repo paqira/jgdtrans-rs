@@ -119,7 +119,7 @@ impl Format {
 }
 
 #[allow(clippy::type_complexity)]
-fn parse<S: BuildHasher>(
+fn parse<S>(
     text: &str,
     header: usize,
     meshcode: Range<usize>,
@@ -127,7 +127,10 @@ fn parse<S: BuildHasher>(
     longitude: Option<Range<usize>>,
     altitude: Option<Range<usize>>,
     hash_builder: S,
-) -> Result<(HashMap<u32, Parameter, S>, Option<String>), ParseParError> {
+) -> Result<(HashMap<u32, Parameter, S>, Option<String>), ParseParError>
+where
+    S: BuildHasher,
+{
     if text.lines().count().lt(&header) {
         return Err(ParseParError::new(
             0,
@@ -304,11 +307,7 @@ impl Parser<RandomState> {
     }
 }
 
-impl<
-        #[cfg(feature = "serde")] S: BuildHasher + Default,
-        #[cfg(not(feature = "serde"))] S: BuildHasher,
-    > Parser<S>
-{
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Parser<S> {
     /// Makes a parser reuslting [`Transformer`] which uses the given hash builder to hash meshcode.
     ///
     /// This may improve performance of transformation.
@@ -320,7 +319,12 @@ impl<
             hash_builder,
         }
     }
+}
 
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Parser<S>
+where
+    S: BuildHasher,
+{
     /// Deserialize par-formatted [`&str`] into a [`Transformer`].
     #[inline]
     pub fn parse(self, s: &str) -> Result<Transformer<S>, ParseParError> {

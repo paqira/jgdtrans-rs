@@ -287,8 +287,8 @@ pub struct Statistics {
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Transformer<
-    #[cfg(feature = "serde")] S: BuildHasher + Default = RandomState,
-    #[cfg(not(feature = "serde"))] S: BuildHasher = RandomState,
+    #[cfg(not(feature = "serde"))] S = RandomState,
+    #[cfg(feature = "serde")] S: Default = RandomState,
 > {
     /// The format of par file.
     pub format: Format,
@@ -309,117 +309,7 @@ pub struct Transformer<
     pub description: Option<String>,
 }
 
-impl Transformer<RandomState> {
-    /// Deserialize par-formatted [`&str`] into a [`Transformer`].
-    ///
-    /// Use `format` argument to specify the format of `s`.
-    ///
-    /// This fills by 0.0 for altitude parameter when [`Format::TKY2JGD`] or [`Format::PatchJGD`] given,
-    /// and for latitude and longitude when [`Format::PatchJGD_H`] or [`Format::HyokoRev`] given.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`Err`] when the invalid data found.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::transformer::Parameter;
-    /// let s = r"<15 lines>
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// MeshCode dB(sec)  dL(sec) dH(m)
-    /// 12345678   0.00001   0.00002   0.00003";
-    /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
-    ///
-    /// assert_eq!(tf.format, Format::SemiDynaEXE);
-    /// assert_eq!(
-    ///     tf.parameter.get(&12345678),
-    ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
-    /// );
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
-    #[inline]
-    pub fn from_str(s: &str, format: Format) -> std::result::Result<Self, ParseParError> {
-        crate::par::from_str(s, format)
-    }
-
-    /// Deserialize par-formatted [`&str`] into a [`Transformer`] with description.
-    ///
-    /// See [`Transformer::from_str`] for detail.
-    /// # Errors
-    ///
-    /// Returns [`Err`] when the invalid data found.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use std::error::Error;
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::transformer::Parameter;
-    /// let s = r"<15 lines>
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// # ...
-    /// MeshCode dB(sec)  dL(sec) dH(m)
-    /// 12345678   0.00001   0.00002   0.00003";
-    /// let tf = Transformer::from_str_with_description(
-    ///     &s,
-    ///     Format::SemiDynaEXE,
-    ///     "SemiDyna2023.par".to_string(),
-    /// )?;
-    ///
-    /// assert_eq!(tf.format, Format::SemiDynaEXE);
-    /// assert_eq!(
-    ///     tf.parameter.get(&12345678),
-    ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
-    /// );
-    /// assert_eq!(tf.description, Some("SemiDyna2023.par".to_string()));
-    /// # Ok::<(), Box<dyn Error>>(())
-    /// ```
-    #[inline]
-    pub fn from_str_with_description(
-        s: &str,
-        format: Format,
-        description: String,
-    ) -> std::result::Result<Self, ParseParError> {
-        crate::par::Parser::new(format).parse_with_description(s, description)
-    }
-}
-
-// TODO: impl with SIMD
-//  Notes, the performance may depends on hash builder.
-//  Measure.
-impl<
-        #[cfg(feature = "serde")] S: BuildHasher + Default,
-        #[cfg(not(feature = "serde"))] S: BuildHasher,
-    > Transformer<S>
-{
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Transformer<S> {
     /// Max error of backward transformation.
     ///
     /// Used by [`Transformer::backward`], [`Transformer::backward_corr`]
@@ -551,7 +441,118 @@ impl<
             horizontal,
         }
     }
+}
 
+impl Transformer<RandomState> {
+    /// Deserialize par-formatted [`&str`] into a [`Transformer`].
+    ///
+    /// Use `format` argument to specify the format of `s`.
+    ///
+    /// This fills by 0.0 for altitude parameter when [`Format::TKY2JGD`] or [`Format::PatchJGD`] given,
+    /// and for latitude and longitude when [`Format::PatchJGD_H`] or [`Format::HyokoRev`] given.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the invalid data found.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::transformer::Parameter;
+    /// let s = r"<15 lines>
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// MeshCode dB(sec)  dL(sec) dH(m)
+    /// 12345678   0.00001   0.00002   0.00003";
+    /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
+    ///
+    /// assert_eq!(tf.format, Format::SemiDynaEXE);
+    /// assert_eq!(
+    ///     tf.parameter.get(&12345678),
+    ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[inline]
+    pub fn from_str(s: &str, format: Format) -> std::result::Result<Self, ParseParError> {
+        crate::par::from_str(s, format)
+    }
+
+    /// Deserialize par-formatted [`&str`] into a [`Transformer`] with description.
+    ///
+    /// See [`Transformer::from_str`] for detail.
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the invalid data found.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::transformer::Parameter;
+    /// let s = r"<15 lines>
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// MeshCode dB(sec)  dL(sec) dH(m)
+    /// 12345678   0.00001   0.00002   0.00003";
+    /// let tf = Transformer::from_str_with_description(
+    ///     &s,
+    ///     Format::SemiDynaEXE,
+    ///     "SemiDyna2023.par".to_string(),
+    /// )?;
+    ///
+    /// assert_eq!(tf.format, Format::SemiDynaEXE);
+    /// assert_eq!(
+    ///     tf.parameter.get(&12345678),
+    ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
+    /// );
+    /// assert_eq!(tf.description, Some("SemiDyna2023.par".to_string()));
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[inline]
+    pub fn from_str_with_description(
+        s: &str,
+        format: Format,
+        description: String,
+    ) -> std::result::Result<Self, ParseParError> {
+        crate::par::Parser::new(format).parse_with_description(s, description)
+    }
+}
+
+// TODO: impl with SIMD
+//  Notes, the performance may depends on hash builder.
+//  Measure.
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Transformer<S>
+where
+    S: BuildHasher,
+{
     /// Returns the forward-transformed position.
     ///
     /// # Errors
@@ -1320,10 +1321,10 @@ macro_rules! interpol {
 
 impl<'a> Interpol<'a> {
     #[inline]
-    fn from<S: BuildHasher>(
-        parameter: &'a HashMap<u32, Parameter, S>,
-        cell: &MeshCell,
-    ) -> Result<Self> {
+    fn from<S>(parameter: &'a HashMap<u32, Parameter, S>, cell: &MeshCell) -> Result<Self>
+    where
+        S: BuildHasher,
+    {
         macro_rules! get {
             ($meshcode:ident, $corner:expr) => {
                 parameter
@@ -1348,11 +1349,14 @@ impl<'a> Interpol<'a> {
     }
 
     #[inline]
-    fn unchecked_from<S: BuildHasher>(
+    fn unchecked_from<S>(
         parameter: &'a HashMap<u32, Parameter, S>,
         code: &MeshCode,
         mesh_unit: &MeshUnit,
-    ) -> Result<Self> {
+    ) -> Result<Self>
+    where
+        S: BuildHasher,
+    {
         let east = code.next_east(mesh_unit);
         let north = code.next_north(mesh_unit);
         let north_east = north.next_east(mesh_unit);
@@ -1430,8 +1434,8 @@ impl<'a> Interpol<'a> {
 /// ```
 #[derive(Debug, Clone)]
 pub struct TransformerBuilder<
-    #[cfg(feature = "serde")] S: BuildHasher + Default = RandomState,
-    #[cfg(not(feature = "serde"))] S: BuildHasher = RandomState,
+    #[cfg(not(feature = "serde"))] S = RandomState,
+    #[cfg(feature = "serde")] S: Default = RandomState,
 > {
     format: Option<Format>,
     parameter: HashMap<u32, Parameter, S>,
@@ -1467,11 +1471,7 @@ impl TransformerBuilder<RandomState> {
     }
 }
 
-impl<
-        #[cfg(feature = "serde")] S: BuildHasher + Default,
-        #[cfg(not(feature = "serde"))] S: BuildHasher,
-    > TransformerBuilder<S>
-{
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> TransformerBuilder<S> {
     /// Makes a [`TransformerBuilder`] wich uses the given hash builder to hash meshcode.
     ///
     /// See [`HashMap::with_hasher`] for detail.
@@ -1504,6 +1504,44 @@ impl<
         self
     }
 
+    /// Updates [`description`](Transformer::description).
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// # use jgdtrans::transformer::TransformerBuilder;
+    /// let tf = TransformerBuilder::new()
+    ///     .format(Format::SemiDynaEXE)
+    ///     .description("My parameter".to_string())
+    ///     .build();
+    ///
+    /// assert_eq!(tf.description, Some("My parameter".to_string()));
+    /// ```
+    #[inline]
+    pub fn description(mut self, s: String) -> Self {
+        self.description = Some(s);
+        self
+    }
+
+    /// Builds [`Transformer`].
+    ///
+    /// # Safety
+    ///
+    /// Panics when `format` is not assigned.
+    #[inline]
+    pub fn build(self) -> Transformer<S> {
+        Transformer {
+            format: self.format.expect("format is not assigned"),
+            parameter: self.parameter,
+            description: self.description,
+        }
+    }
+}
+
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> TransformerBuilder<S>
+where
+    S: BuildHasher,
+{
     /// Adds a [`Parameter`].
     ///
     /// # Example
@@ -1570,25 +1608,6 @@ impl<
         self
     }
 
-    /// Updates [`description`](Transformer::description).
-    ///
-    /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::TransformerBuilder;
-    /// let tf = TransformerBuilder::new()
-    ///     .format(Format::SemiDynaEXE)
-    ///     .description("My parameter".to_string())
-    ///     .build();
-    ///
-    /// assert_eq!(tf.description, Some("My parameter".to_string()));
-    /// ```
-    #[inline]
-    pub fn description(mut self, s: String) -> Self {
-        self.description = Some(s);
-        self
-    }
-
     /// Shrinks the capacity of the [`HashMap`] of the parameter as much as possible.
     ///
     /// See [`HashMap::shrink_to_fit`] for detail.
@@ -1596,21 +1615,9 @@ impl<
         self.parameter.shrink_to_fit();
         self
     }
-
-    /// Builds [`Transformer`].
-    ///
-    /// # Safety
-    ///
-    /// Panics when `format` is not assigned.
-    #[inline]
-    pub fn build(self) -> Transformer<S> {
-        Transformer {
-            format: self.format.expect("format is not assigned"),
-            parameter: self.parameter,
-            description: self.description,
-        }
-    }
 }
+
+
 
 //
 // Error

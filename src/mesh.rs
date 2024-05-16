@@ -1498,7 +1498,7 @@ impl MeshCode {
         };
 
         if self.5 == bound {
-            if self.5 == 7 {
+            if self.4 == 7 {
                 Self(self.0, self.1, self.2, self.3 + 1, 0, 0)
             } else {
                 Self(self.0, self.1, self.2, self.3, self.4 + 1, 0)

@@ -75,10 +75,9 @@
 //! ## Optional Features
 //!
 //! - `serde`: supports serialization/deserialization by [`serde` crate][serde],
-//!            this requires dependency on [`serde`][serde] and [`serde_repr`][serde_repr].
+//!            this requires dependency on [`serde`][serde].
 //!
 //! [serde]: https://crates.io/crates/serde
-//! [serde_repr]: https://crates.io/crates/serde_repr
 //! [fma]: https://en.wikipedia.org/wiki/Multiply–accumulate_operation
 //!
 //! ## Serialization and Deserialization

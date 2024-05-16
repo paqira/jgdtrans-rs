@@ -13,8 +13,6 @@ use std::fmt::{Display, Formatter};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "serde")]
-use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::internal::mul_add;
 use crate::Point;
@@ -36,13 +34,11 @@ pub fn is_meshcode(meshcode: &u32) -> bool {
 
 /// The mesh unit, or approximate length of cell's edge.
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize_repr, Deserialize_repr))]
-#[repr(u8)]
 pub enum MeshUnit {
     /// for 1 \[km\]
-    One = 1,
+    One,
     /// for 5 \[km\]
-    Five = 5,
+    Five,
 }
 
 impl From<&MeshUnit> for u8 {
@@ -58,6 +54,34 @@ impl MeshUnit {
         match self {
             Self::One => 1,
             Self::Five => 5,
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for MeshUnit {
+    #[inline]
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_u8(self.as_u8())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for MeshUnit {
+    fn deserialize<D>(deserializer: D) -> Result<MeshUnit, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        match <u8 as serde::Deserialize>::deserialize(deserializer)? {
+            1 => Ok(Self::One),
+            5 => Ok(Self::Five),
+            v => Err(serde::de::Error::custom(format_args!(
+                "invalid value: integer `{}`, expected an integer, 1 or 5",
+                v,
+            ))),
         }
     }
 }
@@ -1547,6 +1571,19 @@ impl MeshCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    mod tests_mesh_unit {
+        use super::*;
+
+        #[test]
+        #[cfg(feature = "serde")]
+        fn test_serde() {
+            use serde_test::{assert_tokens, Token};
+
+            assert_tokens(&MeshUnit::One, &[Token::U8(1)]);
+            assert_tokens(&MeshUnit::Five, &[Token::U8(5)]);
+        }
+    }
 
     mod tests_mesh_coord {
         use super::*;

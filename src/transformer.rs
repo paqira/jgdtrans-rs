@@ -7,9 +7,9 @@ use std::hash::{BuildHasher, RandomState};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::internal::mul_add;
 use crate::mesh::{MeshCell, MeshCode, MeshUnit};
 use crate::par::ParseParError;
+use crate::vector::{f64x2, f64x3, F64x2, F64x3};
 use crate::{Format, Point};
 
 type Result<T> = std::result::Result<T, TransformError>;
@@ -855,14 +855,12 @@ where
 
         const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
 
-        let latitude = interpol.latitude(&y, &x) * SCALE;
-        let longitude = interpol.longitude(&y, &x) * SCALE;
-        let altitude = interpol.altitude(&y, &x);
+        let r = interpol.interpol(x, y, SCALE);
 
         Ok(Correction {
-            latitude,
-            longitude,
-            altitude,
+            latitude: r[1],
+            longitude: r[0],
+            altitude: r[2],
         })
     }
 
@@ -967,17 +965,10 @@ where
         const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
         const ITERATION: usize = 4;
 
-        let mut xn = point.longitude;
-        let mut yn = point.latitude;
-
-        macro_rules! delta {
-            ($x:expr, $xn:ident, $corr:expr) => {
-                $x - ($xn + $corr)
-            };
-        }
+        let mut zn = f64x2!(point.longitude, point.latitude);
 
         for _ in 0..ITERATION {
-            let current = Point::new(yn, xn, 0.0);
+            let current = Point::new(zn[1], zn[0], 0.0);
 
             let cell = MeshCell::try_from_point(&current, self.format.mesh_unit())
                 .ok_or(TransformError::new_oob())?;
@@ -986,66 +977,33 @@ where
 
             let (y, x) = cell.position(&current);
 
-            let drift_x = interpol.longitude(&y, &x) * SCALE;
-            let drift_y = interpol.latitude(&y, &x) * SCALE;
+            let drift = interpol.interpol_horizontal(x, y, SCALE);
 
-            let fx = delta!(point.longitude, xn, drift_x);
-            let fy = delta!(point.latitude, yn, drift_y);
+            let fz = f64x2!(point.longitude, point.latitude) - (zn + drift);
 
-            // for readability
-            macro_rules! lng_sub {
-                ($a:ident, $b:ident) => {
-                    interpol.$a.longitude - interpol.$b.longitude
-                };
-            }
+            let dzn = f64x2!(1.) - zn;
 
-            macro_rules! lat_sub {
-                ($a:ident, $b:ident) => {
-                    interpol.$a.latitude - interpol.$b.latitude
-                };
-            }
+            // (fy_y, fx_x)
+            let minus_fzz = interpol.minus_fzz(zn, dzn, SCALE);
 
-            // let fx_x = -1. - (lng_sub!(se, sw) * (1. - yn) + lng_sub!(ne, nw) * yn) / SCALE;
-            let fx_x = {
-                let temp = lng_sub!(ne, nw) * yn;
-                let temp = mul_add!(lng_sub!(se, sw), 1. - yn, temp);
-                -mul_add!(temp, SCALE, 1.)
-            };
-
-            // let fx_y = -(lng_sub!(nw, sw) * (1. - xn) + lng_sub!(ne, se) * xn) / SCALE;
-            let fx_y = {
-                let temp = lng_sub!(ne, se) * xn;
-                -mul_add!(lng_sub!(nw, sw), 1. - xn, temp) * SCALE
-            };
-
-            // let fy_x = -(lat_sub!(se, sw) * (1. - yn) + lat_sub!(ne, nw) * yn) / SCALE;
-            let fy_x = {
-                let temp = lat_sub!(ne, nw) * yn;
-                -mul_add!(lat_sub!(se, sw), 1. - yn, temp) * SCALE
-            };
-
-            // let fy_y = -1. - (lat_sub!(nw, sw) * (1. - xn) + lat_sub!(ne, se) * xn) / SCALE;
-            let fy_y = {
-                let temp = lat_sub!(ne, se) * xn;
-                let temp = mul_add!(lat_sub!(nw, sw), 1. - xn, temp);
-                -mul_add!(temp, SCALE, 1.)
-            };
+            // (fx_y, fy_x)
+            let minus_fzw = interpol.minus_fzw(zn, dzn, SCALE);
 
             // and its determinant
-            let det = fx_x * fy_y - fx_y * fy_x;
+            let det = minus_fzz.product() - minus_fzw.product();
 
-            // update Xn
-            // xn -= (fy_y * fx - fx_y * fy) / det;
-            // yn -= (fx_x * fy - fy_x * fx) / det;
-            xn = mul_add!(fy_y * fx - fx_y * fy, -1. / det, xn);
-            yn = mul_add!(fx_x * fy - fy_x * fx, -1. / det, yn);
+            // update zn
+            // original, reduce sign flipping
+            // zn = (fzz * fz - fzw * fz.reverse()).fma(f64x2!(-1./det), zn);
+            zn = (minus_fzz * fz - minus_fzw * fz.reverse()).fma(f64x2!(1. / det), zn);
 
-            let corr = self.forward_corr(&Point::new(yn, xn, 0.0))?;
+            let temp = Point::new(zn[1], zn[0], 0.0);
+            let corr = self.unchecked_forward_corr(&temp)?;
 
-            let delta_x = delta!(point.longitude, xn, corr.longitude);
-            let delta_y = delta!(point.latitude, yn, corr.latitude);
+            let delta = f64x2!(point.longitude, point.latitude)
+                - (zn + f64x2!(corr.longitude, corr.latitude));
 
-            if delta_x.abs().lt(&Self::ERROR_MAX) && delta_y.abs().lt(&Self::ERROR_MAX) {
+            if delta.abs().lt(f64x2!(Self::ERROR_MAX)) {
                 return Ok(Correction {
                     latitude: -corr.latitude,
                     longitude: -corr.longitude,
@@ -1107,14 +1065,12 @@ where
 
         const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
 
-        let latitude = interpol.latitude(&y, &x) * SCALE;
-        let longitude = interpol.longitude(&y, &x) * SCALE;
-        let altitude = interpol.altitude(&y, &x);
+        let r = interpol.interpol(x, y, SCALE);
 
         Ok(Correction {
-            latitude,
-            longitude,
-            altitude,
+            latitude: r[1],
+            longitude: r[0],
+            altitude: r[2],
         })
     }
 
@@ -1217,17 +1173,10 @@ where
         const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
         const ITERATION: usize = 4;
 
-        let mut xn = point.longitude;
-        let mut yn = point.latitude;
-
-        macro_rules! delta {
-            ($x:expr, $xn:ident, $corr:expr) => {
-                $x - ($xn + $corr)
-            };
-        }
+        let mut zn = f64x2!(point.longitude, point.latitude);
 
         for _ in 0..ITERATION {
-            let current = Point::new(yn, xn, 0.0);
+            let current = Point::new(zn[1], zn[0], 0.0);
 
             let code = MeshCode::from_point(&current, &mesh_unit);
 
@@ -1235,59 +1184,33 @@ where
 
             let (y, x) = code.position(&current, &mesh_unit);
 
-            let drift_x = interpol.longitude(&y, &x) * SCALE;
-            let drift_y = interpol.latitude(&y, &x) * SCALE;
+            let drift = interpol.interpol_horizontal(x, y, SCALE);
 
-            let fx = delta!(point.longitude, xn, drift_x);
-            let fy = delta!(point.latitude, yn, drift_y);
+            let fz = f64x2!(point.longitude, point.latitude) - (zn + drift);
 
-            macro_rules! lng_sub {
-                ($a:ident, $b:ident) => {
-                    interpol.$a.longitude - interpol.$b.longitude
-                };
-            }
+            let dzn = f64x2!(1.) - zn;
 
-            macro_rules! lat_sub {
-                ($a:ident, $b:ident) => {
-                    interpol.$a.latitude - interpol.$b.latitude
-                };
-            }
+            // (fy_y, fx_x)
+            let minus_fzz = interpol.minus_fzz(zn, dzn, SCALE);
 
-            let fx_x = {
-                let temp = lng_sub!(ne, nw) * yn;
-                let temp = mul_add!(lng_sub!(se, sw), 1. - yn, temp);
-                -mul_add!(temp, SCALE, 1.)
-            };
-
-            let fx_y = {
-                let temp = lng_sub!(ne, se) * xn;
-                -mul_add!(lng_sub!(nw, sw), 1. - xn, temp) * SCALE
-            };
-
-            let fy_x = {
-                let temp = lat_sub!(ne, nw) * yn;
-                -mul_add!(lat_sub!(se, sw), 1. - yn, temp) * SCALE
-            };
-
-            let fy_y = {
-                let temp = lat_sub!(ne, se) * xn;
-                let temp = mul_add!(lat_sub!(nw, sw), 1. - xn, temp);
-                -mul_add!(temp, SCALE, 1.)
-            };
+            // (fx_y, fy_x)
+            let minus_fzw = interpol.minus_fzw(zn, dzn, SCALE);
 
             // and its determinant
-            let det = fx_x * fy_y - fx_y * fy_x;
+            let det = minus_fzz.product() - minus_fzw.product();
 
-            // update Xn
-            xn = mul_add!(fy_y * fx - fx_y * fy, -1. / det, xn);
-            yn = mul_add!(fx_x * fy - fy_x * fx, -1. / det, yn);
+            // update zn
+            // original, reduce sign flipping
+            // zn = (fzz * fz - fzw * fz.reverse()).fma(f64x2!(-1./det), zn);
+            zn = (minus_fzz * fz - minus_fzw * fz.reverse()).fma(f64x2!(1. / det), zn);
 
-            let corr = self.unchecked_forward_corr(&Point::new(yn, xn, 0.0))?;
+            let temp = Point::new(zn[1], zn[0], 0.0);
+            let corr = self.unchecked_forward_corr(&temp)?;
 
-            let delta_x = delta!(point.longitude, xn, corr.longitude);
-            let delta_y = delta!(point.latitude, yn, corr.latitude);
+            let delta = f64x2!(point.longitude, point.latitude)
+                - (zn + f64x2!(corr.longitude, corr.latitude));
 
-            if delta_x.abs().lt(&Self::ERROR_MAX) && delta_y.abs().lt(&Self::ERROR_MAX) {
+            if delta.abs().lt(f64x2!(Self::ERROR_MAX)) {
                 return Ok(Correction {
                     latitude: -corr.latitude,
                     longitude: -corr.longitude,
@@ -1342,17 +1265,8 @@ struct Interpol<'a> {
     ne: &'a Parameter,
 }
 
-macro_rules! interpol {
-    ($self:ident, $target:ident, $lat:ident, $lng:ident) => {{
-        let temp = $self.sw.$target * (1. - $lng) * (1. - $lat);
-        let temp = mul_add!($self.se.$target, $lng * (1. - $lat), temp);
-        let temp = mul_add!($self.nw.$target, (1. - $lng) * $lat, temp);
-        mul_add!($self.ne.$target, $lng * $lat, temp)
-    }};
-}
-
 impl<'a> Interpol<'a> {
-    #[inline]
+    #[inline(always)]
     fn from<S>(parameter: &'a HashMap<u32, Parameter, S>, cell: &MeshCell) -> Result<Self>
     where
         S: BuildHasher,
@@ -1380,7 +1294,7 @@ impl<'a> Interpol<'a> {
         Ok(Self { sw, se, nw, ne })
     }
 
-    #[inline]
+    #[inline(always)]
     fn unchecked_from<S>(
         parameter: &'a HashMap<u32, Parameter, S>,
         code: &MeshCode,
@@ -1416,19 +1330,71 @@ impl<'a> Interpol<'a> {
         Ok(Self { sw, se, nw, ne })
     }
 
-    #[inline]
-    fn latitude(&self, lat: &f64, lng: &f64) -> f64 {
-        interpol!(self, latitude, lat, lng)
+    #[inline(always)]
+    pub(crate) fn interpol_horizontal(&self, x: f64, y: f64, scale: f64) -> F64x2 {
+        macro_rules! take {
+            ($corner:ident) => {
+                f64x2!(self.$corner.longitude, self.$corner.latitude)
+            };
+        }
+
+        let (dx, dy) = (1. - x, 1. - y);
+        let (xy, xdy, dxy, dxdy) = (x * y, x * dy, dx * y, dx * dy);
+
+        let temp = take!(sw) * f64x2!(dxdy);
+        let temp = take!(se).fma(f64x2!(xdy), temp);
+        let temp = take!(nw).fma(f64x2!(dxy), temp);
+        take!(ne).fma(f64x2!(xy), temp) * f64x2!(scale)
     }
 
-    #[inline]
-    fn longitude(&self, lat: &f64, lng: &f64) -> f64 {
-        interpol!(self, longitude, lat, lng)
+    #[inline(always)]
+    pub(crate) fn interpol(&self, x: f64, y: f64, scale: f64) -> F64x3 {
+        macro_rules! take {
+            ($corner:ident) => {
+                f64x3!(
+                    self.$corner.longitude,
+                    self.$corner.latitude,
+                    self.$corner.altitude
+                )
+            };
+        }
+
+        let (dx, dy) = (1. - x, 1. - y);
+        let (xy, xdy, dxy, dxdy) = (x * y, x * dy, dx * y, dx * dy);
+
+        let temp = take!(sw) * f64x3!(dxdy);
+        let temp = take!(se).fma(f64x3!(xdy), temp);
+        let temp = take!(nw).fma(f64x3!(dxy), temp);
+        let temp = take!(ne).fma(f64x3!(xy), temp);
+
+        temp * f64x3!(scale, scale, 1.0)
     }
 
-    #[inline]
-    fn altitude(&self, lat: &f64, lng: &f64) -> f64 {
-        interpol!(self, altitude, lat, lng)
+    /// Diagonal part, (fy_y, fx_x), notes, first component is fy_y
+    #[inline(always)]
+    pub(crate) fn minus_fzz(&self, zn: F64x2, dzn: F64x2, scale: f64) -> F64x2 {
+        macro_rules! take {
+            ($a:ident, $b:ident) => {
+                f64x2!(self.$a.latitude, self.$b.longitude)
+            };
+        }
+
+        let temp = (take!(ne, ne) - take!(se, nw)) * zn;
+        let temp = (take!(nw, se) - take!(sw, sw)).fma(dzn, temp);
+        temp.fma(f64x2!(scale), f64x2!(1.))
+    }
+
+    // Anti-diagonal part, (fx_y, fy_x)
+    #[inline(always)]
+    pub(crate) fn minus_fzw(&self, zn: F64x2, dzn: F64x2, scale: f64) -> F64x2 {
+        macro_rules! take {
+            ($a:ident, $b:ident) => {
+                f64x2!(self.$a.longitude, self.$b.latitude)
+            };
+        }
+
+        let temp = (take!(ne, ne) - take!(se, nw)) * zn;
+        (take!(nw, se) - take!(sw, sw)).fma(dzn, temp) * f64x2!(scale)
     }
 }
 

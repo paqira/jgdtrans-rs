@@ -71,6 +71,7 @@ impl serde::Serialize for MeshUnit {
 
 #[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for MeshUnit {
+    #[inline]
     fn deserialize<D>(deserializer: D) -> Result<MeshUnit, D::Error>
     where
         D: serde::Deserializer<'de>,

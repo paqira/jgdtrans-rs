@@ -301,7 +301,7 @@ impl Parser<RandomState> {
     /// Makes a parser.
     #[inline]
     pub fn new(format: Format) -> Self {
-        Self::with_hahser(format, RandomState::new())
+        Self::with_hasher(format, RandomState::new())
     }
 }
 
@@ -311,7 +311,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Par
     /// This may improve performance of transformation.
     /// See [`HashMap::with_hasher`], for detail.
     #[inline]
-    pub fn with_hahser(format: Format, hash_builder: S) -> Self {
+    pub fn with_hasher(format: Format, hash_builder: S) -> Self {
         Self {
             format,
             hash_builder,

@@ -293,6 +293,7 @@ where
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
+#[derive(Debug)]
 pub struct Parser<S = RandomState> {
     format: Format,
     hash_builder: S,

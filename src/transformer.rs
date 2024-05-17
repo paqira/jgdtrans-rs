@@ -998,7 +998,7 @@ where
             zn = (minus_fzz * fz - minus_fzw * fz.reverse()).fma(f64x2!(1. / det), zn);
 
             let temp = Point::new(zn[1], zn[0], 0.0);
-            let corr = self.unchecked_forward_corr(&temp)?;
+            let corr = self.forward_corr(&temp)?;
 
             let delta = f64x2!(point.longitude, point.latitude)
                 - (zn + f64x2!(corr.longitude, corr.latitude));

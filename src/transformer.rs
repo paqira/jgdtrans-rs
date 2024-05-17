@@ -1373,28 +1373,28 @@ impl<'a> Interpol<'a> {
     /// Diagonal part, (fy_y, fx_x), notes, first component is fy_y
     #[inline(always)]
     pub(crate) fn minus_fzz(&self, zn: F64x2, dzn: F64x2, scale: f64) -> F64x2 {
-        macro_rules! take {
+        macro_rules! comp {
             ($a:ident, $b:ident) => {
                 f64x2!(self.$a.latitude, self.$b.longitude)
             };
         }
 
-        let temp = (take!(ne, ne) - take!(se, nw)) * zn;
-        let temp = (take!(nw, se) - take!(sw, sw)).fma(dzn, temp);
+        let temp = (comp!(ne, ne) - comp!(se, nw)) * zn;
+        let temp = (comp!(nw, se) - comp!(sw, sw)).fma(dzn, temp);
         temp.fma(f64x2!(scale), f64x2!(1.))
     }
 
     // Anti-diagonal part, (fx_y, fy_x)
     #[inline(always)]
     pub(crate) fn minus_fzw(&self, zn: F64x2, dzn: F64x2, scale: f64) -> F64x2 {
-        macro_rules! take {
+        macro_rules! comp {
             ($a:ident, $b:ident) => {
                 f64x2!(self.$a.longitude, self.$b.latitude)
             };
         }
 
-        let temp = (take!(ne, ne) - take!(se, nw)) * zn;
-        (take!(nw, se) - take!(sw, sw)).fma(dzn, temp) * f64x2!(scale)
+        let temp = (comp!(ne, ne) - comp!(se, nw)) * zn;
+        (comp!(nw, se) - comp!(sw, sw)).fma(dzn, temp) * f64x2!(scale)
     }
 }
 

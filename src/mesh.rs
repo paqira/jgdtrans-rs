@@ -15,6 +15,7 @@ use std::fmt::{Display, Formatter};
 use serde::{Deserialize, Serialize};
 
 use crate::internal::mul_add;
+use crate::vector::{f64x2, u32x2, u8x2, F64x2};
 use crate::Point;
 
 /// Returns `ture` when `meshcode` is valid.
@@ -1381,12 +1382,12 @@ impl MeshCell {
     /// ```
     #[inline]
     pub fn position(&self, point: &Point) -> (f64, f64) {
+        // FIXME:
+        // refactor like MeshCode::position
+        // if performance is not get worse
         let lat = point.latitude - self.south_west.latitude.to_latitude();
         let lng = point.longitude - self.south_west.longitude.to_longitude();
 
-        // The cell stretches 1.5 times in the latitude direction
-        // compared to the longitude direction,
-        // then here uses 120 = 1.5 * 80.
         match self.mesh_unit {
             MeshUnit::One => (120. * lat, 80. * lng),
             MeshUnit::Five => (24. * lat, 16. * lng),
@@ -1413,25 +1414,22 @@ impl MeshCode {
 
         let longitude = point.longitude;
 
-        let integer = (latitude.floor() as u32, longitude.floor() as u32);
-        let first = (integer.0 % 100, integer.1 % 100);
-        let second = (
-            (8. * latitude).floor() as u32 - 8 * integer.0,
-            (8. * longitude).floor() as u32 - 8 * integer.1,
-        );
-        let third = (
-            (80. * latitude).floor() as u32 - 80 * integer.0 - 10 * second.0,
-            (80. * longitude).floor() as u32 - 80 * integer.1 - 10 * second.1,
-        );
+        let integer = f64x2!(latitude, longitude).floor().as_u32();
+        let first = integer % u32x2!(100);
+        let second =
+            (f64x2!(8.) * f64x2!(latitude, longitude)).floor().as_u32() - u32x2!(8) * integer;
+        let third = (f64x2!(80.) * f64x2!(latitude, longitude)).floor().as_u32()
+            - u32x2!(80) * integer
+            - u32x2!(10) * second;
 
         Self(
             (
-                first.0 as u8,
-                second.0 as u8,
+                first[0] as u8,
+                second[0] as u8,
                 match mesh_unit {
-                    MeshUnit::One => third.0 as u8,
+                    MeshUnit::One => third[0] as u8,
                     MeshUnit::Five => {
-                        if third.0 < 5 {
+                        if third[0] < 5 {
                             0
                         } else {
                             5
@@ -1440,12 +1438,12 @@ impl MeshCode {
                 },
             ),
             (
-                first.1 as u8,
-                second.1 as u8,
+                first[1] as u8,
+                second[1] as u8,
                 match mesh_unit {
-                    MeshUnit::One => third.1 as u8,
+                    MeshUnit::One => third[1] as u8,
                     MeshUnit::Five => {
-                        if third.1 < 5 {
+                        if third[1] < 5 {
                             0
                         } else {
                             5
@@ -1466,31 +1464,27 @@ impl MeshCode {
 
     /// See [`MeshCoord::to_latitude`], [`MeshCoord::to_longitude`] and [`MeshCoord::to_degree`].
     #[inline]
-    fn to_pos(&self) -> (f64, f64) {
-        let temp = (
-            mul_add!(self.0 .1 as f64, 1. / 8., self.0 .0 as f64),
-            mul_add!(self.1 .1 as f64, 1. / 8., self.1 .0 as f64),
-        );
-        let temp = (
-            mul_add!(self.0 .2 as f64, 1. / 80., temp.0),
-            mul_add!(self.1 .2 as f64, 1. / 80., temp.1),
-        );
+    fn to_pos(&self) -> F64x2 {
+        let temp = u8x2!(self.0 .1, self.1 .1)
+            .cast::<f64>()
+            .fma(f64x2!(1. / 8.), u8x2!(self.0 .0, self.1 .0).cast::<f64>());
+        let temp = u8x2!(self.0 .2, self.1 .2)
+            .cast::<f64>()
+            .fma(f64x2!(1. / 80.), temp);
 
-        (2. * temp.0 / 3., 100. + temp.1)
+        f64x2!(2. * temp[0] / 3., 100. + temp[1])
     }
 
     /// See [`MeshCell::position`].
     #[inline]
     pub(crate) fn position(&self, point: &Point, mesh_unit: &MeshUnit) -> (f64, f64) {
-        let (latitude, longitude) = self.to_pos();
-
-        let lat = point.latitude - latitude;
-        let lng = point.longitude - longitude;
+        let pos = f64x2!(point.latitude, point.longitude) - self.to_pos();
 
         match mesh_unit {
-            MeshUnit::One => (120. * lat, 80. * lng),
-            MeshUnit::Five => (24. * lat, 16. * lng),
+            MeshUnit::One => f64x2!(120., 80.) * pos,
+            MeshUnit::Five => f64x2!(24., 16.) * pos,
         }
+        .into()
     }
 
     /// See [`MeshCoord::try_next_up`].

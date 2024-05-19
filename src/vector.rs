@@ -27,42 +27,22 @@ macro_rules! f64x3 {
     };
 }
 
-impl F64x2 {
+impl<T> Pair<T> {
     #[inline(always)]
-    pub(crate) fn splat(a: f64) -> Self {
+    pub(crate) fn splat(a: T) -> Self
+    where
+        T: Clone + Copy,
+    {
         Self(a, a)
-    }
-
-    #[inline(always)]
-    pub(crate) fn fma(self, a: Self, b: Self) -> Self {
-        use crate::internal::mul_add;
-        Self(mul_add!(self.0, a.0, b.0), mul_add!(self.1, a.1, b.1))
-    }
-
-    #[inline(always)]
-    pub(crate) fn abs(self) -> Self {
-        Self(self.0.abs(), self.1.abs())
-    }
-
-    #[inline(always)]
-    pub(crate) fn reverse(self) -> Self {
-        Self(self.1, self.0)
-    }
-
-    #[inline(always)]
-    pub(crate) fn product(self) -> f64 {
-        self.0 * self.1
-    }
-
-    #[inline(always)]
-    pub(crate) fn lt(self, other: Self) -> bool {
-        self.0.lt(&other.0) && self.1.lt(&other.1)
     }
 }
 
-impl F64x3 {
+impl<T> Triple<T> {
     #[inline(always)]
-    pub(crate) fn splat(a: f64) -> Self {
+    pub(crate) fn splat(a: T) -> Self
+    where
+        T: Clone + Copy,
+    {
         Self(a, a, a)
     }
 
@@ -115,6 +95,46 @@ impl<T> Index<usize> for Triple<T> {
             2 => &self.2,
             _ => unreachable!(),
         }
+    }
+}
+
+impl F64x2 {
+    #[inline(always)]
+    pub(crate) fn fma(self, a: Self, b: Self) -> Self {
+        use crate::internal::mul_add;
+        Self(mul_add!(self.0, a.0, b.0), mul_add!(self.1, a.1, b.1))
+    }
+
+    #[inline(always)]
+    pub(crate) fn abs(self) -> Self {
+        Self(self.0.abs(), self.1.abs())
+    }
+
+    #[inline(always)]
+    pub(crate) fn reverse(self) -> Self {
+        Self(self.1, self.0)
+    }
+
+    #[inline(always)]
+    pub(crate) fn product(self) -> f64 {
+        self.0 * self.1
+    }
+
+    #[inline(always)]
+    pub(crate) fn lt(self, other: Self) -> bool {
+        self.0.lt(&other.0) && self.1.lt(&other.1)
+    }
+}
+
+impl F64x3 {
+    #[inline(always)]
+    pub(crate) fn fma(self, a: Self, b: Self) -> Self {
+        use crate::internal::mul_add;
+        Self(
+            mul_add!(self.0, a.0, b.0),
+            mul_add!(self.1, a.1, b.1),
+            mul_add!(self.2, a.2, b.2),
+        )
     }
 }
 

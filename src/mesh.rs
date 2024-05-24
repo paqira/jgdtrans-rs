@@ -1874,7 +1874,7 @@ mod tests {
                 assert!(temp.is_none());
                 coord = coord.try_next_up(&MeshUnit::One).unwrap();
             }
-            assert!(MeshNode::try_new(MeshCoord::try_new(0, 0, 0).unwrap(), coord,).is_none());
+            assert!(MeshNode::try_new(MeshCoord::try_new(0, 0, 0).unwrap(), coord).is_none());
         }
 
         #[test]
@@ -1897,7 +1897,7 @@ mod tests {
                 MeshNode::try_from_point(&point, &MeshUnit::One).unwrap(),
                 MeshNode::try_new(
                     MeshCoord::try_new(54, 1, 2).unwrap(),
-                    MeshCoord::try_new(40, 0, 7).unwrap()
+                    MeshCoord::try_new(40, 0, 7).unwrap(),
                 )
                 .unwrap()
             );
@@ -1906,7 +1906,7 @@ mod tests {
                 MeshNode::try_from_point(&point, &MeshUnit::Five).unwrap(),
                 MeshNode::try_new(
                     MeshCoord::try_new(54, 1, 0).unwrap(),
-                    MeshCoord::try_new(40, 0, 5).unwrap()
+                    MeshCoord::try_new(40, 0, 5).unwrap(),
                 )
                 .unwrap()
             );
@@ -1927,7 +1927,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&54401027).unwrap(),
                 MeshNode::try_new(
                     MeshCoord::try_new(54, 1, 2).unwrap(),
-                    MeshCoord::try_new(40, 0, 7).unwrap()
+                    MeshCoord::try_new(40, 0, 7).unwrap(),
                 )
                 .unwrap()
             );
@@ -1935,7 +1935,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&0).unwrap(),
                 MeshNode::try_new(
                     MeshCoord::try_new(0, 0, 0).unwrap(),
-                    MeshCoord::try_new(0, 0, 0).unwrap()
+                    MeshCoord::try_new(0, 0, 0).unwrap(),
                 )
                 .unwrap()
             );
@@ -1946,7 +1946,7 @@ mod tests {
             assert_eq!(
                 MeshNode::try_new(
                     MeshCoord::try_new(54, 1, 2).unwrap(),
-                    MeshCoord::try_new(40, 0, 7).unwrap()
+                    MeshCoord::try_new(40, 0, 7).unwrap(),
                 )
                 .unwrap()
                 .to_meshcode(),
@@ -1959,7 +1959,7 @@ mod tests {
             assert_eq!(
                 MeshNode::try_new(
                     MeshCoord::try_new(54, 1, 2).unwrap(),
-                    MeshCoord::try_new(40, 0, 7).unwrap()
+                    MeshCoord::try_new(40, 0, 7).unwrap(),
                 )
                 .unwrap()
                 .to_point(),
@@ -2041,7 +2041,7 @@ mod tests {
             let coord = MeshCoord::try_new(0, 0, 0).unwrap();
 
             assert_eq!(
-                MeshNode::try_new(coord.clone(), coord.clone(),).unwrap(),
+                MeshNode::try_new(coord.clone(), coord.clone()).unwrap(),
                 MeshNode::try_from(((0, 0, 0), (0, 0, 0))).unwrap()
             );
         }
@@ -2058,7 +2058,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&54401028).unwrap(),
                 MeshNode::try_from_meshcode(&54401037).unwrap(),
                 MeshNode::try_from_meshcode(&54401038).unwrap(),
-                MeshUnit::One
+                MeshUnit::One,
             )
             .is_some());
             assert!(MeshCell::try_new(
@@ -2066,7 +2066,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&54401100).unwrap(),
                 MeshNode::try_from_meshcode(&54401055).unwrap(),
                 MeshNode::try_from_meshcode(&54401150).unwrap(),
-                MeshUnit::Five
+                MeshUnit::Five,
             )
             .is_some());
 
@@ -2077,7 +2077,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&54401028).unwrap(),
                 MeshNode::try_from_meshcode(&54401037).unwrap(),
                 MeshNode::try_from_meshcode(&54401038).unwrap(),
-                MeshUnit::Five
+                MeshUnit::Five,
             )
             .is_none());
             assert!(MeshCell::try_new(
@@ -2085,7 +2085,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&54401100).unwrap(),
                 MeshNode::try_from_meshcode(&54401055).unwrap(),
                 MeshNode::try_from_meshcode(&54401150).unwrap(),
-                MeshUnit::One
+                MeshUnit::One,
             )
             .is_none());
 
@@ -2096,7 +2096,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&54401027).unwrap(),
                 MeshNode::try_from_meshcode(&54401037).unwrap(),
                 MeshNode::try_from_meshcode(&54401038).unwrap(),
-                MeshUnit::One
+                MeshUnit::One,
             )
             .is_none());
             assert!(MeshCell::try_new(
@@ -2104,7 +2104,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&54401028).unwrap(),
                 MeshNode::try_from_meshcode(&54401036).unwrap(),
                 MeshNode::try_from_meshcode(&54401038).unwrap(),
-                MeshUnit::One
+                MeshUnit::One,
             )
             .is_none());
             assert!(MeshCell::try_new(
@@ -2112,7 +2112,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&54401028).unwrap(),
                 MeshNode::try_from_meshcode(&54401037).unwrap(),
                 MeshNode::try_from_meshcode(&54401037).unwrap(),
-                MeshUnit::One
+                MeshUnit::One,
             )
             .is_none());
 
@@ -2122,7 +2122,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&54401018).unwrap(),
                 MeshNode::try_from_meshcode(&54401037).unwrap(),
                 MeshNode::try_from_meshcode(&54401038).unwrap(),
-                MeshUnit::One
+                MeshUnit::One,
             )
             .is_none());
             assert!(MeshCell::try_new(
@@ -2130,7 +2130,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&54401028).unwrap(),
                 MeshNode::try_from_meshcode(&54401027).unwrap(),
                 MeshNode::try_from_meshcode(&54401038).unwrap(),
-                MeshUnit::One
+                MeshUnit::One,
             )
             .is_none());
             assert!(MeshCell::try_new(
@@ -2138,7 +2138,7 @@ mod tests {
                 MeshNode::try_from_meshcode(&54401028).unwrap(),
                 MeshNode::try_from_meshcode(&54401037).unwrap(),
                 MeshNode::try_from_meshcode(&54401028).unwrap(),
-                MeshUnit::One
+                MeshUnit::One,
             )
             .is_none());
         }
@@ -2182,7 +2182,7 @@ mod tests {
                     MeshNode::try_from_meshcode(&54401028).unwrap(),
                     MeshNode::try_from_meshcode(&54401037).unwrap(),
                     MeshNode::try_from_meshcode(&54401038).unwrap(),
-                    MeshUnit::One
+                    MeshUnit::One,
                 )
                 .unwrap()
             );
@@ -2193,7 +2193,7 @@ mod tests {
                     MeshNode::try_from_meshcode(&54401100).unwrap(),
                     MeshNode::try_from_meshcode(&54401055).unwrap(),
                     MeshNode::try_from_meshcode(&54401150).unwrap(),
-                    MeshUnit::Five
+                    MeshUnit::Five,
                 )
                 .unwrap()
             );
@@ -2207,7 +2207,7 @@ mod tests {
             assert_eq!(
                 MeshCell::try_from_node(
                     MeshNode::try_from_meshcode(&54401027).unwrap(),
-                    MeshUnit::One
+                    MeshUnit::One,
                 )
                 .unwrap(),
                 MeshCell::try_new(
@@ -2215,14 +2215,14 @@ mod tests {
                     MeshNode::try_from_meshcode(&54401028).unwrap(),
                     MeshNode::try_from_meshcode(&54401037).unwrap(),
                     MeshNode::try_from_meshcode(&54401038).unwrap(),
-                    MeshUnit::One
+                    MeshUnit::One,
                 )
                 .unwrap()
             );
             assert_eq!(
                 MeshCell::try_from_node(
                     MeshNode::try_from_meshcode(&54401005).unwrap(),
-                    MeshUnit::Five
+                    MeshUnit::Five,
                 )
                 .unwrap(),
                 MeshCell::try_new(
@@ -2230,7 +2230,7 @@ mod tests {
                     MeshNode::try_from_meshcode(&54401100).unwrap(),
                     MeshNode::try_from_meshcode(&54401055).unwrap(),
                     MeshNode::try_from_meshcode(&54401150).unwrap(),
-                    MeshUnit::Five
+                    MeshUnit::Five,
                 )
                 .unwrap()
             );
@@ -2238,7 +2238,7 @@ mod tests {
             // error
             assert!(MeshCell::try_from_node(
                 MeshNode::try_from_meshcode(&54401027).unwrap(),
-                MeshUnit::Five
+                MeshUnit::Five,
             )
             .is_none());
         }
@@ -2254,7 +2254,7 @@ mod tests {
                     MeshNode::try_from_meshcode(&54401028).unwrap(),
                     MeshNode::try_from_meshcode(&54401037).unwrap(),
                     MeshNode::try_from_meshcode(&54401038).unwrap(),
-                    MeshUnit::One
+                    MeshUnit::One,
                 )
                 .unwrap()
             );
@@ -2265,7 +2265,7 @@ mod tests {
                     MeshNode::try_from_meshcode(&54401100).unwrap(),
                     MeshNode::try_from_meshcode(&54401055).unwrap(),
                     MeshNode::try_from_meshcode(&54401150).unwrap(),
-                    MeshUnit::Five
+                    MeshUnit::Five,
                 )
                 .unwrap()
             );

@@ -513,6 +513,16 @@ impl ParseParError {
     }
 }
 
+impl Error for ParseParError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match &self.kind {
+            ParseParErrorKind::ParseInt(e) => Some(e),
+            ParseParErrorKind::ParseFloat(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
 impl Display for ParseParError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self.kind {
@@ -526,16 +536,6 @@ impl Display for ParseParError {
                 "parse error: {} at l{}:{}:{}",
                 self.column, self.lineno, self.start, self.end
             ),
-        }
-    }
-}
-
-impl Error for ParseParError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match &self.kind {
-            ParseParErrorKind::ParseInt(e) => Some(e),
-            ParseParErrorKind::ParseFloat(e) => Some(e),
-            _ => None,
         }
     }
 }

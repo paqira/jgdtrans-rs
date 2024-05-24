@@ -1700,6 +1700,8 @@ impl TransformError {
     }
 }
 
+impl Error for TransformError {}
+
 impl Display for TransformError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match &self.kind {
@@ -1711,12 +1713,6 @@ impl Display for TransformError {
                 write!(f, "position is out-of-bounds of transformation")
             }
         }
-    }
-}
-
-impl Error for TransformError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
     }
 }
 

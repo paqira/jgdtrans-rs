@@ -1547,15 +1547,11 @@ impl MeshTryFromError {
     }
 }
 
+impl Error for MeshTryFromError {}
+
 impl Display for MeshTryFromError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(f, "the value would be out-of-bounds of the output",)
-    }
-}
-
-impl Error for MeshTryFromError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
     }
 }
 

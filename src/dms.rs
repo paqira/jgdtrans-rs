@@ -515,6 +515,8 @@ impl ParseDMSError {
     }
 }
 
+impl Error for ParseDMSError {}
+
 impl Display for ParseDMSError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self.kind {
@@ -522,12 +524,6 @@ impl Display for ParseDMSError {
             ParseDMSErrorKind::OutOfBounds => write!(f, "cannot parse out-of-bounds DMS"),
             ParseDMSErrorKind::Empty => write!(f, "cannot parse DMS from empty string"),
         }
-    }
-}
-
-impl Error for ParseDMSError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
     }
 }
 
@@ -567,18 +563,14 @@ impl TryFromDMSError {
     }
 }
 
+impl Error for TryFromDMSError {}
+
 impl Display for TryFromDMSError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self.kind {
             TryFromDMSErrorKind::NAN => write!(f, "number would be NAN"),
             TryFromDMSErrorKind::OutOfBounds => write!(f, "number would be out-of-bounds"),
         }
-    }
-}
-
-impl Error for TryFromDMSError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
     }
 }
 

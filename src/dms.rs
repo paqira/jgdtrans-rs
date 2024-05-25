@@ -1,8 +1,8 @@
 //! Provides utilities for DMS notation degree.
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use std::num::IntErrorKind;
-use std::str::FromStr;
+use std::iter::Peekable;
+use std::str::{Chars, FromStr};
 
 use crate::internal::mul_add;
 
@@ -163,55 +163,104 @@ impl FromStr for DMS {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // float-like
-        let mut parts = s.split('.');
+        let mut chars = s.chars().peekable();
 
-        let integer = parts.next();
-        let fraction = parts.next();
-
-        // too many '.'
-        if parts.next().is_some() {
-            return Err(ParseDMSError::new_id());
+        #[allow(clippy::if_same_then_else)]
+        let sign = if chars.next_if_eq(&'-').is_some() {
+            Sign::Minus
+        } else if chars.next_if_eq(&'+').is_some() {
+            Sign::Plus
+        } else {
+            Sign::Plus
         };
 
-        match (integer, fraction) {
-            // [+-]?\d+[.]?
-            (Some(i), Some("") | None) => {
-                let int = Self::parse_integer(i)?;
-                Self::try_new(int.0, int.1, int.2, int.3, 0.0).ok_or(ParseDMSError::new_oob())
-            }
-            (Some(i), Some(f)) => {
-                // 0 <= fract < 1
-                let fract = Self::parse_fraction(f)?;
+        let integer = parse_integer(&mut chars)?;
+        let fraction = if chars.next_if_eq(&'.').is_some() {
+            parse_fraction(&mut chars)?
+        } else {
+            None
+        };
 
-                if i.eq("+") || i.is_empty() {
-                    // +?[.]\d+
-                    Ok(Self {
-                        sign: Sign::Plus,
-                        degree: 0,
-                        minute: 0,
-                        second: 0,
-                        fract,
-                    })
-                } else if i.eq("-") {
-                    // -[.]\d+
-                    Ok(Self {
-                        sign: Sign::Minus,
-                        degree: 0,
-                        minute: 0,
-                        second: 0,
-                        fract,
-                    })
-                } else {
-                    // [+-]?\d+[.]\d+
-                    let int = Self::parse_integer(i)?;
-                    Self::try_new(int.0, int.1, int.2, int.3, fract).ok_or(ParseDMSError::new_oob())
-                }
-            }
-            (None, None) => Err(ParseDMSError::new_empty()),
-            // others
-            (None, _) => unreachable!(),
+        match integer {
+            None => match fraction {
+                None => Err(Self::Err::with_empty()),
+                Some(fract) => Ok(Self {
+                    sign,
+                    degree: 0,
+                    minute: 0,
+                    second: 0,
+                    fract,
+                }),
+            },
+            Some((degree, minute, second)) => Ok(Self {
+                sign,
+                degree,
+                minute,
+                second,
+                fract: fraction.unwrap_or(0.0),
+            }),
         }
+    }
+}
+
+fn parse_integer(chars: &mut Peekable<Chars>) -> Result<Option<(u8, u8, u8)>, ParseDMSError> {
+    if matches!(chars.peek(), Some('_')) {
+        return Err(ParseDMSError::with_invalid_digit());
+    }
+
+    let mut acc: Option<u64> = None;
+    while let Some(c) = chars.peek() {
+        if c.eq(&'.') {
+            break;
+        }
+
+        let nb = match chars.next().unwrap() {
+            d @ '0'..='9' => d as u64 - /* b'0' */ 48,
+            '_' => continue,
+            _ => return Err(ParseDMSError::with_invalid_digit()),
+        };
+
+        acc = match acc {
+            Some(a) => {
+                let r = a
+                    .checked_mul(10)
+                    .and_then(|v| v.checked_add(nb))
+                    .ok_or(ParseDMSError::with_invalid_digit())?;
+                Some(r)
+            }
+            None => Some(nb),
+        }
+    }
+
+    match acc {
+        None => Ok(None),
+        Some(a) => {
+            let (i, rest) = (a / 10000, a % 10000);
+            let degree = u8::try_from(i).map_err(|_| ParseDMSError::with_out_of_bounds())?;
+            let minute =
+                u8::try_from(rest / 100).map_err(|_| ParseDMSError::with_out_of_bounds())?;
+            let second =
+                u8::try_from(rest % 100).map_err(|_| ParseDMSError::with_out_of_bounds())?;
+
+            Ok(Some((degree, minute, second)))
+        }
+    }
+}
+
+fn parse_fraction(chars: &mut Peekable<Chars>) -> Result<Option<f64>, ParseDMSError> {
+    if matches!(chars.peek(), Some('_')) {
+        return Err(ParseDMSError::with_invalid_digit());
+    }
+
+    let s = chars.collect::<String>();
+    if s.is_empty() {
+        Ok(None)
+    } else {
+        let r = format!("0.{}", s)
+            .parse::<f64>()
+            .map_err(|_| ParseDMSError::with_invalid_digit())?;
+
+        Ok(Some(r))
     }
 }
 
@@ -264,41 +313,6 @@ impl TryFrom<&f64> for DMS {
         let fract = ss.fract().abs();
 
         Self::try_new(sign, degree, minute, second, fract).ok_or(TryFromDMSError::new_oob())
-    }
-}
-
-impl DMS {
-    fn parse_integer(s: &str) -> Result<(Sign, u8, u8, u8), ParseDMSError> {
-        let sign = if s.starts_with('-') {
-            Sign::Minus
-        } else {
-            Sign::Plus
-        };
-
-        let i = s
-            .parse::<i64>()
-            .map_err(|err| match err.kind() {
-                IntErrorKind::NegOverflow | IntErrorKind::PosOverflow => ParseDMSError::new_oob(),
-                _ => ParseDMSError::new_id(),
-            })?
-            .unsigned_abs();
-        let degree = u8::try_from(i / 10000).map_err(|_| ParseDMSError::new_oob())?;
-
-        let rest = i % 10000;
-        let minute = u8::try_from(rest / 100).map_err(|_| ParseDMSError::new_oob())?;
-        let second = u8::try_from(rest % 100).map_err(|_| ParseDMSError::new_oob())?;
-
-        Ok((sign, degree, minute, second))
-    }
-
-    fn parse_fraction(s: &str) -> Result<f64, ParseDMSError> {
-        if s.is_empty() {
-            Err(ParseDMSError::new_id())
-        } else {
-            format!("0.{}", s)
-                .parse::<f64>()
-                .map_err(|_| ParseDMSError::new_id())
-        }
     }
 }
 
@@ -489,21 +503,21 @@ pub enum ParseDMSErrorKind {
 
 impl ParseDMSError {
     #[cold]
-    const fn new_id() -> Self {
+    const fn with_invalid_digit() -> Self {
         Self {
             kind: ParseDMSErrorKind::InvalidDigit,
         }
     }
 
     #[cold]
-    const fn new_oob() -> Self {
+    const fn with_out_of_bounds() -> Self {
         Self {
             kind: ParseDMSErrorKind::OutOfBounds,
         }
     }
 
     #[cold]
-    const fn new_empty() -> Self {
+    const fn with_empty() -> Self {
         Self {
             kind: ParseDMSErrorKind::Empty,
         }

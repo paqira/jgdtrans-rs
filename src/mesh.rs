@@ -1556,7 +1556,7 @@ impl Display for MeshTryFromError {
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
 
     mod tests_mesh_unit {

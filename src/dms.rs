@@ -575,195 +575,190 @@ impl Display for TryFromDMSError {
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
 
-    mod tests_dms {
-        use super::*;
+    #[test]
+    fn test_try_new() {
+        // error
+        assert!(DMS::try_new(Sign::Plus, 0, 0, 0, 0.0_f64.next_down()).is_none());
 
-        #[test]
-        fn test_try_new() {
-            // error
-            assert!(DMS::try_new(Sign::Plus, 0, 0, 0, 0.0_f64.next_down()).is_none());
+        assert!(DMS::try_new(Sign::Plus, 0, 0, 0, 1.0).is_none());
+        assert!(DMS::try_new(Sign::Plus, 0, 0, 60, 0.0).is_none());
+        assert!(DMS::try_new(Sign::Plus, 0, 60, 0, 0.0).is_none());
 
-            assert!(DMS::try_new(Sign::Plus, 0, 0, 0, 1.0).is_none());
-            assert!(DMS::try_new(Sign::Plus, 0, 0, 60, 0.0).is_none());
-            assert!(DMS::try_new(Sign::Plus, 0, 60, 0, 0.0).is_none());
+        assert!(DMS::try_new(Sign::Plus, 180, 0, 0, 0.0_f64.next_up()).is_none());
+        assert!(DMS::try_new(Sign::Plus, 180, 0, 1, 0.0).is_none());
+        assert!(DMS::try_new(Sign::Plus, 180, 1, 0, 0.0).is_none());
 
-            assert!(DMS::try_new(Sign::Plus, 180, 0, 0, 0.0_f64.next_up()).is_none());
-            assert!(DMS::try_new(Sign::Plus, 180, 0, 1, 0.0).is_none());
-            assert!(DMS::try_new(Sign::Plus, 180, 1, 0, 0.0).is_none());
+        assert!(DMS::try_new(Sign::Minus, 180, 1, 0, 0.0).is_none());
+        assert!(DMS::try_new(Sign::Minus, 180, 0, 1, 0.0).is_none());
+        assert!(DMS::try_new(Sign::Minus, 180, 0, 0, 0.1).is_none());
 
-            assert!(DMS::try_new(Sign::Minus, 180, 1, 0, 0.0).is_none());
-            assert!(DMS::try_new(Sign::Minus, 180, 0, 1, 0.0).is_none());
-            assert!(DMS::try_new(Sign::Minus, 180, 0, 0, 0.1).is_none());
+        // healthy
+        assert!(DMS::try_new(Sign::Plus, 0, 0, 0, 0.0).is_some());
+        assert!(DMS::try_new(Sign::Plus, 180, 0, 0, 0.0).is_some());
+        assert!(DMS::try_new(Sign::Minus, 180, 0, 0, 0.0).is_some());
+    }
 
+    #[test]
+    fn test_to_string() {
+        let cases = [
+            (DMS::try_new(Sign::Plus, 0, 0, 0, 0.0), "0.0"),
+            (DMS::try_new(Sign::Minus, 0, 0, 0, 0.0), "-0.0"),
+            (DMS::try_new(Sign::Plus, 0, 0, 0, 0.000012), "0.000012"),
+            (DMS::try_new(Sign::Minus, 0, 0, 0, 0.000012), "-0.000012"),
+            (DMS::try_new(Sign::Plus, 0, 0, 1, 0.0), "1.0"),
+            (DMS::try_new(Sign::Minus, 0, 0, 1, 0.0), "-1.0"),
+            (DMS::try_new(Sign::Plus, 0, 0, 10, 0.0), "10.0"),
+            (DMS::try_new(Sign::Minus, 0, 0, 10, 0.0), "-10.0"),
+            (DMS::try_new(Sign::Plus, 0, 1, 0, 0.0), "100.0"),
+            (DMS::try_new(Sign::Minus, 0, 1, 0, 0.0), "-100.0"),
+            (DMS::try_new(Sign::Plus, 1, 0, 0, 0.0), "10000.0"),
+            (DMS::try_new(Sign::Minus, 1, 0, 0, 0.0), "-10000.0"),
+            (DMS::try_new(Sign::Plus, 1, 1, 1, 0.0), "10101.0"),
+            (DMS::try_new(Sign::Minus, 1, 1, 1, 0.0), "-10101.0"),
+        ];
+
+        for (a, e) in cases {
+            assert_eq!(a.unwrap().to_string(), e);
+        }
+    }
+
+    #[test]
+    fn test_from_str() {
+        let cases = [
+            // sign
+            ("00", DMS::try_new(Sign::Plus, 0, 0, 0, 0.0)),
+            ("-00", DMS::try_new(Sign::Minus, 0, 0, 0, 0.0)),
+            ("00.0", DMS::try_new(Sign::Plus, 0, 0, 0, 0.0)),
+            ("-00.0", DMS::try_new(Sign::Minus, 0, 0, 0, 0.0)),
+            ("00.", DMS::try_new(Sign::Plus, 0, 0, 0, 0.0)),
+            ("-00.", DMS::try_new(Sign::Minus, 0, 0, 0, 0.0)),
+            (".00", DMS::try_new(Sign::Plus, 0, 0, 0, 0.0)),
+            ("-.00", DMS::try_new(Sign::Minus, 0, 0, 0, 0.0)),
             // healthy
-            assert!(DMS::try_new(Sign::Plus, 0, 0, 0, 0.0).is_some());
-            assert!(DMS::try_new(Sign::Plus, 180, 0, 0, 0.0).is_some());
-            assert!(DMS::try_new(Sign::Minus, 180, 0, 0, 0.0).is_some());
+            ("123456", DMS::try_new(Sign::Plus, 12, 34, 56, 0.0)),
+            ("-123456", DMS::try_new(Sign::Minus, 12, 34, 56, 0.0)),
+            ("123456.78", DMS::try_new(Sign::Plus, 12, 34, 56, 0.78)),
+            ("-123456.78", DMS::try_new(Sign::Minus, 12, 34, 56, 0.78)),
+            ("123456.", DMS::try_new(Sign::Plus, 12, 34, 56, 0.0)),
+            ("-123456.", DMS::try_new(Sign::Minus, 12, 34, 56, 0.0)),
+            (".78", DMS::try_new(Sign::Plus, 0, 0, 0, 0.78)),
+            ("-.78", DMS::try_new(Sign::Minus, 0, 0, 0, 0.78)),
+        ];
+        for (a, e) in cases {
+            assert_eq!(DMS::from_str(a).expect(a), e.expect(a), "{}", a);
         }
 
-        #[test]
-        fn test_to_string() {
-            let cases = [
-                (DMS::try_new(Sign::Plus, 0, 0, 0, 0.0), "0.0"),
-                (DMS::try_new(Sign::Minus, 0, 0, 0, 0.0), "-0.0"),
-                (DMS::try_new(Sign::Plus, 0, 0, 0, 0.000012), "0.000012"),
-                (DMS::try_new(Sign::Minus, 0, 0, 0, 0.000012), "-0.000012"),
-                (DMS::try_new(Sign::Plus, 0, 0, 1, 0.0), "1.0"),
-                (DMS::try_new(Sign::Minus, 0, 0, 1, 0.0), "-1.0"),
-                (DMS::try_new(Sign::Plus, 0, 0, 10, 0.0), "10.0"),
-                (DMS::try_new(Sign::Minus, 0, 0, 10, 0.0), "-10.0"),
-                (DMS::try_new(Sign::Plus, 0, 1, 0, 0.0), "100.0"),
-                (DMS::try_new(Sign::Minus, 0, 1, 0, 0.0), "-100.0"),
-                (DMS::try_new(Sign::Plus, 1, 0, 0, 0.0), "10000.0"),
-                (DMS::try_new(Sign::Minus, 1, 0, 0, 0.0), "-10000.0"),
-                (DMS::try_new(Sign::Plus, 1, 1, 1, 0.0), "10101.0"),
-                (DMS::try_new(Sign::Minus, 1, 1, 1, 0.0), "-10101.0"),
-            ];
-
-            for (a, e) in cases {
-                assert_eq!(a.unwrap().to_string(), e);
-            }
+        // error
+        let cases = [
+            "", "-", "a", "-a", ".", "-.", "..", "-..", "..0", "-..0", ".0.", "-.0.", "0..", "-0..",
+        ];
+        for c in cases {
+            assert!(DMS::from_str(c).is_err(), "{}", c);
         }
+    }
 
-        #[test]
-        fn test_from_str() {
-            let cases = [
-                // sign
-                ("00", DMS::try_new(Sign::Plus, 0, 0, 0, 0.0)),
-                ("-00", DMS::try_new(Sign::Minus, 0, 0, 0, 0.0)),
-                ("00.0", DMS::try_new(Sign::Plus, 0, 0, 0, 0.0)),
-                ("-00.0", DMS::try_new(Sign::Minus, 0, 0, 0, 0.0)),
-                ("00.", DMS::try_new(Sign::Plus, 0, 0, 0, 0.0)),
-                ("-00.", DMS::try_new(Sign::Minus, 0, 0, 0, 0.0)),
-                (".00", DMS::try_new(Sign::Plus, 0, 0, 0, 0.0)),
-                ("-.00", DMS::try_new(Sign::Minus, 0, 0, 0, 0.0)),
-                // healthy
-                ("123456", DMS::try_new(Sign::Plus, 12, 34, 56, 0.0)),
-                ("-123456", DMS::try_new(Sign::Minus, 12, 34, 56, 0.0)),
-                ("123456.78", DMS::try_new(Sign::Plus, 12, 34, 56, 0.78)),
-                ("-123456.78", DMS::try_new(Sign::Minus, 12, 34, 56, 0.78)),
-                ("123456.", DMS::try_new(Sign::Plus, 12, 34, 56, 0.0)),
-                ("-123456.", DMS::try_new(Sign::Minus, 12, 34, 56, 0.0)),
-                (".78", DMS::try_new(Sign::Plus, 0, 0, 0, 0.78)),
-                ("-.78", DMS::try_new(Sign::Minus, 0, 0, 0, 0.78)),
-            ];
-            for (a, e) in cases {
-                assert_eq!(DMS::from_str(a).expect(a), e.expect(a), "{}", a);
-            }
+    #[test]
+    fn test_to_degree() {
+        let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap();
+        assert!((36.103774791666666 - dms.to_degree()).abs() < 1e-10);
 
-            // error
-            let cases = [
-                "", "-", "a", "-a", ".", "-.", "..", "-..", "..0", "-..0", ".0.", "-.0.", "0..",
-                "-0..",
-            ];
-            for c in cases {
-                assert!(DMS::from_str(c).is_err(), "{}", c);
-            }
-        }
+        let dms = DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815).unwrap();
+        assert!((140.08785504166664 - dms.to_degree()).abs() < 1e-10);
+    }
 
-        #[test]
-        fn test_to_degree() {
-            let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap();
-            assert!((36.103774791666666 - dms.to_degree()).abs() < 1e-10);
+    #[test]
+    fn test_try_from_dd() {
+        let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap();
+        let result = DMS::try_from(&36.103774791666666).unwrap();
+        assert_eq!(dms.sign, result.sign);
+        assert_eq!(dms.degree, result.degree);
+        assert_eq!(dms.minute, result.minute);
+        assert_eq!(dms.second, result.second);
+        assert!((result.fract - dms.fract).abs() < 3e-10);
 
-            let dms = DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815).unwrap();
-            assert!((140.08785504166664 - dms.to_degree()).abs() < 1e-10);
-        }
+        let dms = DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815).unwrap();
+        let result = DMS::try_from(&140.08785504166664).unwrap();
+        assert_eq!(dms.sign, result.sign);
+        assert_eq!(dms.degree, result.degree);
+        assert_eq!(dms.minute, result.minute);
+        assert_eq!(dms.second, result.second);
+        assert!((result.fract - dms.fract).abs() < 3e-10);
 
-        #[test]
-        fn test_try_from_dd() {
-            let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap();
-            let result = DMS::try_from(&36.103774791666666).unwrap();
-            assert_eq!(dms.sign, result.sign);
-            assert_eq!(dms.degree, result.degree);
-            assert_eq!(dms.minute, result.minute);
-            assert_eq!(dms.second, result.second);
-            assert!((result.fract - dms.fract).abs() < 3e-10);
+        // at origin
+        let a = DMS::try_from(&0.0).unwrap();
+        assert_eq!(a.sign, Sign::Plus);
+        assert_eq!(a.degree, 0);
+        assert_eq!(a.second, 0);
+        assert_eq!(a.minute, 0);
+        assert_eq!(a.fract, 0.0);
 
-            let dms = DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815).unwrap();
-            let result = DMS::try_from(&140.08785504166664).unwrap();
-            assert_eq!(dms.sign, result.sign);
-            assert_eq!(dms.degree, result.degree);
-            assert_eq!(dms.minute, result.minute);
-            assert_eq!(dms.second, result.second);
-            assert!((result.fract - dms.fract).abs() < 3e-10);
+        let a = DMS::try_from(&-0.0).unwrap();
+        assert_eq!(a.sign, Sign::Minus);
+        assert_eq!(a.degree, 0);
+        assert_eq!(a.second, 0);
+        assert_eq!(a.minute, 0);
+        assert_eq!(a.fract, 0.0);
 
-            // at origin
-            let a = DMS::try_from(&0.0).unwrap();
-            assert_eq!(a.sign, Sign::Plus);
-            assert_eq!(a.degree, 0);
-            assert_eq!(a.second, 0);
-            assert_eq!(a.minute, 0);
-            assert_eq!(a.fract, 0.0);
+        // on bounds
+        let a = DMS::try_from(&180.0).unwrap();
+        assert_eq!(a.sign, Sign::Plus);
+        assert_eq!(a.degree, 180);
+        assert_eq!(a.second, 0);
+        assert_eq!(a.minute, 0);
+        assert_eq!(a.fract, 0.0);
 
-            let a = DMS::try_from(&-0.0).unwrap();
-            assert_eq!(a.sign, Sign::Minus);
-            assert_eq!(a.degree, 0);
-            assert_eq!(a.second, 0);
-            assert_eq!(a.minute, 0);
-            assert_eq!(a.fract, 0.0);
+        let a = DMS::try_from(&-180.0_f64).unwrap();
+        assert_eq!(a.sign, Sign::Minus);
+        assert_eq!(a.degree, 180);
+        assert_eq!(a.second, 0);
+        assert_eq!(a.minute, 0);
+        assert_eq!(a.fract, 0.0);
 
-            // on bounds
-            let a = DMS::try_from(&180.0).unwrap();
-            assert_eq!(a.sign, Sign::Plus);
-            assert_eq!(a.degree, 180);
-            assert_eq!(a.second, 0);
-            assert_eq!(a.minute, 0);
-            assert_eq!(a.fract, 0.0);
+        // near bounds
+        let a = DMS::try_from(&180.0_f64.next_down()).unwrap();
+        assert_eq!(a.sign, Sign::Plus);
+        assert_eq!(a.degree, 179);
+        assert_eq!(a.second, 59);
+        assert_eq!(a.minute, 59);
+        // assert!((1.0_f64.next_down() - a.fract).abs() < 1e-10);
 
-            let a = DMS::try_from(&-180.0_f64).unwrap();
-            assert_eq!(a.sign, Sign::Minus);
-            assert_eq!(a.degree, 180);
-            assert_eq!(a.second, 0);
-            assert_eq!(a.minute, 0);
-            assert_eq!(a.fract, 0.0);
+        let a = DMS::try_from(&(-180.0_f64).next_up()).unwrap();
+        assert_eq!(a.sign, Sign::Minus);
+        assert_eq!(a.degree, 179);
+        assert_eq!(a.second, 59);
+        assert_eq!(a.minute, 59);
+        // assert!((0.999999999999 - a.fract).abs() < 1e-10);
 
-            // near bounds
-            let a = DMS::try_from(&180.0_f64.next_down()).unwrap();
-            assert_eq!(a.sign, Sign::Plus);
-            assert_eq!(a.degree, 179);
-            assert_eq!(a.second, 59);
-            assert_eq!(a.minute, 59);
-            // assert!((1.0_f64.next_down() - a.fract).abs() < 1e-10);
+        // err
+        assert!(DMS::try_from(&f64::NAN).is_err());
+        assert!(DMS::try_from(&(-180.0_f64).next_down()).is_err());
+        assert!(DMS::try_from(&180.0_f64.next_up()).is_err());
+    }
 
-            let a = DMS::try_from(&(-180.0_f64).next_up()).unwrap();
-            assert_eq!(a.sign, Sign::Minus);
-            assert_eq!(a.degree, 179);
-            assert_eq!(a.second, 59);
-            assert_eq!(a.minute, 59);
-            // assert!((0.999999999999 - a.fract).abs() < 1e-10);
+    #[test]
+    fn test_identity_exact() {
+        for deg in 0..180 {
+            for min in 0..60 {
+                for sec in 0..60 {
+                    for frac in 0..10 {
+                        let frac = frac as f64 / 10.0;
 
-            // err
-            assert!(DMS::try_from(&f64::NAN).is_err());
-            assert!(DMS::try_from(&(-180.0_f64).next_down()).is_err());
-            assert!(DMS::try_from(&180.0_f64.next_up()).is_err());
-        }
+                        // plus
+                        let degree = DMS::try_new(Sign::Plus, deg, min, sec, frac)
+                            .unwrap()
+                            .to_degree();
+                        let result = DMS::try_from(&degree).unwrap();
+                        assert!((result.to_degree() - degree).abs() < 3e-15);
 
-        #[test]
-        fn test_identity_exact() {
-            for deg in 0..180 {
-                for min in 0..60 {
-                    for sec in 0..60 {
-                        for frac in 0..10 {
-                            let frac = frac as f64 / 10.0;
-
-                            // plus
-                            let degree = DMS::try_new(Sign::Plus, deg, min, sec, frac)
-                                .unwrap()
-                                .to_degree();
-                            let result = DMS::try_from(&degree).unwrap();
-                            assert!((result.to_degree() - degree).abs() < 3e-15);
-
-                            // minus
-                            let degree = DMS::try_new(Sign::Minus, deg, min, sec, frac)
-                                .unwrap()
-                                .to_degree();
-                            let result = DMS::try_from(&degree).unwrap();
-                            assert!((result.to_degree() - degree).abs() < 3e-15);
-                        }
+                        // minus
+                        let degree = DMS::try_new(Sign::Minus, deg, min, sec, frac)
+                            .unwrap()
+                            .to_degree();
+                        let result = DMS::try_from(&degree).unwrap();
+                        assert!((result.to_degree() - degree).abs() < 3e-15);
                     }
                 }
             }

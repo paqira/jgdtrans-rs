@@ -553,7 +553,7 @@ impl Display for Column {
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
 
     macro_rules! transformer_eq {

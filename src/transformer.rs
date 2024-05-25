@@ -1728,7 +1728,7 @@ impl Display for MeshCellCorner {
 }
 
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
 
     mod test_ksum {

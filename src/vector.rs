@@ -82,14 +82,20 @@ impl<T> Triple<T> {
     }
 }
 
-impl<T: Clone> From<[T; 2]> for Pair<T> {
+impl<T> From<[T; 2]> for Pair<T>
+where
+    T: Clone,
+{
     #[inline(always)]
     fn from(value: [T; 2]) -> Self {
         Self(value[0].clone(), value[1].clone())
     }
 }
 
-impl<T: Clone> From<[T; 3]> for Triple<T> {
+impl<T> From<[T; 3]> for Triple<T>
+where
+    T: Clone,
+{
     #[inline(always)]
     fn from(value: [T; 3]) -> Self {
         Self(value[0].clone(), value[1].clone(), value[2].clone())

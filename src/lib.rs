@@ -157,19 +157,23 @@
 //!       JavaScript/TypeScript <https://github.com/paqira/jgdtrans-js>.
 //!
 //! [国土地理院コンテンツ利用規約]: https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
+#[doc(inline)]
+pub use builder::TransformerBuilder;
 pub use par::ParseParError;
 #[doc(inline)]
 pub use par::{from_str, Format};
 #[doc(inline)]
 pub use point::Point;
-pub use transformer::TransformError;
+pub use trans::TransformError;
 #[doc(inline)]
-pub use transformer::{Correction, Parameter, Transformer, TransformerBuilder};
+pub use transformer::{Correction, Parameter, Transformer};
 
+mod builder;
 pub mod dms;
 mod internal;
 pub mod mesh;
 pub mod par;
 mod point;
+mod trans;
 pub mod transformer;
 mod vector;

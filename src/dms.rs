@@ -2,6 +2,7 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::iter::Peekable;
+use std::num::FpCategory;
 use std::str::{Chars, FromStr};
 
 use crate::internal::mul_add;
@@ -17,7 +18,7 @@ use crate::internal::mul_add;
 /// ```
 /// # use jgdtrans::dms::to_dms;
 /// assert_eq!(to_dms(&36.103774791666666), Some("360613.589249999997719".to_string()));
-/// assert_eq!(to_dms(&140.08785504166664), Some("1400516.278149999914149".to_string()));
+/// assert_eq!(to_dms(&140.08785504166664), Some("1400516.2781499999141488".to_string()));
 /// ```
 #[inline]
 pub fn to_dms(t: &f64) -> Option<String> {
@@ -64,18 +65,16 @@ pub enum Sign {
 ///
 /// let latitude = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap();
 ///
-/// // prints DMS { sign: Plus, degree: 36, minute: 6, second: 13, fract: 0.58925 }
-/// println!("{:?}", latitude);
-/// // prints "360613.58925"
-/// println!("{}", latitude);
+/// assert_eq!(format!("{:}", latitude), "360613.58925");
+/// assert_eq!(format!("{:#}", latitude), "36°06′13.58925″");
 ///
 /// // Construct from &str
 /// assert_eq!(latitude, "360613.58925".parse::<DMS>()?);
 ///
-/// // Convert into DD notation f64
+/// // Convert into DD notation (f64)
 /// assert_eq!(latitude.to_degree(), 36.103774791666666);
 ///
-/// // Construct from DD notation f64
+/// // Construct from DD notation (f64)
 /// let latitude = DMS::try_from(&36.103774791666666)?;
 /// assert_eq!(latitude.sign(), &Sign::Plus);
 /// assert_eq!(latitude.degree(), &36);
@@ -110,27 +109,52 @@ impl Display for DMS {
     /// # fn main() {wrapper();()}
     /// ```
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self.sign {
-            Sign::Plus => {}
-            Sign::Minus => write!(f, "-")?,
-        };
+        #[inline(never)]
+        fn fract_to_string(fract: &f64) -> String {
+            match fract.classify() {
+                FpCategory::Zero => "".to_string(),
+                // FIXME: want full perception logic
+                _ => format!("{}", fract)
+                    .trim_start_matches("0")
+                    .trim_end_matches("0")
+                    .to_string(),
+            }
+        }
 
-        match (self.degree, self.minute, self.second) {
-            (0, 0, sec) => write!(f, "{}", sec)?,
-            (0, min, sec) => write!(f, "{}{:02}", min, sec)?,
-            (deg, min, sec) => write!(f, "{}{:02}{:02}", deg, min, sec)?,
-        };
-
-        let s = format!("{:.15}", self.fract);
-        if let Some((_, fract)) = s.trim_end_matches('0').split_once('.') {
-            if fract.is_empty() {
-                write!(f, ".0")?
-            } else {
-                write!(f, ".{}", fract)?
+        let buf = if f.alternate() {
+            // TODO: follow ISO 80000-3:2019
+            match (self.degree, self.minute, self.second) {
+                (0, 0, 0) if matches!(self.fract.classify(), FpCategory::Zero) => {
+                    "0°00′0″".to_string()
+                }
+                (0, 0, sec) => format!("0°00′{}{}″", sec, fract_to_string(&self.fract)),
+                (0, min, sec) => format!("0°{:02}′{}{}″", min, sec, fract_to_string(&self.fract)),
+                (deg, min, sec) => {
+                    format!(
+                        "{}°{:02}′{}{}″",
+                        deg,
+                        min,
+                        sec,
+                        fract_to_string(&self.fract)
+                    )
+                }
+            }
+        } else {
+            match (self.degree, self.minute, self.second) {
+                (0, 0, 0) if matches!(self.fract.classify(), FpCategory::Zero) => "0".to_string(),
+                (0, 0, sec) => format!("{}{}", sec, fract_to_string(&self.fract)),
+                (0, min, sec) => format!("{}{:02}{}", min, sec, fract_to_string(&self.fract)),
+                (deg, min, sec) => format!(
+                    "{}{:02}{:02}{}",
+                    deg,
+                    min,
+                    sec,
+                    fract_to_string(&self.fract)
+                ),
             }
         };
 
-        Ok(())
+        f.pad_integral(matches!(self.sign, Sign::Plus), "", &buf)
     }
 }
 
@@ -619,24 +643,64 @@ mod test {
     #[test]
     fn test_to_string() {
         let cases = [
-            (DMS::try_new(Sign::Plus, 0, 0, 0, 0.0), "0.0"),
-            (DMS::try_new(Sign::Minus, 0, 0, 0, 0.0), "-0.0"),
+            (DMS::try_new(Sign::Plus, 0, 0, 0, 0.0), "0"),
+            (DMS::try_new(Sign::Minus, 0, 0, 0, 0.0), "-0"),
             (DMS::try_new(Sign::Plus, 0, 0, 0, 0.000012), "0.000012"),
             (DMS::try_new(Sign::Minus, 0, 0, 0, 0.000012), "-0.000012"),
-            (DMS::try_new(Sign::Plus, 0, 0, 1, 0.0), "1.0"),
-            (DMS::try_new(Sign::Minus, 0, 0, 1, 0.0), "-1.0"),
-            (DMS::try_new(Sign::Plus, 0, 0, 10, 0.0), "10.0"),
-            (DMS::try_new(Sign::Minus, 0, 0, 10, 0.0), "-10.0"),
-            (DMS::try_new(Sign::Plus, 0, 1, 0, 0.0), "100.0"),
-            (DMS::try_new(Sign::Minus, 0, 1, 0, 0.0), "-100.0"),
-            (DMS::try_new(Sign::Plus, 1, 0, 0, 0.0), "10000.0"),
-            (DMS::try_new(Sign::Minus, 1, 0, 0, 0.0), "-10000.0"),
-            (DMS::try_new(Sign::Plus, 1, 1, 1, 0.0), "10101.0"),
-            (DMS::try_new(Sign::Minus, 1, 1, 1, 0.0), "-10101.0"),
+            (DMS::try_new(Sign::Plus, 0, 0, 1, 0.0), "1"),
+            (DMS::try_new(Sign::Minus, 0, 0, 1, 0.0), "-1"),
+            (DMS::try_new(Sign::Plus, 0, 0, 10, 0.0), "10"),
+            (DMS::try_new(Sign::Minus, 0, 0, 10, 0.0), "-10"),
+            (DMS::try_new(Sign::Plus, 0, 1, 0, 0.0), "100"),
+            (DMS::try_new(Sign::Minus, 0, 1, 0, 0.0), "-100"),
+            (DMS::try_new(Sign::Plus, 1, 0, 0, 0.0), "10000"),
+            (DMS::try_new(Sign::Minus, 1, 0, 0, 0.0), "-10000"),
+            (DMS::try_new(Sign::Plus, 1, 1, 1, 0.0), "10101"),
+            (DMS::try_new(Sign::Minus, 1, 1, 1, 0.0), "-10101"),
         ];
 
         for (a, e) in cases {
             assert_eq!(a.unwrap().to_string(), e);
+        }
+    }
+
+    #[test]
+    fn test_to_string_alt() {
+        let cases = [
+            (DMS::try_new(Sign::Plus, 0, 0, 0, 0.0), "0°00′0″"),
+            (DMS::try_new(Sign::Minus, 0, 0, 0, 0.0), "-0°00′0″"),
+            (
+                DMS::try_new(Sign::Plus, 0, 0, 0, 0.000012),
+                "0°00′0.000012″",
+            ),
+            (
+                DMS::try_new(Sign::Minus, 0, 0, 0, 0.000012),
+                "-0°00′0.000012″",
+            ),
+            (DMS::try_new(Sign::Plus, 0, 0, 1, 0.0), "0°00′1″"),
+            (DMS::try_new(Sign::Minus, 0, 0, 1, 0.0), "-0°00′1″"),
+            (DMS::try_new(Sign::Plus, 0, 0, 10, 0.0), "0°00′10″"),
+            (DMS::try_new(Sign::Minus, 0, 0, 10, 0.0), "-0°00′10″"),
+            (DMS::try_new(Sign::Plus, 0, 1, 0, 0.0), "0°01′0″"),
+            (DMS::try_new(Sign::Minus, 0, 1, 0, 0.0), "-0°01′0″"),
+            (DMS::try_new(Sign::Plus, 1, 0, 0, 0.0), "1°00′0″"),
+            (DMS::try_new(Sign::Minus, 1, 0, 0, 0.0), "-1°00′0″"),
+            (DMS::try_new(Sign::Plus, 1, 0, 1, 0.0), "1°00′1″"),
+            (DMS::try_new(Sign::Minus, 1, 0, 1, 0.0), "-1°00′1″"),
+            (DMS::try_new(Sign::Plus, 1, 1, 1, 0.0), "1°01′1″"),
+            (DMS::try_new(Sign::Minus, 1, 1, 1, 0.0), "-1°01′1″"),
+            (
+                DMS::try_new(Sign::Plus, 1, 0, 0, 0.000012),
+                "1°00′0.000012″",
+            ),
+            (
+                DMS::try_new(Sign::Minus, 1, 0, 0, 0.000012),
+                "-1°00′0.000012″",
+            ),
+        ];
+
+        for (a, e) in cases {
+            assert_eq!(format!("{:#}", a.unwrap()), e);
         }
     }
 

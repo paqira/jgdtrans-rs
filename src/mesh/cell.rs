@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::mesh::MeshNode;
 use crate::mesh::MeshUnit;
+use crate::vector::f64x2;
 use crate::Point;
 
 /// Represents unit mesh cell, a quadruplet of [`MeshNode`]s and [`MeshUnit`].
@@ -434,16 +435,17 @@ impl MeshCell {
     /// ```
     #[inline]
     pub fn position(&self, point: &Point) -> (f64, f64) {
-        // FIXME:
-        // refactor like MeshCode::position
-        // if performance is not get worse
-        let lat = point.latitude - self.south_west.latitude.to_latitude();
-        let lng = point.longitude - self.south_west.longitude.to_longitude();
+        let pos = f64x2!(point.latitude, point.longitude)
+            - f64x2!(
+                self.south_west.latitude.to_latitude(),
+                self.south_west.longitude.to_longitude()
+            );
 
         match self.mesh_unit {
-            MeshUnit::One => (120. * lat, 80. * lng),
-            MeshUnit::Five => (24. * lat, 16. * lng),
+            MeshUnit::One => f64x2!(120., 80.) * pos,
+            MeshUnit::Five => f64x2!(24., 16.) * pos,
         }
+        .into()
     }
 }
 

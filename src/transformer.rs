@@ -308,7 +308,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     ///
     /// Used by [`Transformer::backward`], [`Transformer::backward_corr`]
     /// [`Transformer::unchecked_backward`] and [`Transformer::unchecked_backward_corr`].
-    pub const ERROR_MAX: f64 = 5e-14;
+    pub const MAX_ERROR: f64 = 5e-14;
 
     /// Makes a [`Transformer`].
     ///

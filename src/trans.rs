@@ -606,7 +606,7 @@ where
             let delta = f64x2!(point.longitude, point.latitude)
                 - (zn + f64x2!(corr.longitude, corr.latitude));
 
-            if delta.abs().lt(f64x2!(Self::ERROR_MAX)) {
+            if delta.abs().lt(f64x2!(Self::MAX_ERROR)) {
                 return Ok(Correction {
                     latitude: -corr.latitude,
                     longitude: -corr.longitude,
@@ -813,7 +813,7 @@ where
             let delta = f64x2!(point.longitude, point.latitude)
                 - (zn + f64x2!(corr.longitude, corr.latitude));
 
-            if delta.abs().lt(f64x2!(Self::ERROR_MAX)) {
+            if delta.abs().lt(f64x2!(Self::MAX_ERROR)) {
                 return Ok(Correction {
                     latitude: -corr.latitude,
                     longitude: -corr.longitude,

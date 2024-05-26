@@ -252,11 +252,12 @@ fn parse_fraction(chars: &mut Peekable<Chars>) -> Result<Option<f64>, ParseDMSEr
         return Err(ParseDMSError::with_invalid_digit());
     }
 
-    let s = chars.collect::<String>();
+    let mut s = chars.collect::<String>();
     if s.is_empty() {
         Ok(None)
     } else {
-        let r = format!("0.{}", s)
+        s.insert_str(0, "0.");
+        let r = s
             .parse::<f64>()
             .map_err(|_| ParseDMSError::with_invalid_digit())?;
 

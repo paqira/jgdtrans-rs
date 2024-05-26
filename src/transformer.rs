@@ -178,7 +178,7 @@ pub struct StatisticData {
 }
 
 impl StatisticData {
-    fn from_arr(vs: &[f64]) -> Self {
+    fn from_array(vs: &[f64]) -> Self {
         if vs.is_empty() {
             return Self {
                 count: None,
@@ -412,21 +412,23 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     /// assert_eq!(stats.latitude.max, Some(-0.0062));
     /// ```
     pub fn statistics(&self) -> Statistics {
+        // it's not optimal, but length of parameters is enough small
+
         // ensure summation order
         let mut sorted: Vec<_> = self.parameter.iter().collect();
         sorted.sort_by_key(|t| t.0);
 
         let arr: Vec<f64> = sorted.iter().map(|t| t.1.latitude).collect();
-        let latitude = StatisticData::from_arr(&arr);
+        let latitude = StatisticData::from_array(&arr);
 
         let arr: Vec<f64> = sorted.iter().map(|t| t.1.longitude).collect();
-        let longitude = StatisticData::from_arr(&arr);
+        let longitude = StatisticData::from_array(&arr);
 
         let arr: Vec<f64> = sorted.iter().map(|t| t.1.altitude).collect();
-        let altitude = StatisticData::from_arr(&arr);
+        let altitude = StatisticData::from_array(&arr);
 
         let arr: Vec<f64> = sorted.iter().map(|t| t.1.horizontal()).collect();
-        let horizontal = StatisticData::from_arr(&arr);
+        let horizontal = StatisticData::from_array(&arr);
 
         Statistics {
             latitude,

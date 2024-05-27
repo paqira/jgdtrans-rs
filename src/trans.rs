@@ -497,7 +497,11 @@ where
     /// let corr = tf.backward_compat_corr(&origin)?;
     ///
     /// assert_eq!(corr.latitude, 1.7729133219831587e-6);
+    /// # if cfg!(target_feature = "fma") {
+    /// # assert_eq!(corr.longitude, -4.202334509042612e-6);
+    /// # } else {
     /// assert_eq!(corr.longitude, -4.202334509042613e-6);
+    /// # };
     /// assert_eq!(corr.altitude, -0.0963138582320569);
     ///
     /// assert_eq!(&origin + corr, tf.backward_compat(&origin)?);

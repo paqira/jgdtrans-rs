@@ -20,6 +20,10 @@ serde = { version = "1", features = ["derive"], optional = true }
 [dev-dependencies]
 serde_json = { version = "1" } # for doctest
 serde_test = { version = "1" }
+hashbrown = { version = "0.14" } # for bench
 
 [features]
 serde = ["dep:serde"]
+
+[profile.bench]
+lto = true

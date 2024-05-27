@@ -14,7 +14,8 @@ use crate::Point;
 /// ```
 /// # use jgdtrans::*;
 /// # use jgdtrans::mesh::*;
-/// # fn wrapper() -> Option<()> {
+/// #
+/// fn wrapper() -> Option<()> {
 /// // Construct from latitude and longitude, altitude ignores
 /// let point = Point::new(36.10377479, 140.087855041, 0.0);
 /// let node = MeshNode::try_from_point(&point, &MeshUnit::One)?;
@@ -121,8 +122,8 @@ impl MeshNode {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
@@ -151,8 +152,8 @@ impl MeshNode {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
@@ -173,8 +174,8 @@ impl MeshNode {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::{MeshCoord, MeshNode};
+    /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
@@ -197,8 +198,8 @@ impl MeshNode {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let node = MeshNode::try_from_meshcode(&54401027)?;
     ///
@@ -226,7 +227,8 @@ impl MeshNode {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn wrapper() -> Option<()> {
+    /// #
+    /// fn wrapper() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// assert_eq!(
@@ -268,8 +270,8 @@ impl MeshNode {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
     ///     MeshNode::try_from_meshcode(&54401027)?,
@@ -322,8 +324,8 @@ impl MeshNode {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let node = MeshNode::try_new(
     ///     MeshCoord::try_new(54, 1, 2)?,
@@ -350,7 +352,8 @@ impl MeshNode {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn wrapper() -> Option<()> {
+    /// #
+    /// fn wrapper() -> Option<()> {
     /// let node = MeshNode::try_new(
     ///     MeshCoord::try_new(54, 1, 2)?,
     ///     MeshCoord::try_new(40, 0, 7)?

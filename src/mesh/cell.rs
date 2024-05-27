@@ -17,7 +17,8 @@ use crate::Point;
 /// ```
 /// # use jgdtrans::*;
 /// # use jgdtrans::mesh::*;
-/// # fn wrapper() -> Option<()> {
+/// #
+/// fn wrapper() -> Option<()> {
 /// // Construct from latitude and longitude, altitude ignores
 /// // (The result depends on the mesh unit)
 /// let point = Point::new(36.10377479, 140.087855041, 0.0);
@@ -78,8 +79,8 @@ impl MeshCell {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let sw = MeshNode::try_from_meshcode(&54401027)?;
     /// let se = MeshNode::try_from_meshcode(&54401028)?;
@@ -138,8 +139,8 @@ impl MeshCell {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let sw = MeshNode::try_from_meshcode(&54401027)?;
     /// let se = MeshNode::try_from_meshcode(&54401028)?;
@@ -161,8 +162,8 @@ impl MeshCell {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
@@ -184,8 +185,8 @@ impl MeshCell {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
@@ -207,8 +208,8 @@ impl MeshCell {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
@@ -230,8 +231,8 @@ impl MeshCell {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
@@ -258,8 +259,8 @@ impl MeshCell {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
     ///     MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?,
@@ -293,8 +294,8 @@ impl MeshCell {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let code = 54401027;
     /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
@@ -338,7 +339,8 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn wrapper() -> Option<()> {
+    /// #
+    /// fn wrapper() -> Option<()> {
     /// let point: Point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// assert_eq!(
@@ -381,6 +383,7 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// // sample latitude and longitude
     /// let point = Point::new(36.10377479, 140.087855041, 0.0);
@@ -415,7 +418,8 @@ impl MeshCell {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
-    /// # fn wrapper() -> Option<()> {
+    /// #
+    /// fn wrapper() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;

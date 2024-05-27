@@ -36,7 +36,8 @@ fn ksum(vs: &[f64]) -> f64 {
 /// # Example
 ///
 /// ```
-/// # use jgdtrans::transformer::Parameter;
+/// # use jgdtrans::*;
+/// #
 /// let parameter = Parameter::new(1., 2., 3.);
 /// assert_eq!(parameter.latitude, 1.);
 /// assert_eq!(parameter.longitude, 2.);
@@ -81,7 +82,8 @@ impl Parameter {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::transformer::Parameter;
+    /// # use jgdtrans::*;
+    /// #
     /// let parameter = Parameter::new(1., 2., 3.);
     /// assert_eq!(parameter.latitude, 1.);
     /// assert_eq!(parameter.longitude, 2.);
@@ -113,7 +115,8 @@ impl Parameter {
 /// # Example
 ///
 /// ```
-/// # use jgdtrans::transformer::Correction;
+/// # use jgdtrans::*;
+/// #
 /// let correction = Correction::new(1., 2., 3.);
 /// assert_eq!(correction.latitude, 1.);
 /// assert_eq!(correction.longitude, 2.);
@@ -135,7 +138,8 @@ impl Correction {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::transformer::Correction;
+    /// # use jgdtrans::*;
+    /// #
     /// let correction = Correction::new(1., 2., 3.);
     /// assert_eq!(correction.latitude, 1.);
     /// assert_eq!(correction.longitude, 2.);
@@ -257,8 +261,7 @@ pub struct Statistics {
 ///
 /// ```
 /// # use jgdtrans::*;
-/// # use jgdtrans::mesh::MeshUnit;
-/// # use jgdtrans::transformer::Parameter;
+/// #
 /// // from SemiDynaEXE2023.par
 /// let tf = Transformer::new(
 ///     Format::SemiDynaEXE,
@@ -319,7 +322,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, StatisticData};
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -354,10 +357,10 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, StatisticData};
-    /// # use std::collections::HashMap;
+    /// #
     /// let tf = Transformer::with_description(
     ///     Format::TKY2JGD,
     ///     HashMap::new(),
@@ -389,8 +392,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, StatisticData};
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -456,7 +458,7 @@ impl Transformer<RandomState> {
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::transformer::Parameter;
+    /// #
     /// let s = r"<15 lines>
     /// # ...
     /// # ...
@@ -500,7 +502,7 @@ impl Transformer<RandomState> {
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::transformer::Parameter;
+    /// #
     /// let s = r"<15 lines>
     /// # ...
     /// # ...

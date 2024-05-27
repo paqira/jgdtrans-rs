@@ -87,8 +87,9 @@
 //! We provide APIs, [`Transformer::from_str`] and [`from_str`].
 //!
 //! ```no_run
-//! use std::fs;
-//! # use std::error::Error;
+//! use std::error::Error;
+//! # use std::fs;
+//!
 //! use jgdtrans::{Format, Transformer};
 //!
 //! # fn main() -> Result<(), Box<dyn Error>> {
@@ -108,7 +109,9 @@
 //!
 //! ```
 //! use std::collections::HashMap;
+//!
 //! use serde_json;
+//!
 //! use jgdtrans::{
 //!     Format,
 //!     Parameter,

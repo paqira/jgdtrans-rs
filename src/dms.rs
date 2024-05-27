@@ -17,6 +17,7 @@ use crate::internal::mul_add;
 ///
 /// ```
 /// # use jgdtrans::dms::to_dms;
+/// #
 /// assert_eq!(to_dms(&36.103774791666666), Some("360613.589249999997719".to_string()));
 /// assert_eq!(to_dms(&140.08785504166664), Some("1400516.2781499999141488".to_string()));
 /// ```
@@ -35,6 +36,7 @@ pub fn to_dms(t: &f64) -> Option<String> {
 ///
 /// ```
 /// # use jgdtrans::dms::from_dms;
+/// #
 /// assert_eq!(from_dms("360613.58925"), Some(36.103774791666666));
 /// assert_eq!(from_dms("1400516.27815"), Some(140.08785504166667));
 /// ```
@@ -60,7 +62,6 @@ pub enum Sign {
 ///
 /// ```
 /// # use std::error::Error;
-/// # use jgdtrans::*;
 /// use jgdtrans::dms::{DMS, Sign};
 ///
 /// let latitude = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap();
@@ -98,8 +99,8 @@ impl Display for DMS {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::dms::{DMS, Sign};
+    /// # use jgdtrans::dms::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.to_string(), "360613.58925");
@@ -174,8 +175,8 @@ impl FromStr for DMS {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::dms::{DMS, Sign};
+    /// # use jgdtrans::dms::*;
+    /// #
     /// assert_eq!(
     ///     "360613.58925".parse::<DMS>()?,
     ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap()
@@ -304,8 +305,8 @@ impl TryFrom<&f64> for DMS {
     ///
     /// ```
     /// # use std::error::Error;
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::dms::{DMS, Sign};
+    /// # use jgdtrans::dms::*;
+    /// #
     /// assert_eq!(
     ///     DMS::try_from(&36.103774791666666)?,
     ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.589249999997719).unwrap()
@@ -351,8 +352,8 @@ impl DMS {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::dms::{DMS, Sign};
+    /// # use jgdtrans::dms::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.to_string(), "360613.58925");
@@ -386,8 +387,8 @@ impl DMS {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::dms::{DMS, Sign};
+    /// # use jgdtrans::dms::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.sign(), &Sign::Plus);
@@ -404,8 +405,8 @@ impl DMS {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::dms::{DMS, Sign};
+    /// # use jgdtrans::dms::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.degree(), &36);
@@ -422,8 +423,8 @@ impl DMS {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::dms::{DMS, Sign};
+    /// # use jgdtrans::dms::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.minute(), &6);
@@ -440,8 +441,8 @@ impl DMS {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::dms::{DMS, Sign};
+    /// # use jgdtrans::dms::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.second(), &13);
@@ -458,8 +459,8 @@ impl DMS {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::dms::{DMS, Sign};
+    /// # use jgdtrans::dms::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(dms.fract(), &0.58925);
@@ -476,8 +477,8 @@ impl DMS {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::dms::{DMS, Sign};
+    /// # use jgdtrans::dms::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
     /// assert_eq!(

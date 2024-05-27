@@ -41,7 +41,7 @@ fn normalize_longitude(t: &f64) -> f64 {
 ///
 /// ```
 /// # use jgdtrans::*;
-/// # use jgdtrans::transformer::Correction;
+/// #
 /// // Construct
 /// let point = Point::new(35.0, 145.0, 5.0);
 ///
@@ -106,6 +106,7 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
+    /// #
     /// let point = Point::new(35.0, 145.0, 5.0);
     ///
     /// assert_eq!(point.latitude, 35.0);
@@ -134,6 +135,7 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let point = Point::try_new(35.0, 145.0, 5.0)?;
     ///
@@ -175,6 +177,7 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
+    /// #
     /// let point = Point::new(100.0, 200.0, 5.0);
     ///
     /// assert_eq!(
@@ -203,6 +206,7 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let point = Point::try_from_meshcode(&54401027)?;
     ///
@@ -226,7 +230,8 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshNode;
-    /// # fn wrapper() -> Option<()> {
+    /// #
+    /// fn wrapper() -> Option<()> {
     /// let node = MeshNode::try_from_meshcode(&54401027)?;
     /// let point = Point::from_node(&node);
     ///
@@ -256,7 +261,8 @@ impl Point {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 50.0);
     ///
@@ -290,6 +296,7 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
+    /// #
     /// let point = Point::new(36.10377479, 140.087855041, 5.0);
     ///
     /// assert_eq!(
@@ -317,7 +324,8 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshCell, MeshUnit};
-    /// # fn wrapper() -> Option<()> {
+    /// #
+    /// fn wrapper() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 10.0);
     ///
     /// assert_eq!(

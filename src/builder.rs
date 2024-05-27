@@ -13,7 +13,7 @@ use crate::{Format, Parameter, Transformer};
 ///
 /// ```
 /// # use jgdtrans::*;
-/// # use jgdtrans::transformer::Parameter;
+/// #
 /// // from SemiDynaEXE2023.par
 /// let tf: Transformer = TransformerBuilder::new()
 ///     .format(Format::SemiDynaEXE)
@@ -50,10 +50,9 @@ impl TransformerBuilder<RandomState> {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::Parameter;
     /// # use std::collections::HashMap;
+    /// # use jgdtrans::*;
+    /// #
     /// let tf = TransformerBuilder::new()
     ///     .format(Format::SemiDynaEXE)
     ///     .build();
@@ -91,7 +90,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use std::collections::HashMap;
+    /// #
     /// let tf = TransformerBuilder::new()
     ///     .format(Format::SemiDynaEXE)
     ///     .build();
@@ -108,7 +107,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
+    /// #
     /// let tf = TransformerBuilder::new()
     ///     .format(Format::SemiDynaEXE)
     ///     .description("My parameter".to_string())
@@ -147,9 +146,7 @@ where
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::Parameter;
-    /// # use std::collections::HashMap;
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = TransformerBuilder::new()
     ///     .format(Format::SemiDynaEXE)
@@ -173,7 +170,7 @@ where
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// #     /// # use jgdtrans::transformer::Parameter;
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = TransformerBuilder::new()
     ///     .format(Format::SemiDynaEXE)

@@ -18,8 +18,8 @@ use crate::mesh::{MeshTryFromError, MeshUnit};
 /// # Example
 ///
 /// ```
-/// # use jgdtrans::*;
 /// # use jgdtrans::mesh::*;
+/// #
 /// # fn wrapper() -> Option<()> {
 /// // The selection of MeshCoord depends on mesh unit
 /// // Every fifth MeshCoord is taken, when MeshUnit::Five given
@@ -92,8 +92,8 @@ impl MeshCoord {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshCoord;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
     ///
@@ -121,8 +121,8 @@ impl MeshCoord {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshCoord;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
     ///
@@ -140,8 +140,8 @@ impl MeshCoord {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshCoord;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
     ///
@@ -159,8 +159,8 @@ impl MeshCoord {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshCoord;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
     ///
@@ -180,8 +180,8 @@ impl MeshCoord {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(1, 2, 3)?;
     ///
@@ -235,8 +235,8 @@ impl MeshCoord {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let degree = 36.103774791666666;
     ///
@@ -288,8 +288,8 @@ impl MeshCoord {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let degree = 140.08785504166664;
     ///
@@ -326,8 +326,8 @@ impl MeshCoord {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let degree = 36.103774791666666;
     ///
@@ -352,8 +352,8 @@ impl MeshCoord {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let degree = 140.08785504166664;
     ///
@@ -381,8 +381,8 @@ impl MeshCoord {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// let coord = MeshCoord::try_new(0, 0, 0)?;
     ///
@@ -448,8 +448,8 @@ impl MeshCoord {
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
+    /// #
     /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
     ///     MeshCoord::try_new(0, 0, 1)?.try_next_down(&MeshUnit::One)?,

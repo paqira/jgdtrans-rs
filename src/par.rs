@@ -29,7 +29,7 @@ use crate::Transformer;
 /// ```
 /// # use std::error::Error;
 /// # use jgdtrans::*;
-/// # use jgdtrans::transformer::Parameter;
+/// #
 /// let s = r"<15 lines>
 /// # ...
 /// # ...
@@ -98,8 +98,9 @@ impl Format {
     /// # Example
     ///
     /// ```
-    /// # use std::error::Error;
-    /// # use jgdtrans::{Format, mesh::MeshUnit};
+    /// # use jgdtrans::Format;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// #
     /// assert_eq!(Format::TKY2JGD.mesh_unit(), MeshUnit::One);
     /// assert_eq!(Format::SemiDynaEXE.mesh_unit(), MeshUnit::Five);
     /// ```
@@ -267,7 +268,7 @@ where
 /// # use std::error::Error;
 /// # use jgdtrans::*;
 /// # use jgdtrans::par::Parser;
-/// # use jgdtrans::transformer::Parameter;
+/// #
 /// let s = r"<15 lines>
 /// # ...
 /// # ...
@@ -388,7 +389,7 @@ where
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// # use jgdtrans::par::Parser;
-    /// # use jgdtrans::transformer::Parameter;
+    /// #
     /// let s = r"<15 lines>
     /// # ...
     /// # ...

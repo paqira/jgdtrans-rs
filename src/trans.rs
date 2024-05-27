@@ -164,8 +164,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::Parameter;
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -207,8 +206,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::Parameter;
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -258,8 +256,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::Parameter;
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -301,8 +298,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::Parameter;
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -341,8 +337,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::Parameter;
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -382,8 +377,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::Parameter;
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -422,8 +416,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Correction};
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -480,8 +473,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Correction};
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -543,8 +535,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Correction};
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -635,8 +626,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Correction};
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -694,8 +684,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Correction};
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
@@ -752,8 +741,7 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// # use jgdtrans::transformer::{Parameter, Correction};
+    /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,

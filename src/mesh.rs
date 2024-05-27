@@ -29,6 +29,7 @@ mod unit;
 ///
 /// ```
 /// # use jgdtrans::mesh::*;
+/// #
 /// assert_eq!(is_meshcode(&54401027), true);
 /// assert_eq!(is_meshcode(&10900000), false);
 /// assert_eq!(is_meshcode(&100000000), false);

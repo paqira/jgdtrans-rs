@@ -12,6 +12,7 @@ use crate::{Format, Parameter, Transformer};
 /// # Example
 ///
 /// ```
+/// # use std::collections::HashMap;
 /// # use jgdtrans::*;
 /// #
 /// // from SemiDynaEXE2023.par
@@ -27,10 +28,10 @@ use crate::{Format, Parameter, Transformer};
 /// assert_eq!(tf.format, Format::SemiDynaEXE);
 /// assert_eq!(
 ///     tf.parameter,
-///     [
+///     HashMap::from([
 ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
 ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-///     ].into()
+///     ])
 /// );
 /// assert_eq!(tf.description, Some("My parameter".to_string()));
 /// ```
@@ -145,6 +146,7 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
@@ -155,7 +157,7 @@ where
     ///
     /// assert_eq!(
     ///     tf.parameter,
-    ///     [(54401005, Parameter::new(-0.00622, 0.01516, 0.0946)), ].into()
+    ///     HashMap::from([(54401005, Parameter::new(-0.00622, 0.01516, 0.0946)), ])
     /// );
     /// ```
     #[inline]
@@ -169,6 +171,7 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
@@ -184,12 +187,12 @@ where
     ///
     /// assert_eq!(
     ///     tf.parameter,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     /// ```
     #[inline]

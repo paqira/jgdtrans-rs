@@ -254,22 +254,23 @@ pub struct Statistics {
 /// identity transformation on altitude, and by the PatchJGD(H) par is
 /// so on latitude and longitude.
 ///
-/// There is a builder, see [`TransformerBuilder`].
+/// There is a builder, see [`TransformerBuilder`](crate::TransformerBuilder).
 ///
 /// # Example
 ///
 /// ```
+/// # use std::collections::HashMap;
 /// # use jgdtrans::*;
 /// #
 /// // from SemiDynaEXE2023.par
 /// let tf = Transformer::new(
 ///     Format::SemiDynaEXE,
-///     [
+///     HashMap::from([
 ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
 ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
 ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
 ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-///     ].into()
+///     ])
 /// );
 ///
 /// // forward transformation
@@ -314,31 +315,32 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
 
     /// Makes a [`Transformer`].
     ///
-    /// We note that there is a builder, see [`TransformerBuilder`].
+    /// We note that we provide a builder, see [`TransformerBuilder`](crate::TransformerBuilder).
     ///
     /// # Example
     ///
     /// ```
-    /// # use jgdtrans::*;
+    /// # use std::collections::HashMap;
+    /// use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// assert_eq!(tf.format, Format::SemiDynaEXE);
     /// assert_eq!(tf.format.mesh_unit(), MeshUnit::Five);
     /// assert_eq!(
     ///     tf.parameter,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///     ].into()
+    ///     ])
     /// );
     /// assert_eq!(tf.description, None);
     /// ```
@@ -390,17 +392,18 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let stats = tf.statistics();

@@ -162,18 +162,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let point = Point::new(36.10377479, 140.087855041, 2.34);
@@ -204,18 +205,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
@@ -237,8 +239,8 @@ where
     /// Returns the backward-transformed position.
     ///
     /// Returns [`Err`] when the error from the exact solution
-    /// is larger than [`Transformer::ERROR_MAX`],
-    /// that is, the result's error is suppressed under [`Transformer::ERROR_MAX`].
+    /// is larger than [`Transformer::MAX_ERROR`],
+    /// that is, the result's error is suppressed under [`Transformer::MAX_ERROR`].
     ///
     /// Notes, the error is less than 1e-9 \[deg\], which is
     /// error of the GIAJ latitude and longitude parameter.
@@ -254,18 +256,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// // In this case, no error remains
@@ -296,18 +299,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let point = Point::new(36.10377479, 140.087855041, 2.34);
@@ -335,18 +339,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
@@ -375,18 +380,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
@@ -414,18 +420,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let origin = Point::new(36.10377479, 140.087855041, 0.0);
@@ -471,18 +478,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
@@ -533,18 +541,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
@@ -624,18 +633,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let origin = Point::new(36.10377479, 140.087855041, 0.0);
@@ -682,18 +692,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
@@ -739,18 +750,19 @@ where
     /// # Example
     ///
     /// ```
+    /// # use std::collections::HashMap;
     /// # use std::error::Error;
     /// # use jgdtrans::*;
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
     ///     Format::SemiDynaEXE,
-    ///     [
+    ///     HashMap::from([
     ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
     ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
     ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
     ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ].into()
+    ///     ])
     /// );
     ///
     /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);

@@ -82,8 +82,12 @@ impl MeshNode {
     ///
     /// ```
     /// # use jgdtrans::mesh::*;
+    /// #
+    /// # fn wrapper() -> Option<()> {
     /// assert_eq!(MeshNode::MIN.latitude(), &MeshCoord::try_new(0, 0, 0)?);
     /// assert_eq!(MeshNode::MIN.longitude(), &MeshCoord::try_new(0, 0, 0)?);
+    /// # Some(())}
+    /// # fn main() {wrapper();()}
     /// ```
     pub const MIN: MeshNode = MeshNode {
         latitude: MeshCoord {
@@ -102,8 +106,12 @@ impl MeshNode {
     ///
     /// ```
     /// # use jgdtrans::mesh::*;
+    /// #
+    /// # fn wrapper() -> Option<()> {
     /// assert_eq!(MeshNode::MAX.latitude(), &MeshCoord::try_new(99, 7, 9)?);
     /// assert_eq!(MeshNode::MAX.longitude(), &MeshCoord::try_new(80, 0, 0)?);
+    /// # Some(())}
+    /// # fn main() {wrapper();()}
     /// ```
     pub const MAX: MeshNode = MeshNode {
         latitude: MeshCoord {

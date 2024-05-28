@@ -280,7 +280,7 @@ fn parse_fraction(chars: &mut Peekable<Chars>) -> Result<Option<f64>, ParseDMSEr
         return Err(ParseDMSError::with_invalid_digit());
     }
 
-    let mut s = chars.collect::<String>();
+    let mut s = chars.filter(|c| c.ne(&'_')).collect::<String>();
     if s.is_empty() {
         Ok(None)
     } else {
@@ -730,6 +730,27 @@ mod test {
             ("-123456.", DMS::try_new(Sign::Negative, 12, 34, 56, 0.0)),
             (".78", DMS::try_new(Sign::Positive, 0, 0, 0, 0.78)),
             ("-.78", DMS::try_new(Sign::Negative, 0, 0, 0, 0.78)),
+            //
+            ("1_23456", DMS::try_new(Sign::Positive, 12, 34, 56, 0.0)),
+            ("-1_23456", DMS::try_new(Sign::Negative, 12, 34, 56, 0.0)),
+            (
+                "12___3456.78",
+                DMS::try_new(Sign::Positive, 12, 34, 56, 0.78),
+            ),
+            (
+                "-12___3456.78",
+                DMS::try_new(Sign::Negative, 12, 34, 56, 0.78),
+            ),
+            (
+                "12__3__456___.",
+                DMS::try_new(Sign::Positive, 12, 34, 56, 0.0),
+            ),
+            (
+                "-12__3__456___.",
+                DMS::try_new(Sign::Negative, 12, 34, 56, 0.0),
+            ),
+            (".7___8___", DMS::try_new(Sign::Positive, 0, 0, 0, 0.78)),
+            ("-.7___8___", DMS::try_new(Sign::Negative, 0, 0, 0, 0.78)),
         ];
         for (a, e) in cases {
             assert_eq!(DMS::from_str(a).expect(a), e.expect(a), "{}", a);
@@ -737,7 +758,8 @@ mod test {
 
         // error
         let cases = [
-            "", "-", "a", "-a", ".", "-.", "..", "-..", "..0", "-..0", ".0.", "-.0.", "0..", "-0..",
+            "", "-", "a", "-a", ".", "-.", "..", "-..", "..0", "-..0", ".0.", "-.0.", "0..",
+            "-0..", "_1.0", "-0._1", "_1.", "-._1", "_.", "-_.", "._", "-._",
         ];
         for c in cases {
             assert!(DMS::from_str(c).is_err(), "{}", c);

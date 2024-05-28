@@ -43,16 +43,16 @@ pub struct MeshNode {
     pub(crate) longitude: MeshCoord,
 }
 
-impl<T, K> TryFrom<(T, K)> for MeshNode
+impl<T1, T2> TryFrom<(T1, T2)> for MeshNode
 where
-    T: TryInto<MeshCoord, Error = MeshTryFromError>,
-    K: TryInto<MeshCoord, Error = MeshTryFromError>,
+    T1: TryInto<MeshCoord, Error = MeshTryFromError>,
+    T2: TryInto<MeshCoord, Error = MeshTryFromError>,
 {
     type Error = MeshTryFromError;
 
     /// Makes a [`MeshNode`], see [`MeshNode::try_new`].
     #[inline]
-    fn try_from(value: (T, K)) -> Result<Self, Self::Error> {
+    fn try_from(value: (T1, T2)) -> Result<Self, Self::Error> {
         let latitude: MeshCoord = value.0.try_into().map_err(|_| Self::Error::new())?;
         let longitude: MeshCoord = value.1.try_into().map_err(|_| Self::Error::new())?;
         Self::try_new(latitude, longitude).ok_or(Self::Error::new())

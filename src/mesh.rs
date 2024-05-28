@@ -35,7 +35,7 @@ mod unit;
 /// assert_eq!(is_meshcode(&100000000), false);
 /// ```
 #[inline]
-pub fn is_meshcode(meshcode: &u32) -> bool {
+pub const fn is_meshcode(meshcode: &u32) -> bool {
     MeshNode::try_from_meshcode(meshcode).is_some()
 }
 

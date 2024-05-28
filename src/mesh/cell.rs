@@ -1,7 +1,7 @@
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::mesh::{MeshNode, MeshUnit};
+use crate::mesh::{MeshCoord, MeshNode, MeshUnit};
 use crate::vector::f64x2;
 use crate::Point;
 
@@ -95,7 +95,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
-    pub fn try_new(
+    pub const fn try_new(
         south_west: MeshNode,
         south_east: MeshNode,
         north_west: MeshNode,
@@ -111,15 +111,31 @@ impl MeshCell {
             return None;
         };
 
-        let lat_next = south_west.latitude.try_next_up(&mesh_unit)?;
-        let lng_next = south_west.longitude.try_next_up(&mesh_unit)?;
+        // TODO: use `?` when `feature(const_trait_impl)` stable
+        let lat_next = match south_west.latitude.try_next_up(&mesh_unit) {
+            Some(r) => r,
+            None => return None,
+        };
+        let lng_next = match south_west.longitude.try_next_up(&mesh_unit) {
+            Some(r) => r,
+            None => return None,
+        };
 
-        if lat_next.ne(&north_west.latitude)
-            || south_west.longitude.ne(&north_west.longitude)
-            || south_west.latitude.ne(&south_east.latitude)
-            || lng_next.ne(&south_east.longitude)
-            || lat_next.ne(&north_east.latitude)
-            || lng_next.ne(&north_east.longitude)
+        // TODO: use Ord::ne when `feature(const_trait_impl)` stable
+        macro_rules! ne {
+            ($left:expr, $right:expr) => {
+                $left.first != $right.first
+                    || $left.second != $right.second
+                    || $left.third != $right.third
+            };
+        }
+
+        if ne!(lat_next, north_west.latitude)
+            || ne!(south_west.longitude, north_west.longitude)
+            || ne!(south_west.latitude, south_east.latitude)
+            || ne!(lng_next, south_east.longitude)
+            || ne!(lat_next, north_east.latitude)
+            || ne!(lng_next, north_east.longitude)
         {
             return None;
         }
@@ -280,8 +296,11 @@ impl MeshCell {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
-    pub fn try_from_meshcode(meshcode: &u32, mesh_unit: MeshUnit) -> Option<Self> {
-        MeshNode::try_from_meshcode(meshcode).and_then(|sw| Self::try_from_node(sw, mesh_unit))
+    pub const fn try_from_meshcode(meshcode: &u32, mesh_unit: MeshUnit) -> Option<Self> {
+        match MeshNode::try_from_meshcode(meshcode) {
+            Some(r) => Self::try_from_node(r, mesh_unit),
+            None => None,
+        }
     }
 
     /// Makes a [`MeshCell`] that has `node` as a south-west node.
@@ -306,15 +325,41 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
-    pub fn try_from_node(node: MeshNode, mesh_unit: MeshUnit) -> Option<Self> {
-        let next_lat_coord = node.latitude.try_next_up(&mesh_unit)?;
-        let next_lng_coord = node.longitude.try_next_up(&mesh_unit)?;
+    pub const fn try_from_node(node: MeshNode, mesh_unit: MeshUnit) -> Option<Self> {
+        // TODO: use `?` when `feature(const_trait_impl)` stable
+        let Some(next_lat_coord) = node.latitude.try_next_up(&mesh_unit) else {
+            return None;
+        };
+        let Some(next_lng_coord) = node.longitude.try_next_up(&mesh_unit) else {
+            return None;
+        };
+
+        // TODO: use Clone::clone when `feature(const_trait_impl)` stable
+        macro_rules! clone {
+            ($src:expr) => {
+                MeshCoord {
+                    first: $src.first,
+                    second: $src.second,
+                    third: $src.third,
+                }
+            };
+        }
 
         // Call MeshNode::try_new
         // to check next_coord_lat
-        let south_east = MeshNode::try_new(node.latitude.clone(), next_lng_coord.clone())?;
-        let north_west = MeshNode::try_new(next_lat_coord.clone(), node.longitude.clone())?;
-        let north_east = MeshNode::try_new(next_lat_coord, next_lng_coord)?;
+        // TODO: use `?` when `feature(const_trait_impl)` stable
+        let Some(south_east) = MeshNode::try_new(clone!(node.latitude), clone!(next_lng_coord))
+        else {
+            return None;
+        };
+        let Some(north_west) = MeshNode::try_new(clone!(next_lat_coord), clone!(node.longitude))
+        else {
+            return None;
+        };
+        let Some(north_east) = MeshNode::try_new(clone!(next_lat_coord), clone!(next_lng_coord))
+        else {
+            return None;
+        };
 
         Some(Self {
             south_west: node,

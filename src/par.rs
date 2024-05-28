@@ -313,7 +313,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Par
     /// This may improve performance of transformation.
     /// See [`HashMap::with_hasher`], for detail.
     #[inline]
-    pub fn with_hasher(format: Format, hash_builder: S) -> Self {
+    pub const fn with_hasher(format: Format, hash_builder: S) -> Self {
         Self {
             format,
             hash_builder,

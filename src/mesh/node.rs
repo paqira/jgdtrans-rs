@@ -135,8 +135,14 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
-    pub fn try_new(latitude: MeshCoord, longitude: MeshCoord) -> Option<Self> {
-        if longitude.gt(&Self::MAX.longitude) {
+    pub const fn try_new(latitude: MeshCoord, longitude: MeshCoord) -> Option<Self> {
+        // TODO: use Ord::gt (longitude.gt(&Self::MAX.longitude))
+        //       when `feature(const_trait_impl)` stable
+        if longitude.first > Self::MAX.longitude.first
+            || (longitude.first == Self::MAX.longitude.first
+                && !(longitude.second == Self::MAX.longitude.second
+                    && longitude.third == Self::MAX.longitude.third))
+        {
             return None;
         };
 
@@ -282,14 +288,14 @@ impl MeshNode {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
-    pub fn try_from_meshcode(meshcode: &u32) -> Option<Self> {
+    pub const fn try_from_meshcode(meshcode: &u32) -> Option<Self> {
         #[allow(clippy::inconsistent_digit_grouping)]
-        if meshcode.ge(&10000_00_00) {
+        if *meshcode >= 10000_00_00 {
             return None;
         }
 
         macro_rules! div_rem {
-            ($n:ident, $m:literal) => {
+            ($n:expr, $m:literal) => {
                 ($n / $m, $n % $m)
             };
         }
@@ -297,7 +303,7 @@ impl MeshNode {
         // code < 10000_00_00
         // lat_first, lng_first < 100
         #[allow(clippy::inconsistent_digit_grouping)]
-        let (lat_first, rest) = div_rem!(meshcode, 100_00_00_u32);
+        let (lat_first, rest) = div_rem!(*meshcode, 100_00_00_u32);
         #[allow(clippy::inconsistent_digit_grouping)]
         let (lng_first, rest) = div_rem!(rest, 100_00_u32);
 
@@ -308,8 +314,17 @@ impl MeshNode {
         // lat_third, lng_third < 10
         let (lat_third, lng_third) = div_rem!(rest, 10_u32);
 
-        let latitude = MeshCoord::try_new(lat_first as u8, lat_second as u8, lat_third as u8)?;
-        let longitude = MeshCoord::try_new(lng_first as u8, lng_second as u8, lng_third as u8)?;
+        // TODO: use `?` when `feature(const_trait_impl)` stable
+        let latitude = match MeshCoord::try_new(lat_first as u8, lat_second as u8, lat_third as u8)
+        {
+            Some(r) => r,
+            None => return None,
+        };
+        let longitude = match MeshCoord::try_new(lng_first as u8, lng_second as u8, lng_third as u8)
+        {
+            Some(r) => r,
+            None => return None,
+        };
 
         Self::try_new(latitude, longitude)
     }

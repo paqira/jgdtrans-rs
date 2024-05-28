@@ -284,7 +284,7 @@ impl MeshCell {
     ///         MeshNode::try_from_meshcode(&54401028)?,
     ///         MeshNode::try_from_meshcode(&54401037)?,
     ///         MeshNode::try_from_meshcode(&54401038)?,
-    ///         MeshUnit::One 
+    ///         MeshUnit::One
     ///     )?
     /// );
     /// # Some(())}

@@ -16,6 +16,7 @@ impl From<&MeshUnit> for u8 {
 
 impl MeshUnit {
     #[inline]
+    #[allow(clippy::wrong_self_convention)]
     pub(crate) const fn to_u8(&self) -> u8 {
         match self {
             Self::One => 1,

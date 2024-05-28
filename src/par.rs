@@ -10,8 +10,7 @@ use std::ops::Range;
 use serde::{Deserialize, Serialize};
 
 use crate::mesh::MeshUnit;
-use crate::transformer::Parameter;
-use crate::Transformer;
+use crate::{Parameter, Transformer};
 
 /// Deserialize par-formatted [`&str`] into a [`Transformer`].
 ///

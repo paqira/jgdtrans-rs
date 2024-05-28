@@ -1,8 +1,7 @@
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::mesh::MeshNode;
-use crate::mesh::MeshUnit;
+use crate::mesh::{MeshNode, MeshUnit};
 use crate::vector::f64x2;
 use crate::Point;
 

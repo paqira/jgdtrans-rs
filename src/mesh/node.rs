@@ -1,8 +1,7 @@
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::mesh::MeshCoord;
-use crate::mesh::{MeshTryFromError, MeshUnit};
+use crate::mesh::{MeshCoord, MeshTryFromError, MeshUnit};
 use crate::Point;
 
 /// Represents mesh node, a pair of [`MeshCoord`]s.
@@ -374,7 +373,6 @@ impl MeshNode {
 }
 
 #[cfg(test)]
-
 mod test {
     use super::*;
 

@@ -505,7 +505,6 @@ impl MeshCoord {
 }
 
 #[cfg(test)]
-
 mod test {
     use super::*;
 

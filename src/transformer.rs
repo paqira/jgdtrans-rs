@@ -5,8 +5,7 @@ use std::hash::{BuildHasher, RandomState};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::par::ParseParError;
-use crate::Format;
+use crate::{Format, ParseParError};
 
 /// Improved Kahan–Babuška algorithm
 ///

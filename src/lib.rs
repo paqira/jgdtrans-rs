@@ -162,6 +162,7 @@
 //! [国土地理院コンテンツ利用規約]: https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
 #[doc(inline)]
 pub use builder::TransformerBuilder;
+#[doc(inline)]
 pub use par::ParseParError;
 #[doc(inline)]
 pub use par::{from_str, Format};

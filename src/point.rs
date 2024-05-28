@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::internal::{impl_assign_ops, impl_ops};
 use crate::mesh::{MeshCell, MeshNode, MeshUnit};
-use crate::transformer::Correction;
+use crate::Correction;
 
 /// Returns the normalized latitude into -90.0 <= and <= 90.0.
 #[inline(always)]

@@ -64,7 +64,7 @@ pub enum Sign {
 /// # use std::error::Error;
 /// use jgdtrans::dms::{DMS, Sign};
 ///
-/// let latitude = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap();
+/// let latitude = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
 ///
 /// assert_eq!(format!("{:}", latitude), "360613.58925");
 /// assert_eq!(format!("{:#}", latitude), "36°06′13.58925″");
@@ -103,9 +103,12 @@ impl Display for DMS {
     /// #
     /// # fn wrapper() -> Option<()> {
     /// let dms = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
-    /// assert_eq!(dms.to_string(), "360613.58925");
+    /// assert_eq!(format!("{}", dms), "360613.58925");
+    /// assert_eq!(format!("{:#}", dms), "36°06′13.58925″");
+    /// 
     /// let dms = DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815)?;
-    /// assert_eq!(dms.to_string(), "1400516.27815");
+    /// assert_eq!(format!("{}", dms), "1400516.27815");
+    /// assert_eq!(format!("{:#}", dms), "140°05′16.27815″");
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
@@ -179,11 +182,11 @@ impl FromStr for DMS {
     /// #
     /// assert_eq!(
     ///     "360613.58925".parse::<DMS>()?,
-    ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925).unwrap()
+    ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?
     /// );
     /// assert_eq!(
     ///     "1400516.27815".parse::<DMS>()?,
-    ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815).unwrap()
+    ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815)?
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
@@ -309,11 +312,11 @@ impl TryFrom<&f64> for DMS {
     /// #
     /// assert_eq!(
     ///     DMS::try_from(&36.103774791666666)?,
-    ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.589249999997719).unwrap()
+    ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.589249999997719)?
     /// );
     /// assert_eq!(
     ///     DMS::try_from(&140.08785504166664)?,
-    ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.2781499999141488).unwrap()
+    ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.2781499999141488)?
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```

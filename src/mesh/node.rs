@@ -14,7 +14,7 @@ use crate::Point;
 /// # use jgdtrans::*;
 /// # use jgdtrans::mesh::*;
 /// #
-/// fn wrapper() -> Option<()> {
+/// # fn wrapper() -> Option<()> {
 /// // Construct from latitude and longitude, altitude ignores
 /// let point = Point::new(36.10377479, 140.087855041, 0.0);
 /// let node = MeshNode::try_from_point(&point, &MeshUnit::One)?;
@@ -80,7 +80,11 @@ impl From<MeshNode> for u32 {
 impl MeshNode {
     /// Smallest [`MeshNode`] value.
     ///
-    /// Equals to `MeshNode { latitude: MeshCoord { first: 0, second: 0, third: 0 }, longitude: MeshCoord { first: 0, second: 0, third: 0 } }`.
+    /// ```
+    /// # use jgdtrans::mesh::*;
+    /// assert_eq!(MeshNode::MIN.latitude(), &MeshCoord::try_new(0, 0, 0)?);
+    /// assert_eq!(MeshNode::MIN.longitude(), &MeshCoord::try_new(0, 0, 0)?);
+    /// ```
     pub const MIN: MeshNode = MeshNode {
         latitude: MeshCoord {
             first: 0,
@@ -96,7 +100,11 @@ impl MeshNode {
 
     /// Largest [`MeshNode`] value.
     ///
-    /// Equals to `MeshNode { latitude: MeshCoord { first: 99, second: 7, third: 9 }, longitude: MeshCoord { first: 80, second: 0, third: 0 } }`.
+    /// ```
+    /// # use jgdtrans::mesh::*;
+    /// assert_eq!(MeshNode::MAX.latitude(), &MeshCoord::try_new(99, 7, 9)?);
+    /// assert_eq!(MeshNode::MAX.longitude(), &MeshCoord::try_new(80, 0, 0)?);
+    /// ```
     pub const MAX: MeshNode = MeshNode {
         latitude: MeshCoord {
             first: 99,
@@ -112,7 +120,7 @@ impl MeshNode {
 
     /// Makes a [`MeshNode`].
     ///
-    /// `longitude` satisfies <= `MeshCoord { first: 80, second: 0, third: 0 }`.
+    /// `longitude` satisfies <= [`MeshNode::MAX.longitude()`](MeshNode::MAX).
     ///
     /// # Errors
     ///
@@ -127,10 +135,10 @@ impl MeshNode {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
-    /// let node = MeshNode::try_new(latitude.clone(), longitude.clone())?;
+    /// let node = MeshNode::try_new(latitude, longitude)?;
     ///
-    /// assert_eq!(node.latitude(), &latitude);
-    /// assert_eq!(node.longitude(), &longitude);
+    /// assert_eq!(node.latitude(), &MeshCoord::try_new(54, 1, 2)?);
+    /// assert_eq!(node.longitude(), &MeshCoord::try_new(40, 0, 7)?);
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
@@ -163,9 +171,9 @@ impl MeshNode {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
-    /// let node = MeshNode::try_new(latitude.clone(), longitude)?;
+    /// let node = MeshNode::try_new(latitude, longitude)?;
     ///
-    /// assert_eq!(node.latitude(), &latitude);
+    /// assert_eq!(node.latitude(), &MeshCoord::try_new(54, 1, 2)?);
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
@@ -185,9 +193,9 @@ impl MeshNode {
     /// let latitude = MeshCoord::try_new(54, 1, 2)?;
     /// let longitude = MeshCoord::try_new(40, 0, 7)?;
     ///
-    /// let node = MeshNode::try_new(latitude, longitude.clone())?;
+    /// let node = MeshNode::try_new(latitude, longitude)?;
     ///
-    /// assert_eq!(node.longitude(), &longitude);
+    /// assert_eq!(node.longitude(), &MeshCoord::try_new(40, 0, 7)?);
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
@@ -233,7 +241,7 @@ impl MeshNode {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// #
-    /// fn wrapper() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// assert_eq!(
@@ -367,7 +375,7 @@ impl MeshNode {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// #
-    /// fn wrapper() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let node = MeshNode::try_new(
     ///     MeshCoord::try_new(54, 1, 2)?,
     ///     MeshCoord::try_new(40, 0, 7)?

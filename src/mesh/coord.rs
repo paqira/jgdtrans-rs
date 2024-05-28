@@ -24,14 +24,14 @@ use crate::mesh::{MeshTryFromError, MeshUnit};
 /// // The selection of MeshCoord depends on mesh unit
 /// // Every fifth MeshCoord is taken, when MeshUnit::Five given
 /// let coord = MeshCoord::try_from_latitude(&36.103774791666666, &MeshUnit::One)?;
-/// assert_eq!(coord, MeshCoord::try_new(54, 1, 2).unwrap());
+/// assert_eq!(coord, MeshCoord::try_new(54, 1, 2)?);
 /// let coord = MeshCoord::try_from_latitude(&36.103774791666666, &MeshUnit::Five)?;
-/// assert_eq!(coord, MeshCoord::try_new(54, 1, 0).unwrap());
+/// assert_eq!(coord, MeshCoord::try_new(54, 1, 0)?);
 ///
 /// // Increment/decrement (not in-place)
 /// let coord = MeshCoord::try_new(54, 1, 2)?;
-/// assert_eq!(coord.try_next_up(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 3).unwrap());
-/// assert_eq!(coord.try_next_down(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 1).unwrap());
+/// assert_eq!(coord.try_next_up(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 3)?);
+/// assert_eq!(coord.try_next_down(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 1)?);
 ///
 /// // Unit must be consistent with MeshCoord,
 /// // otherwise it returns None.
@@ -242,11 +242,11 @@ impl MeshCoord {
     ///
     /// assert_eq!(
     ///     MeshCoord::try_from_latitude(&degree, &MeshUnit::One)?,
-    ///     MeshCoord::try_new(54, 1, 2).unwrap()
+    ///     MeshCoord::try_new(54, 1, 2)?
     /// );
     /// assert_eq!(
     ///     MeshCoord::try_from_latitude(&degree, &MeshUnit::Five)?,
-    ///     MeshCoord::try_new(54, 1, 0).unwrap()
+    ///     MeshCoord::try_new(54, 1, 0)?
     /// );
     /// # Some(())}
     /// # fn main() {wrapper();()}
@@ -295,11 +295,11 @@ impl MeshCoord {
     ///
     /// assert_eq!(
     ///     MeshCoord::try_from_longitude(&degree, &MeshUnit::One)?,
-    ///     MeshCoord::try_new(40, 0, 7).unwrap()
+    ///     MeshCoord::try_new(40, 0, 7)?
     /// );
     /// assert_eq!(
     ///     MeshCoord::try_from_longitude(&degree, &MeshUnit::Five)?,
-    ///     MeshCoord::try_new(40, 0, 5).unwrap()
+    ///     MeshCoord::try_new(40, 0, 5)?
     /// );
     /// # Some(())}
     /// # fn main() {wrapper();()}
@@ -388,11 +388,11 @@ impl MeshCoord {
     ///
     /// assert_eq!(
     ///     coord.try_next_up(&MeshUnit::One)?,
-    ///     MeshCoord::try_new(0, 0, 1).unwrap()
+    ///     MeshCoord::try_new(0, 0, 1)?
     /// );
     /// assert_eq!(
     ///     coord.try_next_up(&MeshUnit::Five)?,
-    ///     MeshCoord::try_new(0, 0, 5).unwrap()
+    ///     MeshCoord::try_new(0, 0, 5)?
     /// );
     /// # Some(())}
     /// # fn main() {wrapper();()}
@@ -453,11 +453,11 @@ impl MeshCoord {
     /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
     ///     MeshCoord::try_new(0, 0, 1)?.try_next_down(&MeshUnit::One)?,
-    ///     MeshCoord::try_new(0, 0, 0).unwrap()
+    ///     MeshCoord::try_new(0, 0, 0)?
     /// );
     /// assert_eq!(
     ///     MeshCoord::try_new(0, 0, 5)?.try_next_down(&MeshUnit::Five)?,
-    ///     MeshCoord::try_new(0, 0, 0).unwrap()
+    ///     MeshCoord::try_new(0, 0, 0)?
     /// );
     /// # Some(())}
     /// # fn main() {wrapper();()}

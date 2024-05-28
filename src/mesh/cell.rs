@@ -81,16 +81,16 @@ impl MeshCell {
     /// # use jgdtrans::mesh::*;
     /// #
     /// # fn wrapper() -> Option<()> {
-    /// let sw = MeshNode::try_from_meshcode(&54401027)?;
-    /// let se = MeshNode::try_from_meshcode(&54401028)?;
-    /// let nw = MeshNode::try_from_meshcode(&54401037)?;
-    /// let ne = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(sw.clone(), se.clone(), nw.clone(), ne.clone(), MeshUnit::One)?;
+    /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
+    /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
+    /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
+    /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
+    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
-    /// assert_eq!(cell.south_west(), &sw);
-    /// assert_eq!(cell.south_east(), &se);
-    /// assert_eq!(cell.north_west(), &nw);
-    /// assert_eq!(cell.north_east(), &ne);
+    /// assert_eq!(cell.south_west(), &MeshNode::try_from_meshcode(&54401027)?);
+    /// assert_eq!(cell.south_east(), &MeshNode::try_from_meshcode(&54401028)?);
+    /// assert_eq!(cell.north_west(), &MeshNode::try_from_meshcode(&54401037)?);
+    /// assert_eq!(cell.north_east(), &MeshNode::try_from_meshcode(&54401038)?);
     /// assert_eq!(cell.mesh_unit(), &MeshUnit::One);
     /// # Some(())}
     /// # fn main() {wrapper();()}
@@ -157,13 +157,13 @@ impl MeshCell {
     /// # use jgdtrans::mesh::*;
     /// #
     /// # fn wrapper() -> Option<()> {
-    /// let sw = MeshNode::try_from_meshcode(&54401027)?;
-    /// let se = MeshNode::try_from_meshcode(&54401028)?;
-    /// let nw = MeshNode::try_from_meshcode(&54401037)?;
-    /// let ne = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(sw.clone(), se, nw, ne, MeshUnit::One)?;
+    /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
+    /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
+    /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
+    /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
+    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
-    /// assert_eq!(cell.south_west(), &sw);
+    /// assert_eq!(cell.south_west(), &MeshNode::try_from_meshcode(&54401027)?);
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
@@ -184,9 +184,9 @@ impl MeshCell {
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
     /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(south_west, south_east.clone(), north_west, north_east, MeshUnit::One)?;
+    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
-    /// assert_eq!(cell.south_east(), &south_east);
+    /// assert_eq!(cell.south_east(), &MeshNode::try_from_meshcode(&54401028)?);
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
@@ -207,9 +207,9 @@ impl MeshCell {
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
     /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(south_west, south_east, north_west.clone(), north_east, MeshUnit::One)?;
+    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
-    /// assert_eq!(cell.north_west(), &north_west);
+    /// assert_eq!(cell.north_west(), &MeshNode::try_from_meshcode(&54401037)?);
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
@@ -230,9 +230,9 @@ impl MeshCell {
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
     /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east.clone(), MeshUnit::One)?;
+    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
-    /// assert_eq!(cell.north_east(), &north_east);
+    /// assert_eq!(cell.north_east(), &MeshNode::try_from_meshcode(&54401038)?);
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
@@ -280,16 +280,11 @@ impl MeshCell {
     /// assert_eq!(
     ///     MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?,
     ///     MeshCell::try_new(
-    ///         // south_west
     ///         MeshNode::try_from_meshcode(&54401027)?,
-    ///         // south_east
     ///         MeshNode::try_from_meshcode(&54401028)?,
-    ///         // north_west
     ///         MeshNode::try_from_meshcode(&54401037)?,
-    ///         // north_east
     ///         MeshNode::try_from_meshcode(&54401038)?,
-    ///         // mesh_unit
-    ///         MeshUnit::One
+    ///         MeshUnit::One 
     ///     )?
     /// );
     /// # Some(())}

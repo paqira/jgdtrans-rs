@@ -64,7 +64,7 @@ jobs:
   bench:
     runs-on: ubuntu-latest
     env:
-      RUSTFLAGS: -C target-feature=native
+      RUSTFLAGS: -C target-cpu=native
     steps:
       - name: Checkout
         uses: actions/checkout@v4

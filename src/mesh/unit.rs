@@ -10,13 +10,13 @@ pub enum MeshUnit {
 impl From<&MeshUnit> for u8 {
     #[inline]
     fn from(value: &MeshUnit) -> Self {
-        value.as_u8()
+        value.to_u8()
     }
 }
 
 impl MeshUnit {
     #[inline]
-    pub(crate) const fn as_u8(&self) -> u8 {
+    pub(crate) const fn to_u8(&self) -> u8 {
         match self {
             Self::One => 1,
             Self::Five => 5,
@@ -31,7 +31,7 @@ impl serde::Serialize for MeshUnit {
     where
         S: serde::Serializer,
     {
-        serializer.serialize_u8(self.as_u8())
+        serializer.serialize_u8(self.to_u8())
     }
 }
 

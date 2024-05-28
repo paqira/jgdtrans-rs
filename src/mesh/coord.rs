@@ -194,7 +194,7 @@ impl MeshCoord {
     pub const fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
         match mesh_unit {
             MeshUnit::One => true,
-            MeshUnit::Five => (self.third % mesh_unit.as_u8()) == 0,
+            MeshUnit::Five => (self.third % mesh_unit.to_u8()) == 0,
         }
     }
 
@@ -433,7 +433,7 @@ impl MeshCoord {
             Some(Self {
                 first: self.first,
                 second: self.second,
-                third: self.third + mesh_unit.as_u8(),
+                third: self.third + mesh_unit.to_u8(),
             })
         }
     }
@@ -498,7 +498,7 @@ impl MeshCoord {
             Some(Self {
                 first: self.first,
                 second: self.second,
-                third: self.third - mesh_unit.as_u8(),
+                third: self.third - mesh_unit.to_u8(),
             })
         }
     }

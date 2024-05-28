@@ -111,7 +111,7 @@ impl MeshCode {
         } else {
             Self(
                 self.0,
-                (self.1 .0, self.1 .1, self.1 .2 + mesh_unit.as_u8()),
+                (self.1 .0, self.1 .1, self.1 .2 + mesh_unit.to_u8()),
             )
         }
     }
@@ -132,7 +132,7 @@ impl MeshCode {
             }
         } else {
             Self(
-                (self.0 .0, self.0 .1, self.0 .2 + mesh_unit.as_u8()),
+                (self.0 .0, self.0 .1, self.0 .2 + mesh_unit.to_u8()),
                 self.1,
             )
         }

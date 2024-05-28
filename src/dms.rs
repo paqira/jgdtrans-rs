@@ -61,28 +61,29 @@ pub enum Sign {
 /// # Example
 ///
 /// ```
-/// # use std::error::Error;
-/// use jgdtrans::dms::{DMS, Sign};
-///
+/// # use jgdtrans::dms::*;
+/// #
+/// # fn wrapper() -> Option<()> {
 /// let latitude = DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?;
 ///
 /// assert_eq!(format!("{:}", latitude), "360613.58925");
 /// assert_eq!(format!("{:#}", latitude), "36°06′13.58925″");
 ///
 /// // Construct from &str
-/// assert_eq!(latitude, "360613.58925".parse::<DMS>()?);
+/// assert_eq!("360613.58925".parse::<DMS>().unwrap(), latitude);
 ///
 /// // Convert into DD notation (f64)
 /// assert_eq!(latitude.to_degree(), 36.103774791666666);
 ///
 /// // Construct from DD notation (f64)
-/// let latitude = DMS::try_from(&36.103774791666666)?;
+/// let latitude = DMS::try_from(&36.103774791666666).unwrap();
 /// assert_eq!(latitude.sign(), &Sign::Plus);
 /// assert_eq!(latitude.degree(), &36);
 /// assert_eq!(latitude.minute(), &6);
 /// assert_eq!(latitude.second(), &13);
 /// assert!((0.58925 - latitude.fract()).abs() < 1e-10);
-/// # Ok::<(), Box<dyn Error>>(())
+/// # Some(())}
+/// # fn main() {wrapper();()}
 /// ```
 #[derive(Debug, PartialEq, Clone)]
 pub struct DMS {
@@ -177,18 +178,19 @@ impl FromStr for DMS {
     /// # Example
     ///
     /// ```
-    /// # use std::error::Error;
     /// # use jgdtrans::dms::*;
     /// #
+    /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
-    ///     "360613.58925".parse::<DMS>()?,
-    ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?
+    ///     "360613.58925".parse::<DMS>(),
+    ///     Ok(DMS::try_new(Sign::Plus, 36, 6, 13, 0.58925)?)
     /// );
     /// assert_eq!(
-    ///     "1400516.27815".parse::<DMS>()?,
-    ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815)?
+    ///     "1400516.27815".parse::<DMS>(),
+    ///     Ok(DMS::try_new(Sign::Plus, 140, 5, 16, 0.27815)?)
     /// );
-    /// # Ok::<(), Box<dyn Error>>(())
+    /// # Some(())}
+    /// # fn main() {wrapper();()}
     /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut chars = s.chars().peekable();
@@ -307,18 +309,19 @@ impl TryFrom<&f64> for DMS {
     /// # Example
     ///
     /// ```
-    /// # use std::error::Error;
     /// # use jgdtrans::dms::*;
     /// #
+    /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
-    ///     DMS::try_from(&36.103774791666666)?,
-    ///     DMS::try_new(Sign::Plus, 36, 6, 13, 0.589249999997719)?
+    ///     DMS::try_from(&36.103774791666666),
+    ///     Ok(DMS::try_new(Sign::Plus, 36, 6, 13, 0.589249999997719)?)
     /// );
     /// assert_eq!(
-    ///     DMS::try_from(&140.08785504166664)?,
-    ///     DMS::try_new(Sign::Plus, 140, 5, 16, 0.2781499999141488)?
+    ///     DMS::try_from(&140.08785504166664),
+    ///     Ok(DMS::try_new(Sign::Plus, 140, 5, 16, 0.2781499999141488)?)
     /// );
-    /// # Ok::<(), Box<dyn Error>>(())
+    /// # Some(())}
+    /// # fn main() {wrapper();()}
     /// ```
     fn try_from(value: &f64) -> Result<Self, Self::Error> {
         if value.is_nan() {

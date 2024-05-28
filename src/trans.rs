@@ -838,13 +838,13 @@ where
 ///
 /// This error is used as the error type for the [`Transformer::forward`],
 /// [`Transformer::forward_corr`] etc.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct TransformError {
     kind: TransformErrorKind,
 }
 
 /// An error kind used by [`TransformError`].
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum TransformErrorKind {
     ParameterNotFound {
         /// Meshcode where the parameter not found
@@ -857,7 +857,7 @@ pub enum TransformErrorKind {
 }
 
 /// An error corner of mesh used by [`TransformErrorKind`].
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum MeshCellCorner {
     NorthWest,
     NorthEast,

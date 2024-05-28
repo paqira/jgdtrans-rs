@@ -44,7 +44,7 @@ pub const fn is_meshcode(meshcode: &u32) -> bool {
 //
 
 /// An error on the [`TryFrom`] trait of [`mesh`](mod@self) module.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct MeshTryFromError;
 
 impl MeshTryFromError {

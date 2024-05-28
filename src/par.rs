@@ -456,7 +456,7 @@ where
 /// An error which can be returned on parsing par-formatted text.
 ///
 /// This error is used as the error type for the [`from_str`].
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct ParseParError {
     /// Error kind
     kind: ParseParErrorKind,
@@ -471,7 +471,7 @@ pub struct ParseParError {
 }
 
 /// An error kind of [`ParseParError`].
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ParseParErrorKind {
     Header,
     ColumnNotFound,
@@ -480,7 +480,7 @@ pub enum ParseParErrorKind {
 }
 
 /// A column that error occurs.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Column {
     Meshcode,
     Latitude,

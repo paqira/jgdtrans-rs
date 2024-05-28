@@ -191,6 +191,10 @@ impl FromStr for DMS {
     /// # fn main() {wrapper();()}
     /// ```
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.is_empty() {
+            return Err(Self::Err::with_empty());
+        };
+
         let mut chars = s.chars().peekable();
 
         #[allow(clippy::if_same_then_else)]
@@ -211,7 +215,7 @@ impl FromStr for DMS {
 
         match integer {
             None => match fraction {
-                None => Err(Self::Err::with_empty()),
+                None => Err(Self::Err::with_invalid_digit()),
                 Some(fract) => Ok(Self {
                     sign,
                     degree: 0,

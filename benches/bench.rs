@@ -8,7 +8,7 @@ use test::Bencher;
 
 use jgdtrans::*;
 
-const TAKE: usize = 10_000;
+const OPS: usize = 1000;
 const POINTS: [Point; 50] = [
     // 1	北海道	札幌市
     Point::new(43.064310, 141.346879, 0.0),
@@ -119,9 +119,10 @@ macro_rules! impl_bench {
         fn $m(b: &mut Bencher) {
             let s = fs::read_to_string("benches/SemiDyna2023.par")
                 .expect("file not found 'SemiDyna2023.par'");
-            let tf = Transformer::from_str(&s, Format::SemiDynaEXE).unwrap();
+            let tf = Transformer::from_str(&s, Format::SemiDynaEXE)
+                .expect("fail to parse 'SemiDyna2023.par'");
 
-            let ps = POINTS.iter().cycle().take(TAKE).collect::<Vec<_>>();
+            let ps = POINTS.iter().cycle().take(OPS).collect::<Vec<_>>();
 
             b.iter(|| {
                 let _ = ps.iter().map(|p| tf.$m(p).unwrap()).collect::<Vec<_>>();
@@ -132,9 +133,10 @@ macro_rules! impl_bench {
         fn $n(b: &mut Bencher) {
             let s = fs::read_to_string("benches/SemiDyna2023.par")
                 .expect("file not found 'SemiDyna2023.par'");
-            let tf = Transformer::from_str(&s, Format::SemiDynaEXE).unwrap();
+            let tf = Transformer::from_str(&s, Format::SemiDynaEXE)
+                .expect("fail to parse 'SemiDyna2023.par'");
 
-            let ps = POINTS.iter().cycle().take(TAKE).collect::<Vec<_>>();
+            let ps = POINTS.iter().cycle().take(OPS).collect::<Vec<_>>();
 
             b.iter(|| {
                 let _ = ps.iter().map(|p| tf.$m(p).unwrap()).collect::<Vec<_>>();

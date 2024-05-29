@@ -1505,6 +1505,24 @@ mod test {
                     })
                     .collect::<Vec<_>>();
             }
+
+            #[test]
+            fn test_identity() {
+                // test transformation not corr
+
+                let tf = TransformerBuilder::new()
+                    .format(Format::PatchJGD)
+                    .parameters(param::PatchJGD)
+                    .build();
+
+                let _ = origin::PatchJGD
+                    .iter()
+                    .map(|o| {
+                        assert_eq!(&tf.backward(&tf.forward(o).unwrap()).unwrap(), o);
+                        assert_eq!(&tf.forward(&tf.backward(o).unwrap()).unwrap(), o);
+                    })
+                    .collect::<Vec<_>>();
+            }
         }
 
         #[allow(non_snake_case)]
@@ -1623,6 +1641,24 @@ mod test {
                     .map(|(o, e)| {
                         assert_2ulp!(tf.backward_corr(o).unwrap(), e);
                         assert_2ulp!(tf.unchecked_backward_corr(o).unwrap(), e);
+                    })
+                    .collect::<Vec<_>>();
+            }
+
+            #[test]
+            fn test_identity() {
+                // test transformation not corr
+
+                let tf = TransformerBuilder::new()
+                    .format(Format::TKY2JGD)
+                    .parameters(param::TKY2JGD)
+                    .build();
+
+                let _ = origin::TKY2JGD
+                    .iter()
+                    .map(|o| {
+                        assert_eq!(&tf.backward(&tf.forward(o).unwrap()).unwrap(), o);
+                        assert_eq!(&tf.forward(&tf.backward(o).unwrap()).unwrap(), o);
                     })
                     .collect::<Vec<_>>();
             }

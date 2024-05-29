@@ -100,6 +100,9 @@ impl Parameter {
     /// Returns √𝑙𝑎𝑡𝑖𝑡𝑢𝑑𝑒² + 𝑙𝑜𝑛𝑔𝑖𝑡𝑢𝑑𝑒².
     #[inline]
     pub fn horizontal(&self) -> f64 {
+        // here and [`Correction::horizontal`] are
+        // only parts that use not an exact operation
+        // defined by IEEE 754, [`f64::hypot`].
         f64::hypot(self.latitude, self.longitude)
     }
 }
@@ -156,6 +159,9 @@ impl Correction {
     /// Returns √𝑙𝑎𝑡𝑖𝑡𝑢𝑑𝑒² + 𝑙𝑜𝑛𝑔𝑖𝑡𝑢𝑑𝑒².
     #[inline]
     pub fn horizontal(&self) -> f64 {
+        // here and [`Parameter::horizontal`] are
+        // only parts that use not an exact operation
+        // defined by IEEE 754, [`f64::hypot`].
         f64::hypot(self.latitude, self.longitude)
     }
 }
@@ -649,8 +655,9 @@ mod test {
                     max: Some(0.10374)
                 }
             );
-            // The difference comes from libc?
-            // It's up to 1 ulp.
+
+            // Notes, horizontal (f64::hypot)
+            // is an only non-exact operation in jgdtrans.
             assert_eq!(
                 stats.horizontal,
                 StatisticData {

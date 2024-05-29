@@ -61,16 +61,3 @@ jobs:
 #         remove --tests after cargo passes RUSTFLAGS to doctest,
 #         currently the doctest with `fma` fails because `cargo` does not pass RUSTFLAGS to doctest
         run: cargo test --no-default-features --tests -F serde
-  bench:
-    runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: -C target-cpu=native
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@nightly
-      - name: Cache Rust
-        uses: Swatinem/rust-cache@v2
-      - name: Bench
-        run: cargo bench

@@ -1,0 +1,22 @@
+name: Bench
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -C target-cpu=native
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+      - name: Bench
+        run: cargo bench

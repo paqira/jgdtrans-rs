@@ -963,13 +963,14 @@ mod test {
 
         #[test]
         #[allow(non_snake_case)]
-        fn test_on_TKY2JGD() {
+        fn test_vs_TKY2JGD_web_app() {
+            // v.s. web
+
             let tf = TransformerBuilder::new()
                 .format(Format::TKY2JGD)
                 .parameters(TKY2JGD)
                 .build();
 
-            // v.s. web
             const DELTA: f64 = 0.00000001;
 
             // 国土地理院
@@ -989,13 +990,14 @@ mod test {
 
         #[test]
         #[allow(non_snake_case)]
-        fn test_on_PatchJGD_HV() {
+        fn test_vs_PatchJGD_HV_web_app() {
+            // v.s. web
+
             let tf = TransformerBuilder::new()
                 .format(Format::PatchJGD_HV)
                 .parameters(PatchJGD_HV)
                 .build();
 
-            // v.s. web
             const DELTA: f64 = 0.00000001;
 
             // 金華山黄金山神社
@@ -1014,13 +1016,14 @@ mod test {
 
         #[test]
         #[allow(non_snake_case)]
-        fn test_on_SemiDynaEXE() {
+        fn test_vs_SemiDynaEXE_web_app() {
+            // v.s. web
+
             let tf = TransformerBuilder::new()
                 .format(Format::SemiDynaEXE)
                 .parameters(SemiDynaEXE)
                 .build();
 
-            // v.s. web
             const DELTA: f64 = 0.00000001;
 
             // 国土地理院
@@ -1039,13 +1042,14 @@ mod test {
 
         #[test]
         #[allow(non_snake_case)]
-        fn test_on_SemiDynaEXE_exact() {
+        fn test_vs_SemiDynaEXE_exact_result() {
+            // v.s. exact (decimal trans)
+
             let tf = TransformerBuilder::new()
                 .format(Format::SemiDynaEXE)
                 .parameters(SemiDynaEXE)
                 .build();
 
-            // v.s. exact
             const DELTA: f64 = 0.0000000000001;
 
             // 国土地理院
@@ -1063,6 +1067,8 @@ mod test {
 
         #[test]
         fn test_unchecked_forward_and_corr() {
+            // unchecked should return same result as checked
+
             // TKY2JGD
             let tf = TransformerBuilder::new()
                 .format(Format::TKY2JGD)
@@ -1098,6 +1104,8 @@ mod test {
 
         #[test]
         fn test_unchecked_backward_compat_and_corr() {
+            // unchecked should return same result as checked
+
             // TKY2JGD
             let tf = TransformerBuilder::new()
                 .format(Format::TKY2JGD)
@@ -1133,6 +1141,8 @@ mod test {
 
         #[test]
         fn test_unchecked_backward_checked_and_corr() {
+            // unchecked should return same result as checked
+
             // TKY2JGD
             let tf = TransformerBuilder::new()
                 .format(Format::TKY2JGD)
@@ -1167,11 +1177,30 @@ mod test {
         }
     }
 
-    mod test_many_points {
+    // to detect regression when change codes
+    mod test_sampling {
         use super::*;
 
-        // maximally 2 bits error (by TKY2JGD)
-        macro_rules! assert_near {
+        macro_rules! assert_1ulp {
+            ($a:expr, $e:expr) => {
+                assert!(
+                    $e.latitude.next_down() <= $a.latitude && $a.latitude <= $e.latitude.next_up(),
+                    "e: 0x{:>08x}, a: 0x{:>08x}",
+                    $e.latitude.to_bits(),
+                    $a.latitude.to_bits()
+                );
+                assert!(
+                    $e.longitude.next_down() <= $a.longitude
+                        && $a.longitude <= $e.longitude.next_up(),
+                    "e: 0x{:>08x}, a: 0x{:>08x}",
+                    $e.longitude.to_bits(),
+                    $a.longitude.to_bits()
+                );
+                assert_eq!($a.altitude, $e.altitude);
+            };
+        }
+
+        macro_rules! assert_2ulp {
             ($a:expr, $e:expr) => {
                 assert!(
                     $e.latitude.next_down().next_down() <= $a.latitude
@@ -1191,7 +1220,9 @@ mod test {
             };
         }
 
+        // maximally distorted area
         mod param {
+            // 硫黄島
             pub(crate) const TKY2JGD: [(u32, (f64, f64, f64)); 42] = [
                 (37411203, (-9.52837, -5.16455, 0.0)),
                 (37411204, (-9.48474, -5.166, 0.0)),
@@ -1237,6 +1268,7 @@ mod test {
                 (37411287, (-9.39669, -5.2141, 0.0)),
             ];
 
+            // 金剛寺
             #[allow(non_upper_case_globals)]
             pub(crate) const PatchJGD: [(u32, (f64, f64, f64)); 20] = [
                 (57413434, (-0.05924, 0.22287, 0.0)),
@@ -1262,6 +1294,7 @@ mod test {
             ];
         }
 
+        // randomly sampling points
         mod origin {
             use super::*;
 
@@ -1358,8 +1391,7 @@ mod test {
             use super::*;
 
             #[test]
-
-            fn test_forward_corr() {
+            fn test_forward_corr_and_unchecked_one() {
                 let tf = TransformerBuilder::new()
                     .format(Format::PatchJGD)
                     .parameters(param::PatchJGD)
@@ -1410,72 +1442,14 @@ mod test {
                         Correction::new(-0.00001677525767741847, 0.00006253105068688413, 0.0),
                     ])
                     .map(|(o, e)| {
-                        let r = tf.forward_corr(o).unwrap();
-                        assert_near!(e, r);
+                        assert_1ulp!(tf.forward_corr(o).unwrap(), e);
+                        assert_1ulp!(tf.unchecked_forward_corr(o).unwrap(), e);
                     })
                     .collect::<Vec<_>>();
             }
 
             #[test]
-            fn test_unchecked_forward_corr() {
-                let tf = TransformerBuilder::new()
-                    .format(Format::PatchJGD)
-                    .parameters(param::PatchJGD)
-                    .build();
-
-                let _ = origin::PatchJGD
-                    .iter()
-                    .zip([
-                        Correction::new(-0.0000168814518646117, 0.0000626237846961288, 0.0),
-                        Correction::new(-0.000016838096116009317, 0.00006258622379442354, 0.0),
-                        Correction::new(-0.0000167293648066435, 0.00006245235772614292, 0.0),
-                        Correction::new(-0.0000167927912747071, 0.00006249523883252357, 0.0),
-                        Correction::new(-0.000016933832772111427, 0.00006267005867786031, 0.0),
-                        Correction::new(-0.000016809693706255367, 0.00006251870596206315, 0.0),
-                        Correction::new(-0.000016786470254049566, 0.00006246228557241947, 0.0),
-                        Correction::new(-0.00001685044470202184, 0.00006259677006272436, 0.0),
-                        Correction::new(-0.000016691037655080527, 0.00006237164728172894, 0.0),
-                        Correction::new(-0.000016870260269578045, 0.00006258535452990637, 0.0),
-                        Correction::new(-0.000016791839127120513, 0.0000625602113400046, 0.0),
-                        Correction::new(-0.00001678754837251092, 0.00006250049437271753, 0.0),
-                        Correction::new(-0.000016767471766493994, 0.0000624742742034364, 0.0),
-                        Correction::new(-0.000016824880426055778, 0.00006255569386298114, 0.0),
-                        Correction::new(-0.000016852429524480752, 0.00006253122084345232, 0.0),
-                        Correction::new(-0.00001674855576375182, 0.00006249431948380992, 0.0),
-                        Correction::new(-0.00001671782238220309, 0.00006238012426291427, 0.0),
-                        Correction::new(-0.00001687330504669575, 0.00006258304674313023, 0.0),
-                        Correction::new(-0.00001692386752743053, 0.00006262716305232194, 0.0),
-                        Correction::new(-0.000016841109776999462, 0.00006258888810224698, 0.0),
-                        Correction::new(-0.000016774827854804727, 0.00006247454551726284, 0.0),
-                        Correction::new(-0.000017006381402755156, 0.00006272317286004789, 0.0),
-                        Correction::new(-0.00001692731399584028, 0.00006264526695962974, 0.0),
-                        Correction::new(-0.000016753104465902736, 0.00006250187962000352, 0.0),
-                        Correction::new(-0.000016744800638686603, 0.00006246953387593844, 0.0),
-                        Correction::new(-0.00001670299149631201, 0.00006238494588595516, 0.0),
-                        Correction::new(-0.000016957612292787124, 0.0000626752048905101, 0.0),
-                        Correction::new(-0.00001685767837297073, 0.00006258097939396365, 0.0),
-                        Correction::new(-0.000016979963121522515, 0.00006269725941925794, 0.0),
-                        Correction::new(-0.000016723363460589664, 0.00006237926078210378, 0.0),
-                        Correction::new(-0.000016829392082136185, 0.00006258163147387824, 0.0),
-                        Correction::new(-0.000016880521445054468, 0.00006261216560671094, 0.0),
-                        Correction::new(-0.000016997446168531008, 0.00006271847443216636, 0.0),
-                        Correction::new(-0.000016922602155685813, 0.00006265632174901151, 0.0),
-                        Correction::new(-0.000016866535038538767, 0.00006261256576411896, 0.0),
-                        Correction::new(-0.000016673410292616015, 0.00006233677887217235, 0.0),
-                        Correction::new(-0.000016937633047476755, 0.00006266771732002265, 0.0),
-                        Correction::new(-0.000016826912478390445, 0.000062541138292727, 0.0),
-                        Correction::new(-0.00001690476217566123, 0.00006261990205433083, 0.0),
-                        Correction::new(-0.00001677525767741847, 0.00006253105068688413, 0.0),
-                    ])
-                    .map(|(o, e)| {
-                        let r = tf.unchecked_forward_corr(o).unwrap();
-                        assert_near!(e, r);
-                    })
-                    .collect::<Vec<_>>();
-            }
-
-            #[test]
-            fn test_backward_corr() {
+            fn test_backward_corr_and_unchecked_one() {
                 let tf = TransformerBuilder::new()
                     .format(Format::PatchJGD)
                     .parameters(param::PatchJGD)
@@ -1526,66 +1500,8 @@ mod test {
                         Correction::new(0.00001677462065901357, -0.00006252935123792957, 0.0),
                     ])
                     .map(|(o, e)| {
-                        let r = tf.backward_corr(o).unwrap();
-                        assert_near!(e, r);
-                    })
-                    .collect::<Vec<_>>();
-            }
-
-            #[test]
-            fn test_unchecked_backward_corr() {
-                let tf = TransformerBuilder::new()
-                    .format(Format::PatchJGD)
-                    .parameters(param::PatchJGD)
-                    .build();
-
-                let _ = origin::PatchJGD
-                    .iter()
-                    .zip([
-                        Correction::new(0.000016881033241320934, -0.00006262347752156904, 0.0),
-                        Correction::new(0.000016837661135768986, -0.00006258578602582213, 0.0),
-                        Correction::new(0.000016728785230206754, -0.00006245106143461017, 0.0),
-                        Correction::new(0.000016792180791664592, -0.00006249372206713576, 0.0),
-                        Correction::new(0.000016933400794840183, -0.000062669644398795, 0.0),
-                        Correction::new(0.00001680908582386808, -0.00006251720785453753, 0.0),
-                        Correction::new(0.000016786051380071508, -0.00006246199104980874, 0.0),
-                        Correction::new(0.000016850060350305607, -0.00006259671684473942, 0.0),
-                        Correction::new(0.000016690462698007165, -0.0000623703766068834, 0.0),
-                        Correction::new(0.000016869801405394748, -0.00006258467018824143, 0.0),
-                        Correction::new(0.00001679141240396685, -0.00006255984084091554, 0.0),
-                        Correction::new(0.00001678714430654925, -0.00006250030108892114, 0.0),
-                        Correction::new(0.00001676706545687047, -0.00006247406481154251, 0.0),
-                        Correction::new(0.00001682426829999102, -0.00006255416739118312, 0.0),
-                        Correction::new(0.000016851839191586866, -0.00006252978771918586, 0.0),
-                        Correction::new(0.00001674797881609922, -0.0000624930400893337, 0.0),
-                        Correction::new(0.000016717405241115722, -0.00006237984257960845, 0.0),
-                        Correction::new(0.00001687284381628209, -0.0000625823479451207, 0.0),
-                        Correction::new(0.00001692340311051274, -0.00006262644467222453, 0.0),
-                        Correction::new(0.00001684067538709154, -0.00006258845504137657, 0.0),
-                        Correction::new(0.000016774415964032874, -0.00006247429667354218, 0.0),
-                        Correction::new(0.00001700599085834298, -0.00006272288423664311, 0.0),
-                        Correction::new(0.000016926856811114192, -0.00006264459264402127, 0.0),
-                        Correction::new(0.000016752721099067026, -0.00006250183317576118, 0.0),
-                        Correction::new(0.000016744164989722545, -0.00006246784206592653, 0.0),
-                        Correction::new(0.00001670257867884075, -0.00006238468935680436, 0.0),
-                        Correction::new(0.00001695715439834229, -0.00006267452620205597, 0.0),
-                        Correction::new(0.00001685721873575516, -0.0000625803427805971, 0.0),
-                        Correction::new(0.0000169795042909641, -0.00006269657502812293, 0.0),
-                        Correction::new(0.00001672294467487681, -0.00006237896552734444, 0.0),
-                        Correction::new(0.000016828960173364332, -0.00006258121852575973, 0.0),
-                        Correction::new(0.000016880071424597896, -0.00006261160653720872, 0.0),
-                        Correction::new(0.000016997055584293922, -0.00006271820045696052, 0.0),
-                        Correction::new(0.000016922229050867552, -0.00006265620665297306, 0.0),
-                        Correction::new(0.000016866115233096053, -0.00006261224933610758, 0.0),
-                        Correction::new(0.00001667284342270606, -0.00006233555586070583, 0.0),
-                        Correction::new(0.000016937182655330687, -0.00006266708429165561, 0.0),
-                        Correction::new(0.000016826507161269037, -0.00006254093642788777, 0.0),
-                        Correction::new(0.00001690430363619336, -0.00006261921955197253, 0.0),
-                        Correction::new(0.00001677462065901357, -0.00006252935123792957, 0.0),
-                    ])
-                    .map(|(o, e)| {
-                        let r = tf.unchecked_backward_corr(o).unwrap();
-                        assert_near!(e, r);
+                        assert_1ulp!(tf.backward_corr(o).unwrap(), e);
+                        assert_1ulp!(tf.unchecked_backward_corr(o).unwrap(), e);
                     })
                     .collect::<Vec<_>>();
             }
@@ -1596,7 +1512,7 @@ mod test {
             use super::*;
 
             #[test]
-            fn test_forward_corr() {
+            fn test_forward_corr_and_unchecked_one() {
                 let tf = TransformerBuilder::new()
                     .format(Format::TKY2JGD)
                     .parameters(param::TKY2JGD)
@@ -1647,72 +1563,14 @@ mod test {
                         Correction::new(-0.002602620028747191, -0.001439230302737092, 0.0),
                     ])
                     .map(|(o, e)| {
-                        let r = tf.forward_corr(o).unwrap();
-                        assert_near!(e, r);
+                        assert_2ulp!(tf.forward_corr(o).unwrap(), e);
+                        assert_2ulp!(tf.unchecked_forward_corr(o).unwrap(), e);
                     })
                     .collect::<Vec<_>>();
             }
 
             #[test]
-            fn test_unchecked_forward_corr() {
-                let tf = TransformerBuilder::new()
-                    .format(Format::TKY2JGD)
-                    .parameters(param::TKY2JGD)
-                    .build();
-
-                let _ = origin::TKY2JGD
-                    .iter()
-                    .zip([
-                        Correction::new(-0.0026061235422512844, -0.0014309489244044126, 0.0),
-                        Correction::new(-0.002618835290300369, -0.0014260112388935016, 0.0),
-                        Correction::new(-0.0026119753448954203, -0.001425117480254691, 0.0),
-                        Correction::new(-0.0026040618575527644, -0.001443865415723786, 0.0),
-                        Correction::new(-0.002604394281406033, -0.0014326078361994175, 0.0),
-                        Correction::new(-0.0026028335486623236, -0.0014407728262463707, 0.0),
-                        Correction::new(-0.002601199340478012, -0.0014419754710470883, 0.0),
-                        Correction::new(-0.002604797967526684, -0.0014248122892494546, 0.0),
-                        Correction::new(-0.002601635087921817, -0.001446159364138761, 0.0),
-                        Correction::new(-0.0025982909237588707, -0.0014429850256785016, 0.0),
-                        Correction::new(-0.0026076228863408683, -0.0014501194037147274, 0.0),
-                        Correction::new(-0.0026056414118502905, -0.0014478727846693703, 0.0),
-                        Correction::new(-0.0026059042156971494, -0.0014285023181905218, 0.0),
-                        Correction::new(-0.002603927284456153, -0.0014351874807651155, 0.0),
-                        Correction::new(-0.0026090619295559138, -0.0014337794025241068, 0.0),
-                        Correction::new(-0.00260379206564831, -0.0014444874233470518, 0.0),
-                        Correction::new(-0.002609189936705112, -0.0014270078801605962, 0.0),
-                        Correction::new(-0.0026067015014788427, -0.0014250520778697374, 0.0),
-                        Correction::new(-0.0026049010998919204, -0.0014320785884550874, 0.0),
-                        Correction::new(-0.002612766885673393, -0.0014261930013035472, 0.0),
-                        Correction::new(-0.002597295847668742, -0.0014398264082119475, 0.0),
-                        Correction::new(-0.0026063921720914734, -0.0014269641107310966, 0.0),
-                        Correction::new(-0.0026025426642558376, -0.00143682163560458, 0.0),
-                        Correction::new(-0.0026040557419934217, -0.0014358744334743191, 0.0),
-                        Correction::new(-0.002603596826441166, -0.0014463876344360386, 0.0),
-                        Correction::new(-0.002604355125567014, -0.0014381848627093206, 0.0),
-                        Correction::new(-0.002596008569565531, -0.0014415246418863037, 0.0),
-                        Correction::new(-0.0026007201572384887, -0.001441531631360347, 0.0),
-                        Correction::new(-0.002601132396305545, -0.0014241218135470296, 0.0),
-                        Correction::new(-0.0026080985102495367, -0.0014284294432651895, 0.0),
-                        Correction::new(-0.0026051196442774846, -0.0014472355651951197, 0.0),
-                        Correction::new(-0.0026057136253893084, -0.0014245524301905656, 0.0),
-                        Correction::new(-0.0026089743551779435, -0.001434848166382774, 0.0),
-                        Correction::new(-0.002603603462876162, -0.001438143380099915, 0.0),
-                        Correction::new(-0.0026028286681453105, -0.0014340732746714502, 0.0),
-                        Correction::new(-0.002605611000202166, -0.0014489020143559554, 0.0),
-                        Correction::new(-0.0025977651215160877, -0.001443492127853303, 0.0),
-                        Correction::new(-0.002613369266351838, -0.0014258897817417636, 0.0),
-                        Correction::new(-0.0026075971938071623, -0.0014301386682097242, 0.0),
-                        Correction::new(-0.002602620028747191, -0.001439230302737092, 0.0),
-                    ])
-                    .map(|(o, e)| {
-                        let r = tf.unchecked_forward_corr(o).unwrap();
-                        assert_near!(e, r);
-                    })
-                    .collect::<Vec<_>>();
-            }
-
-            #[test]
-            fn test_backward_corr() {
+            fn test_backward_corr_and_unchecked_one() {
                 let tf = TransformerBuilder::new()
                     .format(Format::TKY2JGD)
                     .parameters(param::TKY2JGD)
@@ -1763,66 +1621,8 @@ mod test {
                         Correction::new(0.00260365921563244, 0.0014407570593193044, 0.0),
                     ])
                     .map(|(o, e)| {
-                        let r = tf.backward_corr(o).unwrap();
-                        assert_near!(e, r);
-                    })
-                    .collect::<Vec<_>>();
-            }
-
-            #[test]
-            fn test_unchecked_backward_corr() {
-                let tf = TransformerBuilder::new()
-                    .format(Format::TKY2JGD)
-                    .parameters(param::TKY2JGD)
-                    .build();
-
-                let _ = origin::TKY2JGD
-                    .iter()
-                    .zip([
-                        Correction::new(0.002606186029597429, 0.001432486030401843, 0.0),
-                        Correction::new(0.002616380795458269, 0.0014254058084066613, 0.0),
-                        Correction::new(0.0026104423501111685, 0.001425521971375949, 0.0),
-                        Correction::new(0.002605499146091959, 0.001444711437479824, 0.0),
-                        Correction::new(0.002605186943201238, 0.0014347342706107283, 0.0),
-                        Correction::new(0.0026039392225462032, 0.0014420911244126585, 0.0),
-                        Correction::new(0.0026027122022150516, 0.0014432251935010412, 0.0),
-                        Correction::new(0.00260388736530757, 0.001426456695033134, 0.0),
-                        Correction::new(0.0026039636291935258, 0.0014471664299068217, 0.0),
-                        Correction::new(0.0026007746819497013, 0.0014438215561830916, 0.0),
-                        Correction::new(0.002608245866877684, 0.001450525903824889, 0.0),
-                        Correction::new(0.002606708222944097, 0.0014484637993148744, 0.0),
-                        Correction::new(0.0026056949014729622, 0.0014300369860947286, 0.0),
-                        Correction::new(0.002604824863285861, 0.0014370876155516577, 0.0),
-                        Correction::new(0.0026063414297203802, 0.0014341993844403428, 0.0),
-                        Correction::new(0.0026028495537687795, 0.0014459318657103577, 0.0),
-                        Correction::new(0.0026063067497475436, 0.0014256245600731956, 0.0),
-                        Correction::new(0.002603752984282238, 0.0014234158324080417, 0.0),
-                        Correction::new(0.0026054547053366503, 0.0014339568449634494, 0.0),
-                        Correction::new(0.0026118477759219587, 0.0014269359340479796, 0.0),
-                        Correction::new(0.0025983855227962624, 0.001441767376865146, 0.0),
-                        Correction::new(0.002605858737808927, 0.001428457654538331, 0.0),
-                        Correction::new(0.0025999394743814624, 0.0014386252352297493, 0.0),
-                        Correction::new(0.0026049403971356994, 0.001437649695988217, 0.0),
-                        Correction::new(0.0026051249119068602, 0.0014472089176628443, 0.0),
-                        Correction::new(0.0026051848508354273, 0.001439626321127412, 0.0),
-                        Correction::new(0.00259711907762258, 0.0014434224114970471, 0.0),
-                        Correction::new(0.0026019682735831345, 0.0014429430011320167, 0.0),
-                        Correction::new(0.002601130413232378, 0.0014279236724465333, 0.0),
-                        Correction::new(0.002607771278970886, 0.001429906750787098, 0.0),
-                        Correction::new(0.002606310999517925, 0.001447888620287575, 0.0),
-                        Correction::new(0.002604684369343261, 0.0014260134049254973, 0.0),
-                        Correction::new(0.00260626221837615, 0.0014353723867724917, 0.0),
-                        Correction::new(0.002600964757448706, 0.001439742194381401, 0.0),
-                        Correction::new(0.0026036845541074624, 0.0014361754579083328, 0.0),
-                        Correction::new(0.002606753327162285, 0.0014495313122466396, 0.0),
-                        Correction::new(0.0025968757136544513, 0.0014453329417000451, 0.0),
-                        Correction::new(0.002610637355734231, 0.0014250706606104592, 0.0),
-                        Correction::new(0.0026049577712024597, 0.001430299315960377, 0.0),
-                        Correction::new(0.00260365921563244, 0.0014407570593193044, 0.0),
-                    ])
-                    .map(|(o, e)| {
-                        let r = tf.unchecked_backward_corr(o).unwrap();
-                        assert_near!(e, r);
+                        assert_2ulp!(tf.backward_corr(o).unwrap(), e);
+                        assert_2ulp!(tf.unchecked_backward_corr(o).unwrap(), e);
                     })
                     .collect::<Vec<_>>();
             }

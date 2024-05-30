@@ -1506,8 +1506,13 @@ mod test {
                         Correction::new(0.00001677462065901357, -0.00006252935123792957, 0.0),
                     ])
                     .map(|(o, e)| {
-                        assert_1ulp!(tf.backward_corr(o).unwrap(), e);
-                        assert_1ulp!(tf.unchecked_backward_corr(o).unwrap(), e);
+                        if cfg!(target_feature = "fma") {
+                            assert_2ulp!(tf.backward_corr(o).unwrap(), e);
+                            assert_2ulp!(tf.unchecked_backward_corr(o).unwrap(), e);
+                        } else {
+                            assert_1ulp!(tf.backward_corr(o).unwrap(), e);
+                            assert_1ulp!(tf.unchecked_backward_corr(o).unwrap(), e);
+                        }
                     })
                     .collect::<Vec<_>>();
             }

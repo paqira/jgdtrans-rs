@@ -486,7 +486,6 @@ pub enum Column {
     Latitude,
     Longitude,
     Altitude,
-    Other,
 }
 
 impl ParseParError {
@@ -547,7 +546,6 @@ impl Display for Column {
             Self::Latitude => write!(f, "latitude"),
             Self::Longitude => write!(f, "longitude"),
             Self::Altitude => write!(f, "altitude"),
-            Self::Other => write!(f, "other"),
         }
     }
 }

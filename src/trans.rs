@@ -901,9 +901,9 @@ impl Display for TransformError {
             TransformErrorKind::ParameterNotFound { meshcode, corner } => {
                 write!(f, "parameter not found: {} at {}", meshcode, corner)
             }
-            TransformErrorKind::CorrectionNotFound => write!(f, "correction not found"),
+            TransformErrorKind::CorrectionNotFound => f.write_str("correction not found"),
             TransformErrorKind::OutOfBounds => {
-                write!(f, "position is out-of-bounds of transformation")
+                f.write_str("position is out-of-bounds of transformation")
             }
         }
     }
@@ -912,10 +912,10 @@ impl Display for TransformError {
 impl Display for MeshCellCorner {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Self::NorthWest => write!(f, "north-west"),
-            Self::NorthEast => write!(f, "north-east"),
-            Self::SouthWest => write!(f, "south-west"),
-            Self::SouthEast => write!(f, "south-east"),
+            Self::NorthWest => f.write_str("north-west"),
+            Self::NorthEast => f.write_str("north-east"),
+            Self::SouthWest => f.write_str("south-west"),
+            Self::SouthEast => f.write_str("south-east"),
         }
     }
 }

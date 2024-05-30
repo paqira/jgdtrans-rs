@@ -542,10 +542,10 @@ impl Display for ParseParError {
 impl Display for Column {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Self::Meshcode => write!(f, "meshcode"),
-            Self::Latitude => write!(f, "latitude"),
-            Self::Longitude => write!(f, "longitude"),
-            Self::Altitude => write!(f, "altitude"),
+            Self::Meshcode => f.write_str("meshcode"),
+            Self::Latitude => f.write_str("latitude"),
+            Self::Longitude => f.write_str("longitude"),
+            Self::Altitude => f.write_str("altitude"),
         }
     }
 }

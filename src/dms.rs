@@ -568,9 +568,9 @@ impl Error for ParseDMSError {}
 impl Display for ParseDMSError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self.kind {
-            ParseDMSErrorKind::InvalidDigit => write!(f, "invalid digit found in string"),
-            ParseDMSErrorKind::OutOfBounds => write!(f, "cannot parse out-of-bounds DMS"),
-            ParseDMSErrorKind::Empty => write!(f, "cannot parse DMS from empty string"),
+            ParseDMSErrorKind::InvalidDigit => f.write_str("invalid digit found in string"),
+            ParseDMSErrorKind::OutOfBounds => f.write_str("cannot parse out-of-bounds DMS"),
+            ParseDMSErrorKind::Empty => f.write_str("cannot parse DMS from empty string"),
         }
     }
 }
@@ -616,8 +616,8 @@ impl Error for TryFromDMSError {}
 impl Display for TryFromDMSError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self.kind {
-            TryFromDMSErrorKind::NAN => write!(f, "number would be NAN"),
-            TryFromDMSErrorKind::OutOfBounds => write!(f, "number would be out-of-bounds"),
+            TryFromDMSErrorKind::NAN => f.write_str("number would be NAN"),
+            TryFromDMSErrorKind::OutOfBounds => f.write_str("number would be out-of-bounds"),
         }
     }
 }

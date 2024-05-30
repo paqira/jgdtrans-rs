@@ -58,6 +58,6 @@ impl Error for MeshTryFromError {}
 
 impl Display for MeshTryFromError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "the value would be out-of-bounds of the output",)
+        f.write_str("the value would be out-of-bounds of the output")
     }
 }

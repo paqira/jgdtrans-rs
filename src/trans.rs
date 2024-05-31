@@ -46,7 +46,7 @@ impl<'a> Interpol<'a> {
     }
 
     #[inline(always)]
-    fn unchecked_from<S>(
+    fn from_unchecked<S>(
         parameter: &'a HashMap<u32, Parameter, S>,
         code: &MeshCode,
         mesh_unit: &MeshUnit,
@@ -318,14 +318,14 @@ where
     ///
     /// // Equivalent to Transformer::forward except checking
     /// assert_eq!(
-    ///     tf.unchecked_forward(&point)?,
+    ///     tf.forward_unchecked(&point)?,
     ///     tf.forward(&point)?
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[inline]
-    pub fn unchecked_forward(&self, point: &Point) -> Result<Point> {
-        self.unchecked_forward_corr(point).map(|corr| point + corr)
+    pub fn forward_unchecked(&self, point: &Point) -> Result<Point> {
+        self.forward_corr_unchecked(point).map(|corr| point + corr)
     }
 
     /// Unchecked backward-transformation compatible to the GIAJ web app/APIs.
@@ -358,14 +358,14 @@ where
     ///
     /// // Equivalent to Transformer::backward_compat except checking
     /// assert_eq!(
-    ///     tf.unchecked_backward_compat(&point)?,
+    ///     tf.backward_compat_unchecked(&point)?,
     ///     tf.backward_compat(&point)?
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[inline]
-    pub fn unchecked_backward_compat(&self, point: &Point) -> Result<Point> {
-        self.unchecked_backward_compat_corr(point)
+    pub fn backward_compat_unchecked(&self, point: &Point) -> Result<Point> {
+        self.backward_compat_corr_unchecked(point)
             .map(|corr| point + corr)
     }
 
@@ -399,14 +399,14 @@ where
     ///
     /// // Equivalent to Transformer::backward except checking
     /// assert_eq!(
-    ///     tf.unchecked_backward(&point)?,
+    ///     tf.backward_unchecked(&point)?,
     ///     tf.backward(&point)?
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[inline]
-    pub fn unchecked_backward(&self, point: &Point) -> Result<Point> {
-        self.unchecked_backward_corr(point).map(|corr| point + corr)
+    pub fn backward_unchecked(&self, point: &Point) -> Result<Point> {
+        self.backward_corr_unchecked(point).map(|corr| point + corr)
     }
 
     /// Return the correction of the forward-transformation.
@@ -653,19 +653,19 @@ where
     ///
     /// // Equivalent to Transformer::forward_corr except checking
     /// assert_eq!(
-    ///     tf.unchecked_forward_corr(&origin)?,
+    ///     tf.forward_corr_unchecked(&origin)?,
     ///     tf.forward_corr(&origin)?
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[inline]
-    pub fn unchecked_forward_corr(&self, point: &Point) -> Result<Correction> {
+    pub fn forward_corr_unchecked(&self, point: &Point) -> Result<Correction> {
         let mesh_unit = self.format.mesh_unit();
 
         let code = MeshCode::from_point(point, &mesh_unit);
 
         // Interpolation
-        let interpol = Interpol::unchecked_from(&self.parameter, &code, &mesh_unit)?;
+        let interpol = Interpol::from_unchecked(&self.parameter, &code, &mesh_unit)?;
 
         // y: latitude, x: longitude
         let (y, x) = code.position(point, &mesh_unit);
@@ -711,12 +711,12 @@ where
     ///
     /// // Equivalent to Transformer::backward_compat_corr except checking
     /// assert_eq!(
-    ///     tf.unchecked_backward_compat_corr(&origin)?,
+    ///     tf.backward_compat_corr_unchecked(&origin)?,
     ///     tf.backward_compat_corr(&origin)?,
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn unchecked_backward_compat_corr(&self, point: &Point) -> Result<Correction> {
+    pub fn backward_compat_corr_unchecked(&self, point: &Point) -> Result<Correction> {
         const DELTA: f64 = 1. / 300.; // 12. / 3600.
 
         let corr = Correction {
@@ -727,11 +727,11 @@ where
 
         let temporal = point + corr;
 
-        let corr = self.unchecked_forward_corr(&temporal)?;
+        let corr = self.forward_corr_unchecked(&temporal)?;
         let reference = point - corr;
 
         // actual correction
-        let corr = self.unchecked_forward_corr(&reference)?;
+        let corr = self.forward_corr_unchecked(&reference)?;
         Ok(Correction {
             latitude: -corr.latitude,
             longitude: -corr.longitude,
@@ -769,12 +769,12 @@ where
     ///
     /// // Equivalent to Transformer::backward_corr except checking
     /// assert_eq!(
-    ///     tf.unchecked_backward_corr(&origin)?,
+    ///     tf.backward_corr_unchecked(&origin)?,
     ///     tf.backward_corr(&origin)?
     /// );
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
-    pub fn unchecked_backward_corr(&self, point: &Point) -> Result<Correction> {
+    pub fn backward_corr_unchecked(&self, point: &Point) -> Result<Correction> {
         let mesh_unit = self.format.mesh_unit();
 
         const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
@@ -787,7 +787,7 @@ where
 
             let code = MeshCode::from_point(&current, &mesh_unit);
 
-            let interpol = Interpol::unchecked_from(&self.parameter, &code, &mesh_unit)?;
+            let interpol = Interpol::from_unchecked(&self.parameter, &code, &mesh_unit)?;
 
             let (y, x) = code.position(&current, &mesh_unit);
 
@@ -812,7 +812,7 @@ where
             zn = (minus_fzz * fz - minus_fzw * fz.reverse()).fma(f64x2!(1. / det), zn);
 
             let temp = Point::new(zn[1], zn[0], 0.0);
-            let corr = self.unchecked_forward_corr(&temp)?;
+            let corr = self.forward_corr_unchecked(&temp)?;
 
             let delta = f64x2!(point.longitude, point.latitude)
                 - (zn + f64x2!(corr.longitude, corr.latitude));
@@ -1066,7 +1066,7 @@ mod test {
         }
 
         #[test]
-        fn test_unchecked_forward_and_corr() {
+        fn test_forward_and_corr_unchecked() {
             // unchecked should return same result as checked
 
             // TKY2JGD
@@ -1077,11 +1077,11 @@ mod test {
 
             let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
-                tf.unchecked_forward(&origin).unwrap(),
+                tf.forward_unchecked(&origin).unwrap(),
                 tf.forward(&origin).unwrap()
             );
             assert_eq!(
-                tf.unchecked_forward_corr(&origin).unwrap(),
+                tf.forward_corr_unchecked(&origin).unwrap(),
                 tf.forward_corr(&origin).unwrap()
             );
 
@@ -1093,17 +1093,17 @@ mod test {
 
             let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
-                tf.unchecked_forward(&origin).unwrap(),
+                tf.forward_unchecked(&origin).unwrap(),
                 tf.forward(&origin).unwrap()
             );
             assert_eq!(
-                tf.unchecked_forward_corr(&origin).unwrap(),
+                tf.forward_corr_unchecked(&origin).unwrap(),
                 tf.forward_corr(&origin).unwrap()
             );
         }
 
         #[test]
-        fn test_unchecked_backward_compat_and_corr() {
+        fn test_backward_compat_and_corr_unchecked() {
             // unchecked should return same result as checked
 
             // TKY2JGD
@@ -1114,11 +1114,11 @@ mod test {
 
             let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
-                tf.unchecked_backward_compat(&origin).unwrap(),
+                tf.backward_compat_unchecked(&origin).unwrap(),
                 tf.backward_compat(&origin).unwrap()
             );
             assert_eq!(
-                tf.unchecked_backward_compat_corr(&origin).unwrap(),
+                tf.backward_compat_corr_unchecked(&origin).unwrap(),
                 tf.backward_compat_corr(&origin).unwrap()
             );
 
@@ -1130,17 +1130,17 @@ mod test {
 
             let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
-                tf.unchecked_backward_compat(&origin).unwrap(),
+                tf.backward_compat_unchecked(&origin).unwrap(),
                 tf.backward_compat(&origin).unwrap()
             );
             assert_eq!(
-                tf.unchecked_backward_compat_corr(&origin).unwrap(),
+                tf.backward_compat_corr_unchecked(&origin).unwrap(),
                 tf.backward_compat_corr(&origin).unwrap()
             );
         }
 
         #[test]
-        fn test_unchecked_backward_checked_and_corr() {
+        fn test_backward_checked_and_corr_unchecked() {
             // unchecked should return same result as checked
 
             // TKY2JGD
@@ -1151,11 +1151,11 @@ mod test {
 
             let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
-                tf.unchecked_backward(&origin).unwrap(),
+                tf.backward_unchecked(&origin).unwrap(),
                 tf.backward(&origin).unwrap()
             );
             assert_eq!(
-                tf.unchecked_backward_corr(&origin).unwrap(),
+                tf.backward_corr_unchecked(&origin).unwrap(),
                 tf.backward_corr(&origin).unwrap()
             );
 
@@ -1167,11 +1167,11 @@ mod test {
 
             let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
-                tf.unchecked_backward(&origin).unwrap(),
+                tf.backward_unchecked(&origin).unwrap(),
                 tf.backward(&origin).unwrap()
             );
             assert_eq!(
-                tf.unchecked_backward_corr(&origin).unwrap(),
+                tf.backward_corr_unchecked(&origin).unwrap(),
                 tf.backward_corr(&origin).unwrap()
             );
         }
@@ -1399,7 +1399,7 @@ mod test {
             use super::*;
 
             #[test]
-            fn test_forward_corr_and_unchecked_one() {
+            fn test_forward_corr_and_one_unchecked() {
                 let tf = TransformerBuilder::new()
                     .format(Format::PatchJGD)
                     .parameters(param::PatchJGD)
@@ -1451,13 +1451,13 @@ mod test {
                     ])
                     .map(|(o, e)| {
                         assert_1ulp!(tf.forward_corr(o).unwrap(), e);
-                        assert_1ulp!(tf.unchecked_forward_corr(o).unwrap(), e);
+                        assert_1ulp!(tf.forward_corr_unchecked(o).unwrap(), e);
                     })
                     .collect::<Vec<_>>();
             }
 
             #[test]
-            fn test_backward_corr_and_unchecked_one() {
+            fn test_backward_corr_and_one_unchecked() {
                 let tf = TransformerBuilder::new()
                     .format(Format::PatchJGD)
                     .parameters(param::PatchJGD)
@@ -1510,10 +1510,10 @@ mod test {
                     .map(|(o, e)| {
                         if cfg!(target_feature = "fma") {
                             assert_2ulp!(tf.backward_corr(o).unwrap(), e);
-                            assert_2ulp!(tf.unchecked_backward_corr(o).unwrap(), e);
+                            assert_2ulp!(tf.backward_corr_unchecked(o).unwrap(), e);
                         } else {
                             assert_1ulp!(tf.backward_corr(o).unwrap(), e);
-                            assert_1ulp!(tf.unchecked_backward_corr(o).unwrap(), e);
+                            assert_1ulp!(tf.backward_corr_unchecked(o).unwrap(), e);
                         }
                     })
                     .collect::<Vec<_>>();
@@ -1543,7 +1543,7 @@ mod test {
             use super::*;
 
             #[test]
-            fn test_forward_corr_and_unchecked_one() {
+            fn test_forward_corr_and_one_unchecked() {
                 let tf = TransformerBuilder::new()
                     .format(Format::TKY2JGD)
                     .parameters(param::TKY2JGD)
@@ -1595,13 +1595,13 @@ mod test {
                     ])
                     .map(|(o, e)| {
                         assert_2ulp!(tf.forward_corr(o).unwrap(), e);
-                        assert_2ulp!(tf.unchecked_forward_corr(o).unwrap(), e);
+                        assert_2ulp!(tf.forward_corr_unchecked(o).unwrap(), e);
                     })
                     .collect::<Vec<_>>();
             }
 
             #[test]
-            fn test_backward_corr_and_unchecked_one() {
+            fn test_backward_corr_and_one_unchecked() {
                 let tf = TransformerBuilder::new()
                     .format(Format::TKY2JGD)
                     .parameters(param::TKY2JGD)
@@ -1653,7 +1653,7 @@ mod test {
                     ])
                     .map(|(o, e)| {
                         assert_2ulp!(tf.backward_corr(o).unwrap(), e);
-                        assert_2ulp!(tf.unchecked_backward_corr(o).unwrap(), e);
+                        assert_2ulp!(tf.backward_corr_unchecked(o).unwrap(), e);
                     })
                     .collect::<Vec<_>>();
             }

@@ -316,7 +316,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     /// Max error of backward transformation.
     ///
     /// Used by [`Transformer::backward`], [`Transformer::backward_corr`]
-    /// [`Transformer::unchecked_backward`] and [`Transformer::unchecked_backward_corr`].
+    /// [`Transformer::backward_unchecked`] and [`Transformer::backward_corr_unchecked`].
     pub const MAX_ERROR: f64 = 5e-14;
 
     /// Makes a [`Transformer`].

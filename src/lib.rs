@@ -169,7 +169,8 @@ pub use par::ParseParError;
 pub use par::{from_str, Format};
 #[doc(inline)]
 pub use point::Point;
-pub use trans::TransformError;
+#[doc(inline)]
+pub use trans::{TransformError, TransformErrorKind};
 #[doc(inline)]
 pub use transformer::{Correction, Parameter, StatisticData, Statistics, Transformer};
 

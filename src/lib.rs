@@ -152,7 +152,8 @@
 //!
 //! [^3]: TKY2JGD for Windows Ver.1.3.79 (reference implementation):
 //!       <https://www.gsi.go.jp/sokuchikijun/tky2jgd_download.html>
-//!       released under <span lang="ja">[国土地理院コンテンツ利用規約]</span> which compatible to CC BY 4.0.
+//!       released under [<span lang="ja">国土地理院コンテンツ利用規約</span>][国土地理院コンテンツ利用規約]
+//!       which compatible to CC BY 4.0.
 //!
 //! [^4]: Other implementation:
 //!       Python <https://github.com/paqira/jgdtrans-py>,

@@ -402,7 +402,7 @@ impl MeshNode {
         }
     }
 
-    /// Return a next north [`MeshNode`]
+    /// Return a next north [`MeshNode`].
     ///
     /// # Errors
     ///
@@ -439,7 +439,7 @@ impl MeshNode {
         })
     }
 
-    /// Return a next north [`MeshNode`]
+    /// Return a next north [`MeshNode`].
     ///
     /// # Errors
     ///
@@ -476,7 +476,7 @@ impl MeshNode {
         })
     }
 
-    /// Return a next north [`MeshNode`]
+    /// Return a next north [`MeshNode`].
     ///
     /// # Errors
     ///
@@ -513,7 +513,7 @@ impl MeshNode {
         })
     }
 
-    /// Return a next north [`MeshNode`]
+    /// Return a next north [`MeshNode`].
     ///
     /// # Errors
     ///

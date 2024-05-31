@@ -327,7 +327,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     ///
     /// ```
     /// # use std::collections::HashMap;
-    /// use jgdtrans::*;
+    /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::MeshUnit;
     /// #
     /// // from SemiDynaEXE2023.par

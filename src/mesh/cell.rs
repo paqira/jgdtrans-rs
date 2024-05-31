@@ -17,7 +17,7 @@ use crate::Point;
 /// # use jgdtrans::*;
 /// # use jgdtrans::mesh::*;
 /// #
-/// fn wrapper() -> Option<()> {
+/// # fn wrapper() -> Option<()> {
 /// // Construct from latitude and longitude, altitude ignores
 /// // (The result depends on the mesh unit)
 /// let point = Point::new(36.10377479, 140.087855041, 0.0);
@@ -34,7 +34,7 @@ use crate::Point;
 /// // Construct from meshcode
 /// assert_eq!(MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?, cell);
 ///
-/// // Find the position within cell, from 0.0 to 1.0
+/// // Find the position within the cell, from 0.0 to 1.0
 /// // (Again, the result depends on the mesh unit)
 /// let (latitude, longitude) = cell.position(&point);
 /// assert_eq!(latitude, 0.4529748000001632);
@@ -310,7 +310,6 @@ impl MeshCell {
     /// # use jgdtrans::mesh::*;
     /// #
     /// # fn wrapper() -> Option<()> {
-    /// let code = 54401027;
     /// let south_west = MeshNode::try_from_meshcode(&54401027)?;
     ///
     /// assert_eq!(
@@ -379,7 +378,7 @@ impl MeshCell {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// #
-    /// fn wrapper() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let point: Point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// assert_eq!(
@@ -392,6 +391,7 @@ impl MeshCell {
     ///         MeshUnit::One
     ///     )?
     /// );
+    ///
     /// assert_eq!(
     ///     MeshCell::try_from_point(&point, MeshUnit::Five)?,
     ///     MeshCell::try_new(
@@ -458,7 +458,7 @@ impl MeshCell {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::*;
     /// #
-    /// fn wrapper() -> Option<()> {
+    /// # fn wrapper() -> Option<()> {
     /// let point = Point::new(36.10377479, 140.087855041, 0.0);
     ///
     /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;

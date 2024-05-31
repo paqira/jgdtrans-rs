@@ -296,6 +296,13 @@ where
     ///
     /// Returns [`Err`] when the transformation fails.
     ///
+    /// # Safety
+    ///
+    /// Behavior is not specified on fail to resolve [`MeshCell`] from `point`.
+    /// The safe range of `point` depends on parameter,
+    /// practically, it is safe when 10 < `point.latitude()` < 60,
+    /// and 110 <`point.longitude()` < 165 hold.
+    ///
     /// # Example
     ///
     /// ```
@@ -335,6 +342,13 @@ where
     /// # Errors
     ///
     /// Returns [`Err`] when the transformation fails.
+    ///
+    /// # Safety
+    ///
+    /// Behavior is not specified on fail to resolve [`MeshCell`] from `point`.
+    /// The safe range of `point` depends on parameter,
+    /// practically, it is safe when 10 < `point.latitude()` < 60,
+    /// and 110 <`point.longitude()` < 165 hold.
     ///
     /// # Example
     ///
@@ -376,6 +390,13 @@ where
     /// # Errors
     ///
     /// Returns [`Err`] when the transformation fails.
+    ///
+    /// # Safety
+    ///
+    /// Behavior is not specified on fail to resolve [`MeshCell`] from `point`.
+    /// The safe range of `point` depends on parameter,
+    /// practically, it is safe when 10 < `point.latitude()` < 60,
+    /// and 110 <`point.longitude()` < 165 hold.
     ///
     /// # Example
     ///
@@ -630,6 +651,13 @@ where
     ///
     /// Returns [`Err`] when solving correction fails.
     ///
+    /// # Safety
+    ///
+    /// Behavior is not specified on fail to resolve [`MeshCell`] from `point`.
+    /// The safe range of `point` depends on parameter,
+    /// practically, it is safe when 10 < `point.latitude()` < 60,
+    /// and 110 <`point.longitude()` < 165 hold.
+    ///
     /// # Example
     ///
     /// ```
@@ -689,6 +717,13 @@ where
     ///
     /// Returns [`Err`] when solving correction fails.
     ///
+    /// # Safety
+    ///
+    /// Behavior is not specified on fail to resolve [`MeshCell`] from `point`.
+    /// The safe range of `point` depends on parameter,
+    /// practically, it is safe when 10 < `point.latitude()` < 60,
+    /// and 110 <`point.longitude()` < 165 hold.
+    ///
     /// # Example
     ///
     /// ```
@@ -746,6 +781,13 @@ where
     /// # Errors
     ///
     /// Returns [`Err`] when solving correction fails.
+    ///
+    /// # Safety
+    ///
+    /// Behavior is not specified on fail to resolve [`MeshCell`] from `point`.
+    /// The safe range of `point` depends on parameter,
+    /// practically, it is safe when 10 < `point.latitude()` < 60,
+    /// and 110 <`point.longitude()` < 165 hold.
     ///
     /// # Example
     ///

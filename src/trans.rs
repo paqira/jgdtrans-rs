@@ -1180,6 +1180,8 @@ mod test {
     // To detect regression when change codes
     // The expected is snapshots of 2a4a555c
     // that is no fma, no x / 2 to x * 0.5, and no vector.rs impl.
+    // Few upl different does not affect actual transformation result *practically*,
+    // because they will be rounded (Japan locates 10 < lat and 100 < lng).
     mod test_sampling {
         use super::*;
 

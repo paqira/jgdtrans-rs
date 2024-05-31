@@ -112,11 +112,11 @@ impl MeshCell {
         };
 
         // TODO: use `?` when `feature(const_trait_impl)` stable
-        let lat_next = match south_west.latitude.try_next_up(&mesh_unit) {
+        let lat_next = match south_west.latitude.next_up(&mesh_unit) {
             Some(r) => r,
             None => return None,
         };
-        let lng_next = match south_west.longitude.try_next_up(&mesh_unit) {
+        let lng_next = match south_west.longitude.next_up(&mesh_unit) {
             Some(r) => r,
             None => return None,
         };
@@ -322,10 +322,10 @@ impl MeshCell {
     /// ```
     pub const fn try_from_node(node: MeshNode, mesh_unit: MeshUnit) -> Option<Self> {
         // TODO: use `?` when `feature(const_trait_impl)` stable
-        let Some(next_lat_coord) = node.latitude.try_next_up(&mesh_unit) else {
+        let Some(next_lat_coord) = node.latitude.next_up(&mesh_unit) else {
             return None;
         };
-        let Some(next_lng_coord) = node.longitude.try_next_up(&mesh_unit) else {
+        let Some(next_lng_coord) = node.longitude.next_up(&mesh_unit) else {
             return None;
         };
 

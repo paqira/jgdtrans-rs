@@ -30,12 +30,12 @@ use crate::mesh::{MeshTryFromError, MeshUnit};
 ///
 /// // Increment/decrement (not in-place)
 /// let coord = MeshCoord::try_new(54, 1, 2)?;
-/// assert_eq!(coord.try_next_up(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 3)?);
-/// assert_eq!(coord.try_next_down(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 1)?);
+/// assert_eq!(coord.next_up(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 3)?);
+/// assert_eq!(coord.next_down(&MeshUnit::One)?, MeshCoord::try_new(54, 1, 1)?);
 ///
 /// // Unit must be consistent with MeshCoord,
 /// // otherwise it returns None.
-/// assert_eq!(coord.try_next_up(&MeshUnit::Five), None);
+/// assert_eq!(coord.next_up(&MeshUnit::Five), None);
 /// # Some(())}
 /// # fn main() {wrapper();()}
 /// ```
@@ -387,17 +387,17 @@ impl MeshCoord {
     /// let coord = MeshCoord::try_new(0, 0, 0)?;
     ///
     /// assert_eq!(
-    ///     coord.try_next_up(&MeshUnit::One)?,
+    ///     coord.next_up(&MeshUnit::One)?,
     ///     MeshCoord::try_new(0, 0, 1)?
     /// );
     /// assert_eq!(
-    ///     coord.try_next_up(&MeshUnit::Five)?,
+    ///     coord.next_up(&MeshUnit::Five)?,
     ///     MeshCoord::try_new(0, 0, 5)?
     /// );
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
-    pub const fn try_next_up(&self, mesh_unit: &MeshUnit) -> Option<Self> {
+    pub const fn next_up(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         if !self.is_mesh_unit(mesh_unit) {
             return None;
         }
@@ -452,17 +452,17 @@ impl MeshCoord {
     /// #
     /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
-    ///     MeshCoord::try_new(0, 0, 1)?.try_next_down(&MeshUnit::One)?,
+    ///     MeshCoord::try_new(0, 0, 1)?.next_down(&MeshUnit::One)?,
     ///     MeshCoord::try_new(0, 0, 0)?
     /// );
     /// assert_eq!(
-    ///     MeshCoord::try_new(0, 0, 5)?.try_next_down(&MeshUnit::Five)?,
+    ///     MeshCoord::try_new(0, 0, 5)?.next_down(&MeshUnit::Five)?,
     ///     MeshCoord::try_new(0, 0, 0)?
     /// );
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
-    pub const fn try_next_down(&self, mesh_unit: &MeshUnit) -> Option<Self> {
+    pub const fn next_down(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         if !self.is_mesh_unit(mesh_unit) {
             return None;
         }
@@ -635,29 +635,29 @@ mod test {
         // error
         assert!(MeshCoord::try_new(0, 7, 2)
             .unwrap()
-            .try_next_up(&MeshUnit::Five)
+            .next_up(&MeshUnit::Five)
             .is_none());
         assert!(MeshCoord::try_new(99, 7, 9)
             .unwrap()
-            .try_next_up(&MeshUnit::One)
+            .next_up(&MeshUnit::One)
             .is_none());
         assert!(MeshCoord::try_new(99, 7, 5)
             .unwrap()
-            .try_next_up(&MeshUnit::Five)
+            .next_up(&MeshUnit::Five)
             .is_none());
 
         // healty
         assert_eq!(
             MeshCoord::try_new(0, 0, 0)
                 .unwrap()
-                .try_next_up(&MeshUnit::One)
+                .next_up(&MeshUnit::One)
                 .unwrap(),
             MeshCoord::try_new(0, 0, 1).unwrap(),
         );
         assert_eq!(
             MeshCoord::try_new(0, 0, 0)
                 .unwrap()
-                .try_next_up(&MeshUnit::Five)
+                .next_up(&MeshUnit::Five)
                 .unwrap(),
             MeshCoord::try_new(0, 0, 5).unwrap(),
         );
@@ -666,14 +666,14 @@ mod test {
         assert_eq!(
             MeshCoord::try_new(0, 0, 9)
                 .unwrap()
-                .try_next_up(&MeshUnit::One)
+                .next_up(&MeshUnit::One)
                 .unwrap(),
             MeshCoord::try_new(0, 1, 0).unwrap(),
         );
         assert_eq!(
             MeshCoord::try_new(0, 7, 9)
                 .unwrap()
-                .try_next_up(&MeshUnit::One)
+                .next_up(&MeshUnit::One)
                 .unwrap(),
             MeshCoord::try_new(1, 0, 0).unwrap(),
         );
@@ -681,14 +681,14 @@ mod test {
         assert_eq!(
             MeshCoord::try_new(0, 0, 5)
                 .unwrap()
-                .try_next_up(&MeshUnit::Five)
+                .next_up(&MeshUnit::Five)
                 .unwrap(),
             MeshCoord::try_new(0, 1, 0).unwrap(),
         );
         assert_eq!(
             MeshCoord::try_new(0, 7, 5)
                 .unwrap()
-                .try_next_up(&MeshUnit::Five)
+                .next_up(&MeshUnit::Five)
                 .unwrap(),
             MeshCoord::try_new(1, 0, 0).unwrap(),
         );
@@ -699,25 +699,25 @@ mod test {
         // error
         assert!(MeshCoord::try_new(0, 7, 2)
             .unwrap()
-            .try_next_down(&MeshUnit::Five)
+            .next_down(&MeshUnit::Five)
             .is_none());
         assert!(MeshCoord::try_new(0, 0, 0)
             .unwrap()
-            .try_next_down(&MeshUnit::One)
+            .next_down(&MeshUnit::One)
             .is_none());
 
         // healty
         assert_eq!(
             MeshCoord::try_new(0, 0, 1)
                 .unwrap()
-                .try_next_down(&MeshUnit::One)
+                .next_down(&MeshUnit::One)
                 .unwrap(),
             MeshCoord::try_new(0, 0, 0).unwrap(),
         );
         assert_eq!(
             MeshCoord::try_new(0, 0, 5)
                 .unwrap()
-                .try_next_down(&MeshUnit::Five)
+                .next_down(&MeshUnit::Five)
                 .unwrap(),
             MeshCoord::try_new(0, 0, 0).unwrap(),
         );
@@ -726,14 +726,14 @@ mod test {
         assert_eq!(
             MeshCoord::try_new(0, 1, 0)
                 .unwrap()
-                .try_next_down(&MeshUnit::One)
+                .next_down(&MeshUnit::One)
                 .unwrap(),
             MeshCoord::try_new(0, 0, 9).unwrap(),
         );
         assert_eq!(
             MeshCoord::try_new(1, 0, 0)
                 .unwrap()
-                .try_next_down(&MeshUnit::One)
+                .next_down(&MeshUnit::One)
                 .unwrap(),
             MeshCoord::try_new(0, 7, 9).unwrap(),
         );
@@ -741,14 +741,14 @@ mod test {
         assert_eq!(
             MeshCoord::try_new(0, 1, 0)
                 .unwrap()
-                .try_next_down(&MeshUnit::Five)
+                .next_down(&MeshUnit::Five)
                 .unwrap(),
             MeshCoord::try_new(0, 0, 5).unwrap(),
         );
         assert_eq!(
             MeshCoord::try_new(1, 0, 0)
                 .unwrap()
-                .try_next_down(&MeshUnit::Five)
+                .next_down(&MeshUnit::Five)
                 .unwrap(),
             MeshCoord::try_new(0, 7, 5).unwrap(),
         );
@@ -764,7 +764,7 @@ mod test {
                 coord,
                 MeshCoord::try_from_latitude(&coord.to_latitude(), &MeshUnit::One).unwrap(),
             );
-            coord = coord.try_next_up(&MeshUnit::One).unwrap();
+            coord = coord.next_up(&MeshUnit::One).unwrap();
         }
         assert_eq!(
             coord,
@@ -779,7 +779,7 @@ mod test {
                 coord,
                 MeshCoord::try_from_longitude(&coord.to_longitude(), &MeshUnit::One).unwrap(),
             );
-            coord = coord.try_next_up(&MeshUnit::One).unwrap();
+            coord = coord.next_up(&MeshUnit::One).unwrap();
         }
         assert_eq!(
             coord,

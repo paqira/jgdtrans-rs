@@ -425,7 +425,7 @@ impl MeshNode {
     #[inline]
     pub const fn next_north(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         // TODO: use ? and Clone::clone() when they become stable.
-        let Some(latitude) = self.latitude.try_next_up(mesh_unit) else {
+        let Some(latitude) = self.latitude.next_up(mesh_unit) else {
             return None;
         };
 
@@ -462,7 +462,7 @@ impl MeshNode {
     #[inline]
     pub const fn next_south(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         // TODO: use ? and Clone::clone() when they become stable.
-        let Some(latitude) = self.latitude.try_next_up(mesh_unit) else {
+        let Some(latitude) = self.latitude.next_down(mesh_unit) else {
             return None;
         };
 
@@ -499,7 +499,7 @@ impl MeshNode {
     #[inline]
     pub const fn next_east(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         // TODO: use ? and Clone::clone() when they become stable.
-        let Some(longitude) = self.longitude.try_next_up(mesh_unit) else {
+        let Some(longitude) = self.longitude.next_up(mesh_unit) else {
             return None;
         };
 
@@ -536,7 +536,7 @@ impl MeshNode {
     #[inline]
     pub const fn next_west(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         // TODO: use ? and Clone::clone() when they become stable.
-        let Some(longitude) = self.longitude.try_next_up(mesh_unit) else {
+        let Some(longitude) = self.longitude.next_down(mesh_unit) else {
             return None;
         };
 
@@ -562,13 +562,13 @@ mod test {
         while coord.le(&MeshCoord::try_new(80, 0, 0).unwrap()) {
             let temp = MeshNode::try_new(MeshCoord::try_new(0, 0, 0).unwrap(), coord.clone());
             assert!(temp.is_some());
-            coord = coord.try_next_up(&MeshUnit::One).unwrap();
+            coord = coord.next_up(&MeshUnit::One).unwrap();
         }
 
         while coord.lt(&MeshCoord::try_new(99, 7, 9).unwrap()) {
             let temp = MeshNode::try_new(MeshCoord::try_new(0, 0, 0).unwrap(), coord.clone());
             assert!(temp.is_none());
-            coord = coord.try_next_up(&MeshUnit::One).unwrap();
+            coord = coord.next_up(&MeshUnit::One).unwrap();
         }
         assert!(MeshNode::try_new(MeshCoord::try_new(0, 0, 0).unwrap(), coord).is_none());
     }
@@ -687,7 +687,7 @@ mod test {
                 MeshNode::try_from_meshcode(&node.to_meshcode()).unwrap()
             );
             node = MeshNode::try_new(
-                node.latitude().try_next_up(&MeshUnit::One).unwrap(),
+                node.latitude().next_up(&MeshUnit::One).unwrap(),
                 MeshCoord::try_new(0, 0, 0).unwrap(),
             )
             .unwrap();
@@ -720,7 +720,7 @@ mod test {
             );
             node = MeshNode::try_new(
                 MeshCoord::try_new(0, 0, 0).unwrap(),
-                node.longitude().try_next_up(&MeshUnit::One).unwrap(),
+                node.longitude().next_up(&MeshUnit::One).unwrap(),
             )
             .unwrap();
         }

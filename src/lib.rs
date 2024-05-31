@@ -136,7 +136,7 @@
 //!     // Deserialize from json
 //!     let result: Transformer = serde_json::from_str(&json)?;
 //!     assert_eq!(result.format, Format::TKY2JGD);
-//!     assert_eq!(result.parameter, HashMap::<_, _>::from([(12345678, Parameter::new(1., 2., 3.)), ]));
+//!     assert_eq!(result.parameter, HashMap::from([(12345678, Parameter::new(1., 2., 3.)), ]));
 //!     assert_eq!(result.description, None);
 //!     Ok(())
 //! }

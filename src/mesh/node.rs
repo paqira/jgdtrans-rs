@@ -401,6 +401,154 @@ impl MeshNode {
             altitude: 0.0,
         }
     }
+
+    /// Return a next north [`MeshNode`]
+    ///
+    /// # Errors
+    ///
+    /// Returns [`None`] when the next node is out-of-bounds.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::mesh::*;
+    /// #
+    /// # fn wrapper() -> Option<()> {
+    /// let node = MeshNode::try_from_meshcode(&54401027)?;
+    /// assert_eq!(
+    ///     node.next_north(&MeshUnit::One)?,
+    ///     MeshNode::try_from_meshcode(&54401037)?
+    /// );
+    /// # Some(())}
+    /// # fn main() {wrapper();()}
+    /// ```
+    #[inline]
+    pub const fn next_north(&self, mesh_unit: &MeshUnit) -> Option<Self> {
+        // TODO: use ? and Clone::clone() when they become stable.
+        let Some(latitude) = self.latitude.try_next_up(mesh_unit) else {
+            return None;
+        };
+
+        Some(Self {
+            latitude,
+            longitude: MeshCoord {
+                first: self.longitude.first,
+                second: self.longitude.second,
+                third: self.longitude.third,
+            },
+        })
+    }
+
+    /// Return a next north [`MeshNode`]
+    ///
+    /// # Errors
+    ///
+    /// Returns [`None`] when the next node is out-of-bounds.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::mesh::*;
+    /// #
+    /// # fn wrapper() -> Option<()> {
+    /// let node = MeshNode::try_from_meshcode(&54401027)?;
+    /// assert_eq!(
+    ///     node.next_south(&MeshUnit::One)?,
+    ///     MeshNode::try_from_meshcode(&54401017)?
+    /// );
+    /// # Some(())}
+    /// # fn main() {wrapper();()}
+    /// ```
+    #[inline]
+    pub const fn next_south(&self, mesh_unit: &MeshUnit) -> Option<Self> {
+        // TODO: use ? and Clone::clone() when they become stable.
+        let Some(latitude) = self.latitude.try_next_up(mesh_unit) else {
+            return None;
+        };
+
+        Some(Self {
+            latitude,
+            longitude: MeshCoord {
+                first: self.longitude.first,
+                second: self.longitude.second,
+                third: self.longitude.third,
+            },
+        })
+    }
+
+    /// Return a next north [`MeshNode`]
+    ///
+    /// # Errors
+    ///
+    /// Returns [`None`] when the next node is out-of-bounds.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::mesh::*;
+    /// #
+    /// # fn wrapper() -> Option<()> {
+    /// let node = MeshNode::try_from_meshcode(&54401027)?;
+    /// assert_eq!(
+    ///     node.next_east(&MeshUnit::One)?,
+    ///     MeshNode::try_from_meshcode(&54401028)?
+    /// );
+    /// # Some(())}
+    /// # fn main() {wrapper();()}
+    /// ```
+    #[inline]
+    pub const fn next_east(&self, mesh_unit: &MeshUnit) -> Option<Self> {
+        // TODO: use ? and Clone::clone() when they become stable.
+        let Some(longitude) = self.longitude.try_next_up(mesh_unit) else {
+            return None;
+        };
+
+        Some(Self {
+            latitude: MeshCoord {
+                first: self.latitude.first,
+                second: self.latitude.second,
+                third: self.latitude.third,
+            },
+            longitude,
+        })
+    }
+
+    /// Return a next north [`MeshNode`]
+    ///
+    /// # Errors
+    ///
+    /// Returns [`None`] when the next node is out-of-bounds.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::mesh::*;
+    /// #
+    /// # fn wrapper() -> Option<()> {
+    /// let node = MeshNode::try_from_meshcode(&54401027)?;
+    /// assert_eq!(
+    ///     node.next_west(&MeshUnit::One)?,
+    ///     MeshNode::try_from_meshcode(&54401026)?
+    /// );
+    /// # Some(())}
+    /// # fn main() {wrapper();()}
+    /// ```
+    #[inline]
+    pub const fn next_west(&self, mesh_unit: &MeshUnit) -> Option<Self> {
+        // TODO: use ? and Clone::clone() when they become stable.
+        let Some(longitude) = self.longitude.try_next_up(mesh_unit) else {
+            return None;
+        };
+
+        Some(Self {
+            latitude: MeshCoord {
+                first: self.latitude.first,
+                second: self.latitude.second,
+                third: self.latitude.third,
+            },
+            longitude,
+        })
+    }
 }
 
 #[cfg(test)]

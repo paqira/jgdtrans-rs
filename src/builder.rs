@@ -73,7 +73,7 @@ impl TransformerBuilder<RandomState> {
 }
 
 impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> TransformerBuilder<S> {
-    /// Makes a [`TransformerBuilder`] wich uses the given hash builder to hash meshcode.
+    /// Makes a [`TransformerBuilder`] which uses the given hash builder to hash meshcode.
     ///
     /// See [`HashMap::with_hasher`] for detail.
     #[inline]

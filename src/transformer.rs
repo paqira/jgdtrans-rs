@@ -218,6 +218,7 @@ impl StatisticData {
         let mut abs: Vec<f64> = Vec::with_capacity(count);
 
         for v in vs.iter() {
+            // never nan
             max = v.max(max);
             min = v.min(min);
             std.push((sum - *v).powi(2));
@@ -681,7 +682,6 @@ mod test {
                     max: Some(0.016499215132847987)
                 }
             );
-            // 0.016417802947905496
 
             let stats = TransformerBuilder::new()
                 .format(Format::TKY2JGD)

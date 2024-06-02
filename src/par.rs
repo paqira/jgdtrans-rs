@@ -329,7 +329,7 @@ where
     #[inline]
     pub fn parse(self, s: &str) -> Result<Transformer<S>, ParseParError> {
         let (parameter, description) = match self.format {
-            Format::TKY2JGD => self::parse(
+            Format::TKY2JGD => parse(
                 s,
                 2,
                 0..8,
@@ -338,7 +338,7 @@ where
                 None,
                 self.hash_builder,
             ),
-            Format::PatchJGD => self::parse(
+            Format::PatchJGD => parse(
                 s,
                 16,
                 0..8,
@@ -348,12 +348,12 @@ where
                 self.hash_builder,
             ),
             Format::PatchJGD_H => {
-                self::parse(s, 16, 0..8, None, None, Some(9..18), self.hash_builder)
+                parse(s, 16, 0..8, None, None, Some(9..18), self.hash_builder)
             }
             Format::HyokoRev => {
-                self::parse(s, 16, 0..8, None, None, Some(12..21), self.hash_builder)
+                parse(s, 16, 0..8, None, None, Some(12..21), self.hash_builder)
             }
-            Format::PatchJGD_HV | Format::SemiDynaEXE => self::parse(
+            Format::PatchJGD_HV | Format::SemiDynaEXE => parse(
                 s,
                 16,
                 0..8,
@@ -362,7 +362,7 @@ where
                 Some(29..38),
                 self.hash_builder,
             ),
-            Format::geonetF3 | Format::ITRF2014 => self::parse(
+            Format::geonetF3 | Format::ITRF2014 => parse(
                 s,
                 18,
                 0..8,
@@ -574,7 +574,9 @@ MeshCode   dB(sec)   dL(sec)";
                 format: Format::TKY2JGD,
                 parameter: [].into_iter().collect(),
                 description: Some(
-                    ("JGD2000-TokyoDatum Ver.2.1.2\nMeshCode   dB(sec)   dL(sec)\n").to_string(),
+                    "JGD2000-TokyoDatum Ver.2.1.2
+MeshCode   dB(sec)   dL(sec)
+".to_string(),
                 ),
             };
             transformer_eq!(expected, actual);

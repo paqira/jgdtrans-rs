@@ -494,7 +494,7 @@ impl Transformer<RandomState> {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[inline]
-    pub fn from_str(s: &str, format: Format) -> std::result::Result<Self, ParseParError> {
+    pub fn from_str(s: &str, format: Format) -> Result<Self, ParseParError> {
         crate::par::from_str(s, format)
     }
 
@@ -547,7 +547,7 @@ impl Transformer<RandomState> {
         s: &str,
         format: Format,
         description: String,
-    ) -> std::result::Result<Self, ParseParError> {
+    ) -> Result<Self, ParseParError> {
         crate::par::Parser::new(format).parse_with_description(s, description)
     }
 }

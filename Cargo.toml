@@ -4,15 +4,12 @@ version = "0.1.1"
 edition = "2021"
 authors = ["Kentaro Tatsumi <paqira.2019@gmail.com>"]
 license = "MIT OR Apache-2.0"
-description = "Coordinate Transformer by Gridded Correction Parameter (par file)"
-readme = "README.md"
-categories = ["science::geo"]
-keywords = [
-    "GIS",
-    "par-file",
-]
-
 repository = "https://github.com/paqira/jgdtrans-rs"
+description = "Coordinate Transformer by Gridded Correction Parameter (par file)"
+keywords = ["GIS", "par-file"]
+readme = "README.md"
+exclude = [".*"]
+categories = ["science::geo"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"], optional = true }

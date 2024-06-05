@@ -347,12 +347,8 @@ where
                 None,
                 self.hash_builder,
             ),
-            Format::PatchJGD_H => {
-                parse(s, 16, 0..8, None, None, Some(9..18), self.hash_builder)
-            }
-            Format::HyokoRev => {
-                parse(s, 16, 0..8, None, None, Some(12..21), self.hash_builder)
-            }
+            Format::PatchJGD_H => parse(s, 16, 0..8, None, None, Some(9..18), self.hash_builder),
+            Format::HyokoRev => parse(s, 16, 0..8, None, None, Some(12..21), self.hash_builder),
             Format::PatchJGD_HV | Format::SemiDynaEXE => parse(
                 s,
                 16,
@@ -576,7 +572,8 @@ MeshCode   dB(sec)   dL(sec)";
                 description: Some(
                     "JGD2000-TokyoDatum Ver.2.1.2
 MeshCode   dB(sec)   dL(sec)
-".to_string(),
+"
+                    .to_string(),
                 ),
             };
             transformer_eq!(expected, actual);

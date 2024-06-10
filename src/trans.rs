@@ -3,6 +3,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::hash::BuildHasher;
 
+use crate::internal::mul_add;
 use crate::mesh::{MeshCell, MeshCode, MeshUnit};
 use crate::vector::{f64x2, f64x3, F64x2, F64x3};
 use crate::{Correction, Parameter, Point, Transformer};
@@ -618,7 +619,7 @@ where
             let minus_fzw = interpol.minus_fzw(zn, dzn, SCALE);
 
             // and its determinant
-            let det = minus_fzz.product() - minus_fzw.product();
+            let det = mul_add!(minus_fzz[0], minus_fzz[1], -minus_fzw.product());
 
             // update zn
             // original, reduce sign flipping
@@ -846,7 +847,7 @@ where
             let minus_fzw = interpol.minus_fzw(zn, dzn, SCALE);
 
             // and its determinant
-            let det = minus_fzz.product() - minus_fzw.product();
+            let det = mul_add!(minus_fzz[0], minus_fzz[1], -minus_fzw.product());
 
             // update zn
             // original, reduce sign flipping

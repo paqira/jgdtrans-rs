@@ -622,7 +622,7 @@ where
         const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
         const ITERATION: usize = 4;
 
-        let p = f64x2!(point.longitude, point.latitude);
+        let q = f64x2!(point.longitude, point.latitude);
         let mut zn = f64x2!(point.longitude, point.latitude);
 
         for _ in 0..ITERATION {
@@ -645,7 +645,7 @@ where
             let drift = interpol.interpol_horizontal(x, y, SCALE);
 
             // This is f(x)
-            let fz = p - (zn + drift);
+            let fz = q - (zn + drift);
 
             //
             // Calculate an inverse of Jacobian J[f]
@@ -671,7 +671,7 @@ where
             let temp = Point::new(zn[1], zn[0], 0.0);
             let corr = self.forward_corr(&temp)?;
 
-            let delta = p - (zn + f64x2!(corr.longitude, corr.latitude));
+            let delta = q - (zn + f64x2!(corr.longitude, corr.latitude));
 
             if delta.abs().lt(f64x2!(Self::MAX_ERROR)) {
                 // If ok, it's a result!
@@ -866,7 +866,7 @@ where
         const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
         const ITERATION: usize = 4;
 
-        let p = f64x2!(point.longitude, point.latitude);
+        let q = f64x2!(point.longitude, point.latitude);
         let mut zn = f64x2!(point.longitude, point.latitude);
 
         for _ in 0..ITERATION {
@@ -880,7 +880,7 @@ where
 
             let drift = interpol.interpol_horizontal(x, y, SCALE);
 
-            let fz = p - (zn + drift);
+            let fz = q - (zn + drift);
 
             let dzn = f64x2!(1.) - zn;
 
@@ -901,7 +901,7 @@ where
             let temp = Point::new(zn[1], zn[0], 0.0);
             let corr = self.forward_corr_unchecked(&temp)?;
 
-            let delta = p - (zn + f64x2!(corr.longitude, corr.latitude));
+            let delta = q - (zn + f64x2!(corr.longitude, corr.latitude));
 
             if delta.abs().lt(f64x2!(Self::MAX_ERROR)) {
                 return Ok(Correction {

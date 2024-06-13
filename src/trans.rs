@@ -589,7 +589,35 @@ where
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn backward_corr(&self, point: &Point) -> Result<Correction> {
-        // Newton's Method
+        // Assume p as an origin of forward transformation,
+        // and q (point) as a destination of it.
+        // These satisfy,
+        //     q = p + forward_corr(p) .
+        // We note that p is an unknown point.
+        //
+        // We can explicitly solve backward_corr,
+        // but, on my experiment, it's error is to huge.
+        // Thus we take approximation approach.
+        //
+        // The Newton's Method has a following expression,
+        //     xₖ₊₁ = xₖ - J[f](xₖ)⁻¹ f(xₖ) ,
+        // for continuous function f: 𝑹ⁿ → 𝑹ⁿ,
+        // where J[f] is Jacobian of function f.
+        //
+        // For simplicity, we find the origin by naive 2d Newton's method,
+        // instead of finding backward_corr explicitly.
+        // We take f as,
+        //     f(p) = q - p - forward_corr(p)
+        //          = q - p - <bilinear interpolation on p> .
+        // Notes, Jacobian J[f] is independent of q
+        // because q is independent of p (q is constant).
+        //
+        // Practically, it results enough precisely under 4 Newton's method iterations.
+        //
+        // In the code, we denote f as fz, and xₖ as zn.
+        //
+        // Reference:
+        // 1. https://en.wikipedia.org/wiki/Newton%27s_method
 
         const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
         const ITERATION: usize = 4;
@@ -598,6 +626,9 @@ where
         let mut zn = f64x2!(point.longitude, point.latitude);
 
         for _ in 0..ITERATION {
+            //
+            // Preparation
+            //
             let current = Point::new(zn[1], zn[0], 0.0);
 
             let cell = MeshCell::try_from_point(&current, self.format.mesh_unit())
@@ -605,11 +636,22 @@ where
 
             let interpol = Interpol::from(&self.parameter, &cell)?;
 
+            //
+            // Construct f(x)
+            //
+
             let (y, x) = cell.position(&current);
 
             let drift = interpol.interpol_horizontal(x, y, SCALE);
 
+            // This is f(x)
             let fz = p - (zn + drift);
+
+            //
+            // Calculate an inverse of Jacobian J[f]
+            //
+
+            // Notes, Jacobian J[f] is a 2x2 matrix.
 
             let dzn = f64x2!(1.) - zn;
 
@@ -619,20 +661,20 @@ where
             // (fx_y, fy_x)
             let minus_fzw = interpol.minus_fzw(zn, dzn, SCALE);
 
-            // and its determinant
+            // determinant
             let det = mul_add!(minus_fzz[0], minus_fzz[1], -minus_fzw.product());
 
-            // update zn
-            // original, reduce sign flipping
-            // zn = (fzz * fz - fzw * fz.reverse()).fma(f64x2!(-1./det), zn);
+            // Perform a  step of Newton's method
             zn = (minus_fzz * fz - minus_fzw * fz.reverse()).fma(f64x2!(1. / det), zn);
 
+            // Verify the current error
             let temp = Point::new(zn[1], zn[0], 0.0);
             let corr = self.forward_corr(&temp)?;
 
             let delta = p - (zn + f64x2!(corr.longitude, corr.latitude));
 
             if delta.abs().lt(f64x2!(Self::MAX_ERROR)) {
+                // If ok, it's a result!
                 return Ok(Correction {
                     latitude: -corr.latitude,
                     longitude: -corr.longitude,

@@ -1,9 +1,6 @@
 //! Provides [`Point`].
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 use crate::internal::{impl_assign_ops, impl_ops};
 use crate::mesh::{MeshCell, MeshNode, MeshUnit};
 use crate::Correction;
@@ -57,7 +54,7 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// assert_eq!(result, point);
 /// ```
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Point {
     /// The latitude \[deg\] of the point
     pub latitude: f64,

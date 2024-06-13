@@ -1,6 +1,3 @@
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 use crate::mesh::{MeshCoord, MeshNode, MeshUnit};
 use crate::vector::f64x2;
 use crate::Point;
@@ -53,7 +50,7 @@ use crate::Point;
 /// # fn main() {wrapper();()}
 /// ```
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MeshCell {
     /// The south-west node of the cell
     pub(crate) south_west: MeshNode,

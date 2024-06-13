@@ -1,6 +1,3 @@
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 use crate::mesh::{MeshCoord, MeshTryFromError, MeshUnit};
 use crate::Point;
 
@@ -33,7 +30,7 @@ use crate::Point;
 /// # fn main() {wrapper();()}
 /// ```
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MeshNode {
     /// The mesh coord of latitude
     pub(crate) latitude: MeshCoord,

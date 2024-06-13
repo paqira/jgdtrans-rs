@@ -1,6 +1,3 @@
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 use crate::internal::mul_add;
 use crate::mesh::{MeshTryFromError, MeshUnit};
 
@@ -40,7 +37,7 @@ use crate::mesh::{MeshTryFromError, MeshUnit};
 /// # fn main() {wrapper();()}
 /// ```
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MeshCoord {
     /// Takes 0 to 99 inclusive.
     pub(crate) first: u8,

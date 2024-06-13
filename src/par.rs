@@ -6,9 +6,6 @@ use std::hash::{BuildHasher, Hash, RandomState};
 use std::num::{ParseFloatError, ParseIntError};
 use std::ops::Range;
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 use crate::mesh::MeshUnit;
 use crate::{Parameter, Transformer};
 
@@ -61,7 +58,7 @@ pub fn from_str(s: &str, format: Format) -> Result<Transformer, ParseParError> {
 
 /// Represents format of par-formatted text.
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Format {
     TKY2JGD,
     PatchJGD,

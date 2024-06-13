@@ -2,9 +2,6 @@
 use std::collections::HashMap;
 use std::hash::{BuildHasher, RandomState};
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
-
 use crate::{Format, ParseParError};
 
 /// Improved Kahan–Babuška algorithm
@@ -43,7 +40,7 @@ fn ksum(vs: &[f64]) -> f64 {
 /// assert_eq!(parameter.altitude, 3.);
 /// ```
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Parameter {
     /// The latitude parameter \[sec\]
     pub latitude: f64,
@@ -124,7 +121,7 @@ impl Parameter {
 /// assert_eq!(correction.longitude, 2.);
 /// assert_eq!(correction.altitude, 3.);
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Correction {
     /// The latitude correction \[deg\].
     pub latitude: f64,
@@ -170,7 +167,7 @@ impl Correction {
 ///
 /// This is a component of the result that [`Transformer::statistics()`] returns.
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct StatisticData {
     /// The count of parameters.
     pub count: Option<usize>,
@@ -241,7 +238,7 @@ impl StatisticData {
 ///
 /// This is a result that [`Transformer::statistics()`] returns.
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Statistics {
     /// The statistics of latitude.
     pub latitude: StatisticData,
@@ -289,7 +286,7 @@ pub struct Statistics {
 /// # Ok::<(), TransformError>(())
 /// ```
 #[derive(Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Transformer<
     #[cfg(not(feature = "serde"))] S = RandomState,
     #[cfg(feature = "serde")] S: Default = RandomState,
@@ -303,8 +300,8 @@ pub struct Transformer<
     #[cfg_attr(
         feature = "serde",
         serde(bound(
-            serialize = "HashMap<u32, Parameter, S>: Serialize",
-            deserialize = "HashMap<u32, Parameter, S>: Deserialize<'de>"
+            serialize = "HashMap<u32, Parameter, S>: serde::Serialize",
+            deserialize = "HashMap<u32, Parameter, S>: serde::Deserialize<'de>"
         ))
     )]
     pub parameter: HashMap<u32, Parameter, S>,

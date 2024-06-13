@@ -594,6 +594,7 @@ where
         const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
         const ITERATION: usize = 4;
 
+        let p = f64x2!(point.longitude, point.latitude);
         let mut zn = f64x2!(point.longitude, point.latitude);
 
         for _ in 0..ITERATION {
@@ -608,7 +609,7 @@ where
 
             let drift = interpol.interpol_horizontal(x, y, SCALE);
 
-            let fz = f64x2!(point.longitude, point.latitude) - (zn + drift);
+            let fz = p - (zn + drift);
 
             let dzn = f64x2!(1.) - zn;
 
@@ -629,8 +630,7 @@ where
             let temp = Point::new(zn[1], zn[0], 0.0);
             let corr = self.forward_corr(&temp)?;
 
-            let delta = f64x2!(point.longitude, point.latitude)
-                - (zn + f64x2!(corr.longitude, corr.latitude));
+            let delta = p - (zn + f64x2!(corr.longitude, corr.latitude));
 
             if delta.abs().lt(f64x2!(Self::MAX_ERROR)) {
                 return Ok(Correction {
@@ -818,11 +818,13 @@ where
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     pub fn backward_corr_unchecked(&self, point: &Point) -> Result<Correction> {
+        // See backward_corr for detail
         let mesh_unit = self.format.mesh_unit();
 
         const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
         const ITERATION: usize = 4;
 
+        let p = f64x2!(point.longitude, point.latitude);
         let mut zn = f64x2!(point.longitude, point.latitude);
 
         for _ in 0..ITERATION {
@@ -836,7 +838,7 @@ where
 
             let drift = interpol.interpol_horizontal(x, y, SCALE);
 
-            let fz = f64x2!(point.longitude, point.latitude) - (zn + drift);
+            let fz = p - (zn + drift);
 
             let dzn = f64x2!(1.) - zn;
 

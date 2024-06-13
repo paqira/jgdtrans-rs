@@ -199,6 +199,8 @@ impl MeshCoord {
     }
 
     fn from_degree(degree: &f64, mesh_unit: &MeshUnit) -> Self {
+        assert!(0.0.le(degree) && 180.0.ge(degree));
+
         let integer = degree.floor() as u32;
 
         let first = integer % 100;

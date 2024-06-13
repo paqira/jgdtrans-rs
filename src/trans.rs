@@ -859,8 +859,7 @@ where
             let temp = Point::new(zn[1], zn[0], 0.0);
             let corr = self.forward_corr_unchecked(&temp)?;
 
-            let delta = f64x2!(point.longitude, point.latitude)
-                - (zn + f64x2!(corr.longitude, corr.latitude));
+            let delta = p - (zn + f64x2!(corr.longitude, corr.latitude));
 
             if delta.abs().lt(f64x2!(Self::MAX_ERROR)) {
                 return Ok(Correction {

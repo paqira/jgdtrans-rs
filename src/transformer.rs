@@ -278,7 +278,7 @@ pub struct Statistics {
 /// );
 ///
 /// // forward transformation
-/// let origin = Point::new(36.10377479, 140.087855041, 2.34);
+/// let origin = Point::new_unchecked(36.10377479, 140.087855041, 2.34);
 /// let result = tf.forward(&origin)?;
 /// assert_eq!(result.latitude, 36.103773017086695);
 /// assert_eq!(result.longitude, 140.08785924333452);

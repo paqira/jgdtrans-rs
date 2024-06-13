@@ -40,7 +40,7 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// # use jgdtrans::*;
 /// #
 /// // Construct
-/// let point = Point::new(35.0, 145.0, 5.0);
+/// let point = Point::new_unchecked(35.0, 145.0, 5.0);
 ///
 /// assert_eq!(point.latitude, 35.0);
 /// assert_eq!(point.longitude, 145.0);
@@ -48,7 +48,7 @@ fn normalize_longitude(t: &f64) -> f64 {
 ///
 /// // Add/sub Correction
 /// let result = &point + Correction::new(1.0, 1.0, 1.0);
-/// assert_eq!(result, Point::new(36.0, 146.0, 6.0));
+/// assert_eq!(result, Point::new_unchecked(36.0, 146.0, 6.0));
 ///
 /// let result = &result - Correction::new(1.0, 1.0, 1.0);
 /// assert_eq!(result, point);
@@ -65,18 +65,18 @@ pub struct Point {
 }
 
 impl From<(f64, f64)> for Point {
-    /// see [`Point::new()`], defaulting 0.0 for altitude.
+    /// see [`Point::new_unchecked()`], defaulting 0.0 for altitude.
     #[inline]
     fn from(rhs: (f64, f64)) -> Self {
-        Self::new(rhs.0, rhs.1, 0.0)
+        Self::new_unchecked(rhs.0, rhs.1, 0.0)
     }
 }
 
 impl From<(f64, f64, f64)> for Point {
-    /// see [`Point::new()`].
+    /// see [`Point::new_unchecked()`].
     #[inline]
     fn from(rhs: (f64, f64, f64)) -> Self {
-        Self::new(rhs.0, rhs.1, rhs.2)
+        Self::new_unchecked(rhs.0, rhs.1, rhs.2)
     }
 }
 
@@ -104,14 +104,14 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// #
-    /// let point = Point::new(35.0, 145.0, 5.0);
+    /// let point = Point::new_unchecked(35.0, 145.0, 5.0);
     ///
     /// assert_eq!(point.latitude, 35.0);
     /// assert_eq!(point.longitude, 145.0);
     /// assert_eq!(point.altitude, 5.0);
     /// ```
     #[inline]
-    pub const fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
+    pub const fn new_unchecked(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
             longitude,
@@ -134,22 +134,22 @@ impl Point {
     /// # use jgdtrans::*;
     /// #
     /// # fn wrapper() -> Option<()> {
-    /// let point = Point::try_new(35.0, 145.0, 5.0)?;
+    /// let point = Point::new(35.0, 145.0, 5.0)?;
     ///
     /// assert_eq!(point.latitude, 35.0);
     /// assert_eq!(point.longitude, 145.0);
     /// assert_eq!(point.altitude, 5.0);
     ///
-    /// assert_eq!(Point::try_new(91.0, 145.0, 5.0), None);
-    /// assert_eq!(Point::try_new(35.0, 181.0, 5.0), None);
-    /// assert_eq!(Point::try_new(f64::NAN, 145.0, 5.0), None);
-    /// assert_eq!(Point::try_new(35.0, f64::NAN, 5.0), None);
-    /// assert_eq!(Point::try_new(35.0, 145.0, f64::NAN), None);
+    /// assert_eq!(Point::new(91.0, 145.0, 5.0), None);
+    /// assert_eq!(Point::new(35.0, 181.0, 5.0), None);
+    /// assert_eq!(Point::new(f64::NAN, 145.0, 5.0), None);
+    /// assert_eq!(Point::new(35.0, f64::NAN, 5.0), None);
+    /// assert_eq!(Point::new(35.0, 145.0, f64::NAN), None);
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
-    pub fn try_new(latitude: f64, longitude: f64, altitude: f64) -> Option<Self> {
+    pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Option<Self> {
         if latitude.lt(&-90.)
             || 90.0.lt(&latitude)
             || longitude.lt(&-180.)
@@ -161,7 +161,7 @@ impl Point {
             return None;
         };
 
-        Some(Self::new(latitude, longitude, altitude))
+        Some(Self::new_unchecked(latitude, longitude, altitude))
     }
 
     /// Makes a normalized [`Point`] from `self`.
@@ -175,11 +175,11 @@ impl Point {
     /// ```
     /// # use jgdtrans::*;
     /// #
-    /// let point = Point::new(100.0, 200.0, 5.0);
+    /// let point = Point::new_unchecked(100.0, 200.0, 5.0);
     ///
     /// assert_eq!(
     ///     point.normalize(),
-    ///     Point::new(80.0, -160.0, 5.0)
+    ///     Point::new_unchecked(80.0, -160.0, 5.0)
     /// );
     /// ```
     #[inline]
@@ -242,7 +242,7 @@ impl Point {
     pub fn from_node(node: &MeshNode) -> Self {
         let latitude = node.latitude.to_latitude();
         let longitude = node.longitude.to_longitude();
-        Self::new(latitude, longitude, 0.)
+        Self::new_unchecked(latitude, longitude, 0.)
     }
 
     /// Returns a meshcode represents the nearest south-east mesh node of `self`.
@@ -261,7 +261,7 @@ impl Point {
     /// # use jgdtrans::mesh::MeshUnit;
     /// #
     /// # fn wrapper() -> Option<()> {
-    /// let point = Point::new(36.10377479, 140.087855041, 50.0);
+    /// let point = Point::new_unchecked(36.10377479, 140.087855041, 50.0);
     ///
     /// assert_eq!(
     ///     point.try_to_meshcode(&MeshUnit::One)?,
@@ -294,7 +294,7 @@ impl Point {
     /// # use jgdtrans::*;
     /// # use jgdtrans::mesh::{MeshNode, MeshUnit};
     /// #
-    /// let point = Point::new(36.10377479, 140.087855041, 5.0);
+    /// let point = Point::new_unchecked(36.10377479, 140.087855041, 5.0);
     ///
     /// assert_eq!(
     ///     point.try_to_node(&MeshUnit::One),
@@ -323,7 +323,7 @@ impl Point {
     /// # use jgdtrans::mesh::{MeshCell, MeshUnit};
     /// #
     /// fn wrapper() -> Option<()> {
-    /// let point = Point::new(36.10377479, 140.087855041, 10.0);
+    /// let point = Point::new_unchecked(36.10377479, 140.087855041, 10.0);
     ///
     /// assert_eq!(
     ///     point.try_to_cell(MeshUnit::One)?,
@@ -370,7 +370,7 @@ mod test {
             (20.0, -200.),
             (-70.0, -110.),
         ] {
-            assert_eq!(Point::new(v, 0.0, 0.0).normalize(), Point::new(e, 0.0, 0.0));
+            assert_eq!(Point::new_unchecked(v, 0.0, 0.0).normalize(), Point::new_unchecked(e, 0.0, 0.0));
         }
 
         for (e, v) in [
@@ -395,10 +395,10 @@ mod test {
             (160.0, -200.),
             (-110.0, -110.),
         ] {
-            assert_eq!(Point::new(0.0, v, 0.0).normalize(), Point::new(0.0, e, 0.0));
+            assert_eq!(Point::new_unchecked(0.0, v, 0.0).normalize(), Point::new_unchecked(0.0, e, 0.0));
         }
 
-        let actual = Point::new(f64::NAN, f64::NAN, f64::NAN).normalize();
+        let actual = Point::new_unchecked(f64::NAN, f64::NAN, f64::NAN).normalize();
         assert!(actual.latitude.is_nan());
         assert!(actual.longitude.is_nan());
         assert!(actual.altitude.is_nan());

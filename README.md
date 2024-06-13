@@ -65,7 +65,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
 
     // Make the origin of transformation
-    let origin = Point::new(35.0, 135.0, 2.34);
+    let origin = Point::new_unchecked(35.0, 135.0, 2.34);
     // Prints Point { latitude: 35.0, longitude: 135.0, altitude: 2.34 }
     println!("{origin:?}");
 

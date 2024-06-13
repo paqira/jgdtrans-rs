@@ -17,7 +17,7 @@ use crate::Point;
 /// # fn wrapper() -> Option<()> {
 /// // Construct from latitude and longitude, altitude ignores
 /// // (The result depends on the mesh unit)
-/// let point = Point::new(36.10377479, 140.087855041, 0.0);
+/// let point = Point::new_unchecked(36.10377479, 140.087855041, 0.0);
 /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
 /// assert_eq!(cell.south_west(), &MeshNode::try_from_meshcode(&54401027)?);
 /// assert_eq!(cell.south_east(), &MeshNode::try_from_meshcode(&54401028)?);
@@ -82,7 +82,7 @@ impl MeshCell {
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
     /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
+    /// let cell = MeshCell::new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
     /// assert_eq!(cell.south_west(), &MeshNode::try_from_meshcode(&54401027)?);
     /// assert_eq!(cell.south_east(), &MeshNode::try_from_meshcode(&54401028)?);
@@ -92,7 +92,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
-    pub const fn try_new(
+    pub const fn new(
         south_west: MeshNode,
         south_east: MeshNode,
         north_west: MeshNode,
@@ -158,7 +158,7 @@ impl MeshCell {
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
     /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
+    /// let cell = MeshCell::new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
     /// assert_eq!(cell.south_west(), &MeshNode::try_from_meshcode(&54401027)?);
     /// # Some(())}
@@ -181,7 +181,7 @@ impl MeshCell {
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
     /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
+    /// let cell = MeshCell::new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
     /// assert_eq!(cell.south_east(), &MeshNode::try_from_meshcode(&54401028)?);
     /// # Some(())}
@@ -204,7 +204,7 @@ impl MeshCell {
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
     /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
+    /// let cell = MeshCell::new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
     /// assert_eq!(cell.north_west(), &MeshNode::try_from_meshcode(&54401037)?);
     /// # Some(())}
@@ -227,7 +227,7 @@ impl MeshCell {
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
     /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
+    /// let cell = MeshCell::new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
     /// assert_eq!(cell.north_east(), &MeshNode::try_from_meshcode(&54401038)?);
     /// # Some(())}
@@ -250,7 +250,7 @@ impl MeshCell {
     /// let south_east = MeshNode::try_from_meshcode(&54401028)?;
     /// let north_west = MeshNode::try_from_meshcode(&54401037)?;
     /// let north_east = MeshNode::try_from_meshcode(&54401038)?;
-    /// let cell = MeshCell::try_new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
+    /// let cell = MeshCell::new(south_west, south_east, north_west, north_east, MeshUnit::One)?;
     ///
     /// assert_eq!(cell.mesh_unit(), &MeshUnit::One);
     /// # Some(())}
@@ -276,7 +276,7 @@ impl MeshCell {
     /// # fn wrapper() -> Option<()> {
     /// assert_eq!(
     ///     MeshCell::try_from_meshcode(&54401027, MeshUnit::One)?,
-    ///     MeshCell::try_new(
+    ///     MeshCell::new(
     ///         MeshNode::try_from_meshcode(&54401027)?,
     ///         MeshNode::try_from_meshcode(&54401028)?,
     ///         MeshNode::try_from_meshcode(&54401037)?,
@@ -339,15 +339,15 @@ impl MeshCell {
         // Call MeshNode::try_new
         // to check next_coord_lat
         // TODO: use `?` when `feature(const_trait_impl)` stable
-        let Some(south_east) = MeshNode::try_new(clone!(node.latitude), clone!(next_lng_coord))
+        let Some(south_east) = MeshNode::new(clone!(node.latitude), clone!(next_lng_coord))
         else {
             return None;
         };
-        let Some(north_west) = MeshNode::try_new(clone!(next_lat_coord), clone!(node.longitude))
+        let Some(north_west) = MeshNode::new(clone!(next_lat_coord), clone!(node.longitude))
         else {
             return None;
         };
-        let Some(north_east) = MeshNode::try_new(clone!(next_lat_coord), clone!(next_lng_coord))
+        let Some(north_east) = MeshNode::new(clone!(next_lat_coord), clone!(next_lng_coord))
         else {
             return None;
         };
@@ -376,11 +376,11 @@ impl MeshCell {
     /// # use jgdtrans::mesh::*;
     /// #
     /// # fn wrapper() -> Option<()> {
-    /// let point: Point = Point::new(36.10377479, 140.087855041, 0.0);
+    /// let point: Point = Point::new_unchecked(36.10377479, 140.087855041, 0.0);
     ///
     /// assert_eq!(
     ///     MeshCell::try_from_point(&point, MeshUnit::One)?,
-    ///     MeshCell::try_new(
+    ///     MeshCell::new(
     ///         MeshNode::try_from_meshcode(&54401027)?,
     ///         MeshNode::try_from_meshcode(&54401028)?,
     ///         MeshNode::try_from_meshcode(&54401037)?,
@@ -391,7 +391,7 @@ impl MeshCell {
     ///
     /// assert_eq!(
     ///     MeshCell::try_from_point(&point, MeshUnit::Five)?,
-    ///     MeshCell::try_new(
+    ///     MeshCell::new(
     ///         MeshNode::try_from_meshcode(&54401005)?,
     ///         MeshNode::try_from_meshcode(&54401100)?,
     ///         MeshNode::try_from_meshcode(&54401055)?,
@@ -422,7 +422,7 @@ impl MeshCell {
     /// #
     /// # fn wrapper() -> Option<()> {
     /// // sample latitude and longitude
-    /// let point = Point::new(36.10377479, 140.087855041, 0.0);
+    /// let point = Point::new_unchecked(36.10377479, 140.087855041, 0.0);
     ///
     /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
     ///
@@ -456,7 +456,7 @@ impl MeshCell {
     /// # use jgdtrans::mesh::*;
     /// #
     /// # fn wrapper() -> Option<()> {
-    /// let point = Point::new(36.10377479, 140.087855041, 0.0);
+    /// let point = Point::new_unchecked(36.10377479, 140.087855041, 0.0);
     ///
     /// let cell = MeshCell::try_from_point(&point, MeshUnit::One)?;
     /// assert_eq!(
@@ -496,7 +496,7 @@ mod test {
     #[test]
     fn test_try_new() {
         // healty
-        assert!(MeshCell::try_new(
+        assert!(MeshCell::new(
             MeshNode::try_from_meshcode(&54401027).unwrap(),
             MeshNode::try_from_meshcode(&54401028).unwrap(),
             MeshNode::try_from_meshcode(&54401037).unwrap(),
@@ -504,7 +504,7 @@ mod test {
             MeshUnit::One,
         )
         .is_some());
-        assert!(MeshCell::try_new(
+        assert!(MeshCell::new(
             MeshNode::try_from_meshcode(&54401005).unwrap(),
             MeshNode::try_from_meshcode(&54401100).unwrap(),
             MeshNode::try_from_meshcode(&54401055).unwrap(),
@@ -515,7 +515,7 @@ mod test {
 
         // error
         // incorrect unit
-        assert!(MeshCell::try_new(
+        assert!(MeshCell::new(
             MeshNode::try_from_meshcode(&54401027).unwrap(),
             MeshNode::try_from_meshcode(&54401028).unwrap(),
             MeshNode::try_from_meshcode(&54401037).unwrap(),
@@ -523,7 +523,7 @@ mod test {
             MeshUnit::Five,
         )
         .is_none());
-        assert!(MeshCell::try_new(
+        assert!(MeshCell::new(
             MeshNode::try_from_meshcode(&54401005).unwrap(),
             MeshNode::try_from_meshcode(&54401100).unwrap(),
             MeshNode::try_from_meshcode(&54401055).unwrap(),
@@ -534,7 +534,7 @@ mod test {
 
         // not a unit cell
         // longitude
-        assert!(MeshCell::try_new(
+        assert!(MeshCell::new(
             MeshNode::try_from_meshcode(&54401027).unwrap(),
             MeshNode::try_from_meshcode(&54401027).unwrap(),
             MeshNode::try_from_meshcode(&54401037).unwrap(),
@@ -542,7 +542,7 @@ mod test {
             MeshUnit::One,
         )
         .is_none());
-        assert!(MeshCell::try_new(
+        assert!(MeshCell::new(
             MeshNode::try_from_meshcode(&54401027).unwrap(),
             MeshNode::try_from_meshcode(&54401028).unwrap(),
             MeshNode::try_from_meshcode(&54401036).unwrap(),
@@ -550,7 +550,7 @@ mod test {
             MeshUnit::One,
         )
         .is_none());
-        assert!(MeshCell::try_new(
+        assert!(MeshCell::new(
             MeshNode::try_from_meshcode(&54401027).unwrap(),
             MeshNode::try_from_meshcode(&54401028).unwrap(),
             MeshNode::try_from_meshcode(&54401037).unwrap(),
@@ -560,7 +560,7 @@ mod test {
         .is_none());
 
         // latitude
-        assert!(MeshCell::try_new(
+        assert!(MeshCell::new(
             MeshNode::try_from_meshcode(&54401027).unwrap(),
             MeshNode::try_from_meshcode(&54401018).unwrap(),
             MeshNode::try_from_meshcode(&54401037).unwrap(),
@@ -568,7 +568,7 @@ mod test {
             MeshUnit::One,
         )
         .is_none());
-        assert!(MeshCell::try_new(
+        assert!(MeshCell::new(
             MeshNode::try_from_meshcode(&54401027).unwrap(),
             MeshNode::try_from_meshcode(&54401028).unwrap(),
             MeshNode::try_from_meshcode(&54401027).unwrap(),
@@ -576,7 +576,7 @@ mod test {
             MeshUnit::One,
         )
         .is_none());
-        assert!(MeshCell::try_new(
+        assert!(MeshCell::new(
             MeshNode::try_from_meshcode(&54401027).unwrap(),
             MeshNode::try_from_meshcode(&54401028).unwrap(),
             MeshNode::try_from_meshcode(&54401037).unwrap(),
@@ -588,7 +588,7 @@ mod test {
 
     #[test]
     fn test_getter() {
-        let cell = MeshCell::try_new(
+        let cell = MeshCell::new(
             MeshNode::try_from_meshcode(&54401027).unwrap(),
             MeshNode::try_from_meshcode(&54401028).unwrap(),
             MeshNode::try_from_meshcode(&54401037).unwrap(),
@@ -620,7 +620,7 @@ mod test {
     fn test_try_from_meshcode() {
         assert_eq!(
             MeshCell::try_from_meshcode(&54401027, MeshUnit::One).unwrap(),
-            MeshCell::try_new(
+            MeshCell::new(
                 MeshNode::try_from_meshcode(&54401027).unwrap(),
                 MeshNode::try_from_meshcode(&54401028).unwrap(),
                 MeshNode::try_from_meshcode(&54401037).unwrap(),
@@ -631,7 +631,7 @@ mod test {
         );
         assert_eq!(
             MeshCell::try_from_meshcode(&54401005, MeshUnit::Five).unwrap(),
-            MeshCell::try_new(
+            MeshCell::new(
                 MeshNode::try_from_meshcode(&54401005).unwrap(),
                 MeshNode::try_from_meshcode(&54401100).unwrap(),
                 MeshNode::try_from_meshcode(&54401055).unwrap(),
@@ -653,7 +653,7 @@ mod test {
                 MeshUnit::One,
             )
             .unwrap(),
-            MeshCell::try_new(
+            MeshCell::new(
                 MeshNode::try_from_meshcode(&54401027).unwrap(),
                 MeshNode::try_from_meshcode(&54401028).unwrap(),
                 MeshNode::try_from_meshcode(&54401037).unwrap(),
@@ -668,7 +668,7 @@ mod test {
                 MeshUnit::Five,
             )
             .unwrap(),
-            MeshCell::try_new(
+            MeshCell::new(
                 MeshNode::try_from_meshcode(&54401005).unwrap(),
                 MeshNode::try_from_meshcode(&54401100).unwrap(),
                 MeshNode::try_from_meshcode(&54401055).unwrap(),
@@ -688,11 +688,11 @@ mod test {
 
     #[test]
     fn test_try_from_point() {
-        let point = Point::new(36.10377479, 140.087855041, 10.0);
+        let point = Point::new_unchecked(36.10377479, 140.087855041, 10.0);
 
         assert_eq!(
             MeshCell::try_from_point(&point, MeshUnit::One).unwrap(),
-            MeshCell::try_new(
+            MeshCell::new(
                 MeshNode::try_from_meshcode(&54401027).unwrap(),
                 MeshNode::try_from_meshcode(&54401028).unwrap(),
                 MeshNode::try_from_meshcode(&54401037).unwrap(),
@@ -703,7 +703,7 @@ mod test {
         );
         assert_eq!(
             MeshCell::try_from_point(&point, MeshUnit::Five).unwrap(),
-            MeshCell::try_new(
+            MeshCell::new(
                 MeshNode::try_from_meshcode(&54401005).unwrap(),
                 MeshNode::try_from_meshcode(&54401100).unwrap(),
                 MeshNode::try_from_meshcode(&54401055).unwrap(),
@@ -716,7 +716,7 @@ mod test {
 
     #[test]
     fn test_position() {
-        let point = Point::new(36.10377479, 140.087855041, 10.0);
+        let point = Point::new_unchecked(36.10377479, 140.087855041, 10.0);
 
         let cell = MeshCell::try_from_point(&point, MeshUnit::One).unwrap();
         assert_eq!(

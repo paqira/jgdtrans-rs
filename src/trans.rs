@@ -178,7 +178,7 @@ where
     ///     ])
     /// );
     ///
-    /// let point = Point::new(36.10377479, 140.087855041, 2.34);
+    /// let point = Point::new_unchecked(36.10377479, 140.087855041, 2.34);
     /// let result = tf.forward(&point)?;
     ///
     /// assert_eq!(result.latitude, 36.103773017086695);
@@ -221,7 +221,7 @@ where
     ///     ])
     /// );
     ///
-    /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
+    /// let point = Point::new_unchecked(36.103773017086695, 140.08785924333452, 2.4363138578103);
     /// let result = tf.backward_compat(&point)?;
     ///
     /// assert_eq!(result.latitude, 36.10377479000002);  // exact: 36.10377479
@@ -273,7 +273,7 @@ where
     /// );
     ///
     /// // In this case, no error remains
-    /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
+    /// let point = Point::new_unchecked(36.103773017086695, 140.08785924333452, 2.4363138578103);
     /// let result = tf.backward(&point)?;
     ///
     /// assert_eq!(result.latitude, 36.10377479);  // exact: 36.10377479
@@ -322,7 +322,7 @@ where
     ///     ])
     /// );
     ///
-    /// let point = Point::new(36.10377479, 140.087855041, 2.34);
+    /// let point = Point::new_unchecked(36.10377479, 140.087855041, 2.34);
     ///
     /// // Equivalent to Transformer::forward except checking
     /// assert_eq!(
@@ -369,7 +369,7 @@ where
     ///     ])
     /// );
     ///
-    /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
+    /// let point = Point::new_unchecked(36.103773017086695, 140.08785924333452, 2.4363138578103);
     ///
     /// // Equivalent to Transformer::backward_compat except checking
     /// assert_eq!(
@@ -417,7 +417,7 @@ where
     ///     ])
     /// );
     ///
-    /// let point = Point::new(36.103773017086695, 140.08785924333452, 2.4363138578103);
+    /// let point = Point::new_unchecked(36.103773017086695, 140.08785924333452, 2.4363138578103);
     ///
     /// // Equivalent to Transformer::backward except checking
     /// assert_eq!(
@@ -457,7 +457,7 @@ where
     ///     ])
     /// );
     ///
-    /// let origin = Point::new(36.10377479, 140.087855041, 0.0);
+    /// let origin = Point::new_unchecked(36.10377479, 140.087855041, 0.0);
     /// let corr = tf.forward_corr(&origin)?;
     ///
     /// assert_eq!(corr.latitude, -1.7729133100878255e-6);
@@ -515,7 +515,7 @@ where
     ///     ])
     /// );
     ///
-    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
+    /// let origin = Point::new_unchecked(36.103773017086695, 140.08785924333452, 0.0);
     /// let corr = tf.backward_compat_corr(&origin)?;
     ///
     /// assert_eq!(corr.latitude, 1.7729133219831587e-6);
@@ -578,7 +578,7 @@ where
     ///     ])
     /// );
     ///
-    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
+    /// let origin = Point::new_unchecked(36.103773017086695, 140.08785924333452, 0.0);
     /// let corr = tf.backward_corr(&origin)?;
     ///
     /// assert_eq!(corr.latitude, 1.7729133100878255e-6);
@@ -629,7 +629,7 @@ where
             //
             // Preparation
             //
-            let current = Point::new(zn[1], zn[0], 0.0);
+            let current = Point::new_unchecked(zn[1], zn[0], 0.0);
 
             let cell = MeshCell::try_from_point(&current, self.format.mesh_unit())
                 .ok_or(TransformError::new_oob())?;
@@ -668,7 +668,7 @@ where
             zn = (minus_fzz * fz - minus_fzw * fz.reverse()).fma(f64x2!(1. / det), zn);
 
             // Verify the current error
-            let temp = Point::new(zn[1], zn[0], 0.0);
+            let temp = Point::new_unchecked(zn[1], zn[0], 0.0);
             let corr = self.forward_corr(&temp)?;
 
             let delta = q - (zn + f64x2!(corr.longitude, corr.latitude));
@@ -719,7 +719,7 @@ where
     ///     ])
     /// );
     ///
-    /// let origin = Point::new(36.10377479, 140.087855041, 0.0);
+    /// let origin = Point::new_unchecked(36.10377479, 140.087855041, 0.0);
     /// let corr = tf.forward_corr(&origin)?;
     ///
     /// // Equivalent to Transformer::forward_corr except checking
@@ -785,7 +785,7 @@ where
     ///     ])
     /// );
     ///
-    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
+    /// let origin = Point::new_unchecked(36.103773017086695, 140.08785924333452, 0.0);
     ///
     /// // Equivalent to Transformer::backward_compat_corr except checking
     /// assert_eq!(
@@ -850,7 +850,7 @@ where
     ///     ])
     /// );
     ///
-    /// let origin = Point::new(36.103773017086695, 140.08785924333452, 0.0);
+    /// let origin = Point::new_unchecked(36.103773017086695, 140.08785924333452, 0.0);
     ///
     /// // Equivalent to Transformer::backward_corr except checking
     /// assert_eq!(
@@ -870,7 +870,7 @@ where
         let mut zn = f64x2!(point.longitude, point.latitude);
 
         for _ in 0..ITERATION {
-            let current = Point::new(zn[1], zn[0], 0.0);
+            let current = Point::new_unchecked(zn[1], zn[0], 0.0);
 
             let code = MeshCode::from_point(&current, &mesh_unit);
 
@@ -898,7 +898,7 @@ where
             // zn = (fzz * fz - fzw * fz.reverse()).fma(f64x2!(-1./det), zn);
             zn = (minus_fzz * fz - minus_fzw * fz.reverse()).fma(f64x2!(1. / det), zn);
 
-            let temp = Point::new(zn[1], zn[0], 0.0);
+            let temp = Point::new_unchecked(zn[1], zn[0], 0.0);
             let corr = self.forward_corr_unchecked(&temp)?;
 
             let delta = q - (zn + f64x2!(corr.longitude, corr.latitude));
@@ -1060,14 +1060,14 @@ mod test {
             const DELTA: f64 = 0.00000001;
 
             // 国土地理院
-            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            let origin = Point::new_unchecked(36.103774791666666, 140.08785504166664, 0.0);
             let actual = tf.forward(&origin).unwrap();
 
             assert!((36.106966281 - actual.latitude).abs() < DELTA);
             assert!((140.084576867 - actual.longitude).abs() < DELTA);
             assert_eq!(0.0, actual.altitude);
 
-            let origin = Point::new(36.10696628160147, 140.08457686629436, 0.0);
+            let origin = Point::new_unchecked(36.10696628160147, 140.08457686629436, 0.0);
             let actual = tf.backward_compat(&origin).unwrap();
             assert!((36.103774792 - actual.latitude).abs() < DELTA);
             assert!((140.087855042 - actual.longitude).abs() < DELTA);
@@ -1087,13 +1087,13 @@ mod test {
             const DELTA: f64 = 0.00000001;
 
             // 金華山黄金山神社
-            let origin = Point::new(38.2985120586605, 141.5559006163195, 0.);
+            let origin = Point::new_unchecked(38.2985120586605, 141.5559006163195, 0.);
             let actual = tf.forward(&origin).unwrap();
             assert!((38.298495306 - actual.latitude).abs() < DELTA);
             assert!((141.555963019 - actual.longitude).abs() < DELTA);
             assert!((-1.263 - actual.altitude).abs() < 0.001);
 
-            let origin = Point::new(38.29849530463122, 141.55596301776936, 0.0);
+            let origin = Point::new_unchecked(38.29849530463122, 141.55596301776936, 0.0);
             let actual = tf.backward_compat(&origin).unwrap();
             assert!((38.298512058 - actual.latitude).abs() < DELTA);
             assert!((141.555900614 - actual.longitude).abs() < DELTA);
@@ -1113,13 +1113,13 @@ mod test {
             const DELTA: f64 = 0.00000001;
 
             // 国土地理院
-            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.);
+            let origin = Point::new_unchecked(36.103774791666666, 140.08785504166664, 0.);
             let actual = tf.forward(&origin).unwrap();
             assert!((36.103773019 - actual.latitude).abs() < DELTA);
             assert!((140.087859244 - actual.longitude).abs() < DELTA);
             assert!((0.096 - actual.altitude).abs() < 0.001);
 
-            let origin = Point::new(36.10377301875336, 140.08785924400115, 0.);
+            let origin = Point::new_unchecked(36.10377301875336, 140.08785924400115, 0.);
             let actual = tf.backward_compat(&origin).unwrap();
             assert!((36.103774792 - actual.latitude).abs() < DELTA);
             assert!((140.087855042 - actual.longitude).abs() < DELTA);
@@ -1139,7 +1139,7 @@ mod test {
             const DELTA: f64 = 0.0000000000001;
 
             // 国土地理院
-            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            let origin = Point::new_unchecked(36.103774791666666, 140.08785504166664, 0.0);
             let actual = tf.forward(&origin).unwrap();
             assert!((36.10377301875335 - actual.latitude).abs() < DELTA);
             assert!((140.08785924400115 - actual.longitude).abs() < DELTA);
@@ -1161,7 +1161,7 @@ mod test {
                 .parameters(TKY2JGD)
                 .build();
 
-            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            let origin = Point::new_unchecked(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
                 tf.forward_unchecked(&origin).unwrap(),
                 tf.forward(&origin).unwrap()
@@ -1177,7 +1177,7 @@ mod test {
                 .parameters(SemiDynaEXE)
                 .build();
 
-            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            let origin = Point::new_unchecked(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
                 tf.forward_unchecked(&origin).unwrap(),
                 tf.forward(&origin).unwrap()
@@ -1198,7 +1198,7 @@ mod test {
                 .parameters(TKY2JGD)
                 .build();
 
-            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            let origin = Point::new_unchecked(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
                 tf.backward_compat_unchecked(&origin).unwrap(),
                 tf.backward_compat(&origin).unwrap()
@@ -1214,7 +1214,7 @@ mod test {
                 .parameters(SemiDynaEXE)
                 .build();
 
-            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            let origin = Point::new_unchecked(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
                 tf.backward_compat_unchecked(&origin).unwrap(),
                 tf.backward_compat(&origin).unwrap()
@@ -1235,7 +1235,7 @@ mod test {
                 .parameters(TKY2JGD)
                 .build();
 
-            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            let origin = Point::new_unchecked(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
                 tf.backward_unchecked(&origin).unwrap(),
                 tf.backward(&origin).unwrap()
@@ -1251,7 +1251,7 @@ mod test {
                 .parameters(SemiDynaEXE)
                 .build();
 
-            let origin = Point::new(36.103774791666666, 140.08785504166664, 0.0);
+            let origin = Point::new_unchecked(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
                 tf.backward_unchecked(&origin).unwrap(),
                 tf.backward(&origin).unwrap()
@@ -1393,90 +1393,90 @@ mod test {
             use super::*;
 
             pub(crate) const TKY2JGD: [Point; 40] = [
-                Point::new(24.798290751134598, 141.3092768564055, 0.0),
-                Point::new(24.776992362241682, 141.2957020875077, 0.0),
-                Point::new(24.788118554416414, 141.29898410056833, 0.0),
-                Point::new(24.798235275783192, 141.3266731395085, 0.0),
-                Point::new(24.798058446159867, 141.31321388872777, 0.0),
-                Point::new(24.796644681979227, 141.3228919280988, 0.0),
-                Point::new(24.793579980932243, 141.32424155831634, 0.0),
-                Point::new(24.786255806314095, 141.30818909716402, 0.0),
-                Point::new(24.78993679066769, 141.32869108860442, 0.0),
-                Point::new(24.788834601117944, 141.32468254434286, 0.0),
-                Point::new(24.79874479040802, 141.33546685599055, 0.0),
-                Point::new(24.796000572815707, 141.33166238497353, 0.0),
-                Point::new(24.793671689443524, 141.30768027721874, 0.0),
-                Point::new(24.797617850757536, 141.3164020097272, 0.0),
-                Point::new(24.76987596694603, 141.31577548648312, 0.0),
-                Point::new(24.773162494661474, 141.33025776990172, 0.0),
-                Point::new(24.77648478415442, 141.3078617313661, 0.0),
-                Point::new(24.78002879231921, 141.30817494436678, 0.0),
-                Point::new(24.79862854689639, 141.31198846489906, 0.0),
-                Point::new(24.793770393958578, 141.2965315249094, 0.0),
-                Point::new(24.785969281563226, 141.32229963191577, 0.0),
-                Point::new(24.79093502301227, 141.30627968578676, 0.0),
-                Point::new(24.77554194881383, 141.32051272892983, 0.0),
-                Point::new(24.79809948351226, 141.3170321747806, 0.0),
-                Point::new(24.79313940841349, 141.329310015945, 0.0),
-                Point::new(24.799331821736533, 141.319467447338, 0.0),
-                Point::new(24.78453600572179, 141.3233174144879, 0.0),
-                Point::new(24.79245500153927, 141.32383477232435, 0.0),
-                Point::new(24.7853452020542, 141.31235212566133, 0.0),
-                Point::new(24.796000054489724, 141.3046077435609, 0.0),
-                Point::new(24.795676247270556, 141.33077800568157, 0.0),
-                Point::new(24.78574286806258, 141.30707955610401, 0.0),
-                Point::new(24.769350256959537, 141.3169685630857, 0.0),
-                Point::new(24.773545879608932, 141.3217284222138, 0.0),
-                Point::new(24.794711546614124, 141.3161942411729, 0.0),
-                Point::new(24.793539358633474, 141.33239060465922, 0.0),
-                Point::new(24.779619552875534, 141.32559975003764, 0.0),
-                Point::new(24.77739829743626, 141.30236135418414, 0.0),
-                Point::new(24.773121933792915, 141.31296442626453, 0.0),
-                Point::new(24.79577846634706, 141.32130844832952, 0.0),
+                Point::new_unchecked(24.798290751134598, 141.3092768564055, 0.0),
+                Point::new_unchecked(24.776992362241682, 141.2957020875077, 0.0),
+                Point::new_unchecked(24.788118554416414, 141.29898410056833, 0.0),
+                Point::new_unchecked(24.798235275783192, 141.3266731395085, 0.0),
+                Point::new_unchecked(24.798058446159867, 141.31321388872777, 0.0),
+                Point::new_unchecked(24.796644681979227, 141.3228919280988, 0.0),
+                Point::new_unchecked(24.793579980932243, 141.32424155831634, 0.0),
+                Point::new_unchecked(24.786255806314095, 141.30818909716402, 0.0),
+                Point::new_unchecked(24.78993679066769, 141.32869108860442, 0.0),
+                Point::new_unchecked(24.788834601117944, 141.32468254434286, 0.0),
+                Point::new_unchecked(24.79874479040802, 141.33546685599055, 0.0),
+                Point::new_unchecked(24.796000572815707, 141.33166238497353, 0.0),
+                Point::new_unchecked(24.793671689443524, 141.30768027721874, 0.0),
+                Point::new_unchecked(24.797617850757536, 141.3164020097272, 0.0),
+                Point::new_unchecked(24.76987596694603, 141.31577548648312, 0.0),
+                Point::new_unchecked(24.773162494661474, 141.33025776990172, 0.0),
+                Point::new_unchecked(24.77648478415442, 141.3078617313661, 0.0),
+                Point::new_unchecked(24.78002879231921, 141.30817494436678, 0.0),
+                Point::new_unchecked(24.79862854689639, 141.31198846489906, 0.0),
+                Point::new_unchecked(24.793770393958578, 141.2965315249094, 0.0),
+                Point::new_unchecked(24.785969281563226, 141.32229963191577, 0.0),
+                Point::new_unchecked(24.79093502301227, 141.30627968578676, 0.0),
+                Point::new_unchecked(24.77554194881383, 141.32051272892983, 0.0),
+                Point::new_unchecked(24.79809948351226, 141.3170321747806, 0.0),
+                Point::new_unchecked(24.79313940841349, 141.329310015945, 0.0),
+                Point::new_unchecked(24.799331821736533, 141.319467447338, 0.0),
+                Point::new_unchecked(24.78453600572179, 141.3233174144879, 0.0),
+                Point::new_unchecked(24.79245500153927, 141.32383477232435, 0.0),
+                Point::new_unchecked(24.7853452020542, 141.31235212566133, 0.0),
+                Point::new_unchecked(24.796000054489724, 141.3046077435609, 0.0),
+                Point::new_unchecked(24.795676247270556, 141.33077800568157, 0.0),
+                Point::new_unchecked(24.78574286806258, 141.30707955610401, 0.0),
+                Point::new_unchecked(24.769350256959537, 141.3169685630857, 0.0),
+                Point::new_unchecked(24.773545879608932, 141.3217284222138, 0.0),
+                Point::new_unchecked(24.794711546614124, 141.3161942411729, 0.0),
+                Point::new_unchecked(24.793539358633474, 141.33239060465922, 0.0),
+                Point::new_unchecked(24.779619552875534, 141.32559975003764, 0.0),
+                Point::new_unchecked(24.77739829743626, 141.30236135418414, 0.0),
+                Point::new_unchecked(24.773121933792915, 141.31296442626453, 0.0),
+                Point::new_unchecked(24.79577846634706, 141.32130844832952, 0.0),
             ];
 
             #[allow(non_upper_case_globals)]
             pub(crate) const PatchJGD: [Point; 40] = [
-                Point::new(38.29366648184684, 141.57218911318597, 0.0),
-                Point::new(38.29524750505648, 141.565951814976, 0.0),
-                Point::new(38.28915479765745, 141.56079323763166, 0.0),
-                Point::new(38.297513747823075, 141.55984791630456, 0.0),
-                Point::new(38.297007281172434, 141.5746649204517, 0.0),
-                Point::new(38.29829825378931, 141.56072587586758, 0.0),
-                Point::new(38.282415662326834, 141.57402956317543, 0.0),
-                Point::new(38.291308839971855, 141.57109017536575, 0.0),
-                Point::new(38.287977577974964, 141.55866958172842, 0.0),
-                Point::new(38.30091699112494, 141.5643922697493, 0.0),
-                Point::new(38.29279324093365, 141.56306228386993, 0.0),
-                Point::new(38.286837780670275, 141.56928026805485, 0.0),
-                Point::new(38.2860438423304, 141.56801950212866, 0.0),
-                Point::new(38.29792409516659, 141.5622524433344, 0.0),
-                Point::new(38.30300649955924, 141.56104080525452, 0.0),
-                Point::new(38.28914067031325, 141.56238204898824, 0.0),
-                Point::new(38.28171743867986, 141.56765553046435, 0.0),
-                Point::new(38.30157113957333, 141.56413577139742, 0.0),
-                Point::new(38.30348165284211, 141.56767483299026, 0.0),
-                Point::new(38.295223833911066, 141.566301690163, 0.0),
-                Point::new(38.28533589095024, 141.5695980435206, 0.0),
-                Point::new(38.30318722327355, 141.5765931735851, 0.0),
-                Point::new(38.30177973315218, 141.5695502689466, 0.0),
-                Point::new(38.28928124097101, 141.5626725130587, 0.0),
-                Point::new(38.29237043182264, 141.5593835313238, 0.0),
-                Point::new(38.28361764109154, 141.56394270141877, 0.0),
-                Point::new(38.30262467419498, 141.57191624504966, 0.0),
-                Point::new(38.29972185146991, 141.56412159071996, 0.0),
-                Point::new(38.30334459979315, 141.57355894182143, 0.0),
-                Point::new(38.28104546751318, 141.56899076582783, 0.0),
-                Point::new(38.2945432168755, 141.56563651301778, 0.0),
-                Point::new(38.29867420807941, 141.56744030102118, 0.0),
-                Point::new(38.302209007855474, 141.57657802410878, 0.0),
-                Point::new(38.29486900681201, 141.57558289020673, 0.0),
-                Point::new(38.29349642206837, 141.57070332133043, 0.0),
-                Point::new(38.286703576574766, 141.55832263592652, 0.0),
-                Point::new(38.30035172054504, 141.57192705645912, 0.0),
-                Point::new(38.28752088543183, 141.57277468859644, 0.0),
-                Point::new(38.301609894209, 141.5673646322615, 0.0),
-                Point::new(38.292785674864675, 141.56157144988188, 0.0),
+                Point::new_unchecked(38.29366648184684, 141.57218911318597, 0.0),
+                Point::new_unchecked(38.29524750505648, 141.565951814976, 0.0),
+                Point::new_unchecked(38.28915479765745, 141.56079323763166, 0.0),
+                Point::new_unchecked(38.297513747823075, 141.55984791630456, 0.0),
+                Point::new_unchecked(38.297007281172434, 141.5746649204517, 0.0),
+                Point::new_unchecked(38.29829825378931, 141.56072587586758, 0.0),
+                Point::new_unchecked(38.282415662326834, 141.57402956317543, 0.0),
+                Point::new_unchecked(38.291308839971855, 141.57109017536575, 0.0),
+                Point::new_unchecked(38.287977577974964, 141.55866958172842, 0.0),
+                Point::new_unchecked(38.30091699112494, 141.5643922697493, 0.0),
+                Point::new_unchecked(38.29279324093365, 141.56306228386993, 0.0),
+                Point::new_unchecked(38.286837780670275, 141.56928026805485, 0.0),
+                Point::new_unchecked(38.2860438423304, 141.56801950212866, 0.0),
+                Point::new_unchecked(38.29792409516659, 141.5622524433344, 0.0),
+                Point::new_unchecked(38.30300649955924, 141.56104080525452, 0.0),
+                Point::new_unchecked(38.28914067031325, 141.56238204898824, 0.0),
+                Point::new_unchecked(38.28171743867986, 141.56765553046435, 0.0),
+                Point::new_unchecked(38.30157113957333, 141.56413577139742, 0.0),
+                Point::new_unchecked(38.30348165284211, 141.56767483299026, 0.0),
+                Point::new_unchecked(38.295223833911066, 141.566301690163, 0.0),
+                Point::new_unchecked(38.28533589095024, 141.5695980435206, 0.0),
+                Point::new_unchecked(38.30318722327355, 141.5765931735851, 0.0),
+                Point::new_unchecked(38.30177973315218, 141.5695502689466, 0.0),
+                Point::new_unchecked(38.28928124097101, 141.5626725130587, 0.0),
+                Point::new_unchecked(38.29237043182264, 141.5593835313238, 0.0),
+                Point::new_unchecked(38.28361764109154, 141.56394270141877, 0.0),
+                Point::new_unchecked(38.30262467419498, 141.57191624504966, 0.0),
+                Point::new_unchecked(38.29972185146991, 141.56412159071996, 0.0),
+                Point::new_unchecked(38.30334459979315, 141.57355894182143, 0.0),
+                Point::new_unchecked(38.28104546751318, 141.56899076582783, 0.0),
+                Point::new_unchecked(38.2945432168755, 141.56563651301778, 0.0),
+                Point::new_unchecked(38.29867420807941, 141.56744030102118, 0.0),
+                Point::new_unchecked(38.302209007855474, 141.57657802410878, 0.0),
+                Point::new_unchecked(38.29486900681201, 141.57558289020673, 0.0),
+                Point::new_unchecked(38.29349642206837, 141.57070332133043, 0.0),
+                Point::new_unchecked(38.286703576574766, 141.55832263592652, 0.0),
+                Point::new_unchecked(38.30035172054504, 141.57192705645912, 0.0),
+                Point::new_unchecked(38.28752088543183, 141.57277468859644, 0.0),
+                Point::new_unchecked(38.301609894209, 141.5673646322615, 0.0),
+                Point::new_unchecked(38.292785674864675, 141.56157144988188, 0.0),
             ];
         }
 

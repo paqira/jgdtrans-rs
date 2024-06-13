@@ -15,11 +15,12 @@ macro_rules! impl_ops {
 
             #[inline]
             fn $m(self, rhs: $rhs) -> Self::Output {
-                Self::Output::new(
+                Self::Output::new_unchecked(
                     $t::$m(self.latitude, rhs.latitude),
                     $t::$m(self.longitude, rhs.longitude),
                     $t::$m(self.altitude, rhs.altitude),
                 )
+                .normalize()
             }
         }
 
@@ -28,11 +29,12 @@ macro_rules! impl_ops {
 
             #[inline]
             fn $m(self, rhs: &$rhs) -> Self::Output {
-                Self::Output::new(
+                Self::Output::new_unchecked(
                     $t::$m(self.latitude, rhs.latitude),
                     $t::$m(self.longitude, rhs.longitude),
                     $t::$m(self.altitude, rhs.altitude),
                 )
+                .normalize()
             }
         }
 
@@ -41,11 +43,12 @@ macro_rules! impl_ops {
 
             #[inline]
             fn $m(self, rhs: $rhs) -> Self::Output {
-                Self::Output::new(
+                Self::Output::new_unchecked(
                     $t::$m(self.latitude, rhs.latitude),
                     $t::$m(self.longitude, rhs.longitude),
                     $t::$m(self.altitude, rhs.altitude),
                 )
+                .normalize()
             }
         }
 
@@ -54,11 +57,12 @@ macro_rules! impl_ops {
 
             #[inline]
             fn $m(self, rhs: &$rhs) -> Self::Output {
-                Self::Output::new(
+                Self::Output::new_unchecked(
                     $t::$m(self.latitude, rhs.latitude),
                     $t::$m(self.longitude, rhs.longitude),
                     $t::$m(self.altitude, rhs.altitude),
                 )
+                .normalize()
             }
         }
     };
@@ -72,6 +76,7 @@ macro_rules! impl_assign_ops {
                 $t::$m(&mut self.latitude, rhs.latitude);
                 $t::$m(&mut self.longitude, rhs.longitude);
                 $t::$m(&mut self.altitude, rhs.altitude);
+                *self = self.normalize();
             }
         }
 
@@ -81,6 +86,7 @@ macro_rules! impl_assign_ops {
                 $t::$m(&mut self.latitude, rhs.latitude);
                 $t::$m(&mut self.longitude, rhs.longitude);
                 $t::$m(&mut self.altitude, rhs.altitude);
+                *self = self.normalize();
             }
         }
     };

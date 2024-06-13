@@ -46,7 +46,7 @@ fn normalize_longitude(t: &f64) -> f64 {
 /// assert_eq!(point.longitude, 145.0);
 /// assert_eq!(point.altitude, 5.0);
 ///
-/// // Add/sub Correction
+/// // (Wrapping) add/sub with Correction
 /// let result = &point + Correction::new(1.0, 1.0, 1.0);
 /// assert_eq!(result, Point::new_unchecked(36.0, 146.0, 6.0));
 ///

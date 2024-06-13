@@ -95,30 +95,6 @@ impl_assign_ops!(AddAssign, add_assign, Point, Correction);
 impl_assign_ops!(SubAssign, sub_assign, Point, Correction);
 
 impl Point {
-    /// Makes a [`Point`].
-    ///
-    /// This does not check any values.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use jgdtrans::*;
-    /// #
-    /// let point = Point::new_unchecked(35.0, 145.0, 5.0);
-    ///
-    /// assert_eq!(point.latitude, 35.0);
-    /// assert_eq!(point.longitude, 145.0);
-    /// assert_eq!(point.altitude, 5.0);
-    /// ```
-    #[inline]
-    pub const fn new_unchecked(latitude: f64, longitude: f64, altitude: f64) -> Self {
-        Self {
-            latitude,
-            longitude,
-            altitude,
-        }
-    }
-
     /// Makes a [`Point`] with checking.
     ///
     /// The resulting `latitude` satisfies -90.0 <= and <= 90.0
@@ -162,6 +138,30 @@ impl Point {
         };
 
         Some(Self::new_unchecked(latitude, longitude, altitude))
+    }
+    
+    /// Makes a [`Point`].
+    ///
+    /// This does not check any values.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// #
+    /// let point = Point::new_unchecked(35.0, 145.0, 5.0);
+    ///
+    /// assert_eq!(point.latitude, 35.0);
+    /// assert_eq!(point.longitude, 145.0);
+    /// assert_eq!(point.altitude, 5.0);
+    /// ```
+    #[inline]
+    pub const fn new_unchecked(latitude: f64, longitude: f64, altitude: f64) -> Self {
+        Self {
+            latitude,
+            longitude,
+            altitude,
+        }
     }
 
     /// Makes a normalized [`Point`] from `self`.

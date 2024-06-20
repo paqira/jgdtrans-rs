@@ -133,7 +133,8 @@ macro_rules! impl_bench {
         fn $n(b: &mut Bencher) {
             let s = fs::read_to_string("benches/SemiDyna2023.par")
                 .expect("file not found 'SemiDyna2023.par'");
-            let tf = Transformer::from_str(&s, Format::SemiDynaEXE)
+            let tf = par::Parser::with_hasher(Format::SemiDynaEXE, fnv::FnvBuildHasher::default())
+                .parse(&s)
                 .expect("fail to parse 'SemiDyna2023.par'");
 
             let ps = POINTS.iter().cycle().take(OPS).collect::<Vec<_>>();

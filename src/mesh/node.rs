@@ -328,13 +328,11 @@ impl MeshNode {
         let (lat_third, lng_third) = div_rem!(rest, 10_u32);
 
         // TODO: use `?` when `feature(const_trait_impl)` stable
-        let latitude = match MeshCoord::new(lat_first as u8, lat_second as u8, lat_third as u8)
-        {
+        let latitude = match MeshCoord::new(lat_first as u8, lat_second as u8, lat_third as u8) {
             Some(r) => r,
             None => return None,
         };
-        let longitude = match MeshCoord::new(lng_first as u8, lng_second as u8, lng_third as u8)
-        {
+        let longitude = match MeshCoord::new(lng_first as u8, lng_second as u8, lng_third as u8) {
             Some(r) => r,
             None => return None,
         };

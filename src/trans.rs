@@ -652,13 +652,13 @@ where
             //
 
             // Notes, Jacobian J[f] is a 2x2 matrix.
-            
+
             // TODO: Here may be refactoring opportunity.
             //   For example, we can refactor the following part
             //   by introducing Jacobian struc.
             //   for explicitly corresponding to equations.
             //   But,
-            //     1. Does it really readable? Program of math eqs is ugly in general... 
+            //     1. Does it really readable? Program of math eqs is ugly in general...
             //     2. Does it fast as the present code?
             //   Notes, we don't get performance regression.
 

@@ -737,22 +737,10 @@ mod test {
             //
             ("1_23456", DMS::new(Sign::Positive, 12, 34, 56, 0.0)),
             ("-1_23456", DMS::new(Sign::Negative, 12, 34, 56, 0.0)),
-            (
-                "12___3456.78",
-                DMS::new(Sign::Positive, 12, 34, 56, 0.78),
-            ),
-            (
-                "-12___3456.78",
-                DMS::new(Sign::Negative, 12, 34, 56, 0.78),
-            ),
-            (
-                "12__3__456___.",
-                DMS::new(Sign::Positive, 12, 34, 56, 0.0),
-            ),
-            (
-                "-12__3__456___.",
-                DMS::new(Sign::Negative, 12, 34, 56, 0.0),
-            ),
+            ("12___3456.78", DMS::new(Sign::Positive, 12, 34, 56, 0.78)),
+            ("-12___3456.78", DMS::new(Sign::Negative, 12, 34, 56, 0.78)),
+            ("12__3__456___.", DMS::new(Sign::Positive, 12, 34, 56, 0.0)),
+            ("-12__3__456___.", DMS::new(Sign::Negative, 12, 34, 56, 0.0)),
             (".7___8___", DMS::new(Sign::Positive, 0, 0, 0, 0.78)),
             ("-.7___8___", DMS::new(Sign::Negative, 0, 0, 0, 0.78)),
         ];

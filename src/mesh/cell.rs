@@ -339,16 +339,13 @@ impl MeshCell {
         // Call MeshNode::try_new
         // to check next_coord_lat
         // TODO: use `?` when `feature(const_trait_impl)` stable
-        let Some(south_east) = MeshNode::new(clone!(node.latitude), clone!(next_lng_coord))
-        else {
+        let Some(south_east) = MeshNode::new(clone!(node.latitude), clone!(next_lng_coord)) else {
             return None;
         };
-        let Some(north_west) = MeshNode::new(clone!(next_lat_coord), clone!(node.longitude))
-        else {
+        let Some(north_west) = MeshNode::new(clone!(next_lat_coord), clone!(node.longitude)) else {
             return None;
         };
-        let Some(north_east) = MeshNode::new(clone!(next_lat_coord), clone!(next_lng_coord))
-        else {
+        let Some(north_east) = MeshNode::new(clone!(next_lat_coord), clone!(next_lng_coord)) else {
             return None;
         };
 

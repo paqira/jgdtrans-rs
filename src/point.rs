@@ -139,7 +139,7 @@ impl Point {
 
         Some(Self::new_unchecked(latitude, longitude, altitude))
     }
-    
+
     /// Makes a [`Point`].
     ///
     /// This does not check any values.
@@ -370,7 +370,10 @@ mod test {
             (20.0, -200.),
             (-70.0, -110.),
         ] {
-            assert_eq!(Point::new_unchecked(v, 0.0, 0.0).normalize(), Point::new_unchecked(e, 0.0, 0.0));
+            assert_eq!(
+                Point::new_unchecked(v, 0.0, 0.0).normalize(),
+                Point::new_unchecked(e, 0.0, 0.0)
+            );
         }
 
         for (e, v) in [
@@ -395,7 +398,10 @@ mod test {
             (160.0, -200.),
             (-110.0, -110.),
         ] {
-            assert_eq!(Point::new_unchecked(0.0, v, 0.0).normalize(), Point::new_unchecked(0.0, e, 0.0));
+            assert_eq!(
+                Point::new_unchecked(0.0, v, 0.0).normalize(),
+                Point::new_unchecked(0.0, e, 0.0)
+            );
         }
 
         let actual = Point::new_unchecked(f64::NAN, f64::NAN, f64::NAN).normalize();

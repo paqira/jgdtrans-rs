@@ -24,7 +24,7 @@ Features:
 - No dependency
     - 依存パッケージなし
 
-`jdgtrans` requires nightly channel, it depends on a `float_next_up_down` feature.
+`jdgtrans` requires nightly channel of Rust, it depends on a `float_next_up_down` feature.
 
 [TKY2JGD]: https://www.gsi.go.jp/sokuchikijun/tky2jgd.html
 [PatchJGD]: https://vldb.gsi.go.jp/sokuchi/surveycalc/patchjgd/index.html

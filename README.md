@@ -1,5 +1,10 @@
 # jgdtrans for Rust
 
+[![Crates.io Version](https://img.shields.io/crates/v/jgdtrans?logo=rust)](https://crates.io/crates/jgdtrans)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/paqira/jgdtrans-rs/ci.yaml?logo=GitHub)
+[![docs.rs](https://img.shields.io/docsrs/jgdtrans?logo=rust)](https://docs.rs/jgdtrans/)
+![Crates.io License](https://img.shields.io/crates/l/jgdtrans)
+
 Unofficial coordinate transformer by _Gridded Correction Parameter_
 which Geospatial Information Authority of Japan (GIAJ, formerly GSIJ) distributing
 for Rust.

@@ -55,7 +55,7 @@ macro_rules! f64x3 {
 
 impl<T> Pair<T> {
     #[inline(always)]
-    pub(crate) fn splat(a: T) -> Self
+    pub(crate) const fn splat(a: T) -> Self
     where
         T: Clone + Copy,
     {
@@ -74,7 +74,7 @@ impl<T> Pair<T> {
 
 impl<T> Triple<T> {
     #[inline(always)]
-    pub(crate) fn splat(a: T) -> Self
+    pub(crate) const fn splat(a: T) -> Self
     where
         T: Clone + Copy,
     {
@@ -145,7 +145,7 @@ impl<T> From<Triple<T>> for (T, T, T) {
 
 impl Pair<f64> {
     #[inline(always)]
-    pub(crate) fn as_u32(self) -> Pair<u32> {
+    pub(crate) const fn as_u32(self) -> Pair<u32> {
         Pair(self.0 as u32, self.1 as u32)
     }
 

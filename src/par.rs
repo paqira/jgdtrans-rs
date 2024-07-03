@@ -325,46 +325,28 @@ where
     /// Deserialize par-formatted [`&str`] into a [`Transformer`].
     #[inline]
     pub fn parse(self, s: &str) -> Result<Transformer<S>, ParseParError> {
-        let (parameter, description) = match self.format {
-            Format::TKY2JGD => parse(
-                s,
-                2,
-                0..8,
-                Some(9..18),
-                Some(19..28),
-                None,
-                self.hash_builder,
-            ),
-            Format::PatchJGD => parse(
-                s,
-                16,
-                0..8,
-                Some(9..18),
-                Some(19..28),
-                None,
-                self.hash_builder,
-            ),
-            Format::PatchJGD_H => parse(s, 16, 0..8, None, None, Some(9..18), self.hash_builder),
-            Format::HyokoRev => parse(s, 16, 0..8, None, None, Some(12..21), self.hash_builder),
-            Format::PatchJGD_HV | Format::SemiDynaEXE => parse(
-                s,
-                16,
-                0..8,
-                Some(9..18),
-                Some(19..28),
-                Some(29..38),
-                self.hash_builder,
-            ),
-            Format::geonetF3 | Format::ITRF2014 => parse(
-                s,
-                18,
-                0..8,
-                Some(12..21),
-                Some(22..31),
-                Some(32..41),
-                self.hash_builder,
-            ),
-        }?;
+        let (header, meshcode, latitude, longitude, altitude) = match self.format {
+            Format::TKY2JGD => (2, 0..8, Some(9..18), Some(19..28), None),
+            Format::PatchJGD => (16, 0..8, Some(9..18), Some(19..28), None),
+            Format::PatchJGD_H => (16, 0..8, None, None, Some(9..18)),
+            Format::HyokoRev => (16, 0..8, None, None, Some(12..21)),
+            Format::PatchJGD_HV | Format::SemiDynaEXE => {
+                (16, 0..8, Some(9..18), Some(19..28), Some(29..38))
+            }
+            Format::geonetF3 | Format::ITRF2014 => {
+                (18, 0..8, Some(12..21), Some(22..31), Some(32..41))
+            }
+        };
+
+        let (parameter, description) = parse(
+            s,
+            header,
+            meshcode,
+            latitude,
+            longitude,
+            altitude,
+            self.hash_builder,
+        )?;
 
         Ok(Transformer {
             format: self.format.clone(),
@@ -414,12 +396,9 @@ where
         s: &str,
         description: String,
     ) -> Result<Transformer<S>, ParseParError> {
-        let tf = self.parse(s)?;
-        Ok(Transformer {
-            format: tf.format,
-            parameter: tf.parameter,
-            description: Some(description),
-        })
+        let mut tf = self.parse(s)?;
+        tf.description.replace(description);
+        Ok(tf)
     }
 }
 

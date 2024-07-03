@@ -615,10 +615,11 @@ impl Error for TryFromDMSError {}
 
 impl Display for TryFromDMSError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self.kind {
-            TryFromDMSErrorKind::NAN => f.write_str("number would be NAN"),
-            TryFromDMSErrorKind::OutOfBounds => f.write_str("number would be out-of-bounds"),
-        }
+        let s = match self.kind {
+            TryFromDMSErrorKind::NAN => "number would be NAN",
+            TryFromDMSErrorKind::OutOfBounds => "number would be out-of-bounds",
+        };
+        f.write_str(s)
     }
 }
 

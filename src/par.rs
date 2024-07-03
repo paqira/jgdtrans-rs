@@ -517,29 +517,27 @@ impl Error for ParseParError {
 
 impl Display for ParseParError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self.kind {
-            ParseParErrorKind::Header => write!(
-                f,
-                "parse error: header at l{}:{}:{}",
-                self.lineno, self.start, self.end
-            ),
-            _ => write!(
-                f,
-                "parse error: {} at l{}:{}:{}",
-                self.column, self.lineno, self.start, self.end
-            ),
-        }
+        let name = match self.kind {
+            ParseParErrorKind::Header => "header at",
+            _ => "at",
+        };
+        write!(
+            f,
+            "parse error: {} l{}:{}:{}",
+            name, self.lineno, self.start, self.end
+        )
     }
 }
 
 impl Display for Column {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self {
-            Self::Meshcode => f.write_str("meshcode"),
-            Self::Latitude => f.write_str("latitude"),
-            Self::Longitude => f.write_str("longitude"),
-            Self::Altitude => f.write_str("altitude"),
-        }
+        let s = match self {
+            Self::Meshcode => "meshcode",
+            Self::Latitude => "latitude",
+            Self::Longitude => "longitude",
+            Self::Altitude => "altitude",
+        };
+        f.write_str(s)
     }
 }
 

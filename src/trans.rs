@@ -1006,12 +1006,13 @@ impl Display for TransformError {
 
 impl Display for MeshCellCorner {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        match self {
-            Self::NorthWest => f.write_str("north-west"),
-            Self::NorthEast => f.write_str("north-east"),
-            Self::SouthWest => f.write_str("south-west"),
-            Self::SouthEast => f.write_str("south-east"),
-        }
+        let s = match self {
+            Self::NorthWest => "north-west",
+            Self::NorthEast => "north-east",
+            Self::SouthWest => "south-west",
+            Self::SouthEast => "south-east",
+        };
+        f.write_str(s)
     }
 }
 

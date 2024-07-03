@@ -72,6 +72,17 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     /// Makes a [`TransformerBuilder`] which uses the given hash builder to hash meshcode.
     ///
     /// See [`HashMap::with_hasher`] for detail.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// use std::hash::RandomState;
+    ///
+    /// let tf = TransformerBuilder::with_hasher(RandomState::new())
+    ///     .format(Format::SemiDynaEXE)
+    ///     .build();
+    /// ```
     #[inline]
     pub fn with_hasher(hash_builder: S) -> Self {
         Self {

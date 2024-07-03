@@ -144,6 +144,10 @@ impl Point {
     ///
     /// This does not check any values.
     ///
+    /// # Safety
+    ///
+    /// Coordinate transformation on non-normalized point is unspecified.
+    ///
     /// # Example
     ///
     /// ```

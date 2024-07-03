@@ -66,6 +66,28 @@ impl TransformerBuilder<RandomState> {
     pub fn new() -> Self {
         Self::with_hasher(RandomState::new())
     }
+
+    /// Makes a [`TransformerBuilder`] with at least the specified capacity.
+    ///
+    /// See [`HashMap::with_capacity`] for detail.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// #
+    /// let tf = TransformerBuilder::with_capacity(10)
+    ///     .format(Format::SemiDynaEXE)
+    ///     .build();
+    /// ```
+    #[inline]
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            format: None,
+            parameter: HashMap::with_capacity_and_hasher(capacity, RandomState::new()),
+            description: None,
+        }
+    }
 }
 
 impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> TransformerBuilder<S> {
@@ -88,6 +110,29 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
         Self {
             format: None,
             parameter: HashMap::with_hasher(hash_builder),
+            description: None,
+        }
+    }
+
+    /// Makes a [`TransformerBuilder`] with at least the specified capacity, which uses the given hash builder to hash meshcode.
+    ///
+    /// See [`HashMap::with_capacity_and_hasher`] for detail.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// use std::hash::RandomState;
+    ///
+    /// let tf = TransformerBuilder::with_capacity_and_hasher(10, RandomState::new())
+    ///     .format(Format::SemiDynaEXE)
+    ///     .build();
+    /// ```
+    #[inline]
+    pub fn with_capacity_and_hasher(capacity: usize, hash_builder: S) -> Self {
+        Self {
+            format: None,
+            parameter: HashMap::with_capacity_and_hasher(capacity, hash_builder),
             description: None,
         }
     }

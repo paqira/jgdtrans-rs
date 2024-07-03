@@ -64,11 +64,7 @@ impl TransformerBuilder<RandomState> {
     /// ```
     #[inline]
     pub fn new() -> Self {
-        Self {
-            format: None,
-            parameter: HashMap::new(),
-            description: None,
-        }
+        Self::with_hasher(RandomState::new())
     }
 }
 

@@ -307,7 +307,6 @@ impl Parser<RandomState> {
 impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Parser<S> {
     /// Makes a parser resulting [`Transformer`] which uses the given hash builder to hash meshcode.
     ///
-    /// This may improve performance of transformation.
     /// See [`HashMap::with_hasher`], for detail.
     #[inline]
     pub const fn with_hasher(format: Format, hash_builder: S) -> Self {

@@ -304,6 +304,40 @@ pub struct Parser<S = RandomState> {
 
 impl Parser<RandomState> {
     /// Makes a parser.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::par::Parser;
+    /// let s = r"<15 lines>
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// MeshCode dB(sec)  dL(sec) dH(m)
+    /// 12345678   0.00001   0.00002   0.00003";
+    ///
+    /// let parser = Parser::new(Format::SemiDynaEXE);
+    /// let tf = parser.parse(s)?;
+    ///
+    /// assert_eq!(
+    ///     tf.parameter.get(&12345678),
+    ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
     #[inline]
     pub fn new(format: Format) -> Self {
         Self::with_hasher(format, RandomState::new())
@@ -315,6 +349,14 @@ impl Parser<RandomState> {
     /// is shrunk as much as possible.
     ///
     /// See [`HashMap::with_capacity`], for detail.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::par::Parser;
+    /// let parser = Parser::with_capacity(Format::SemiDynaEXE, 10);
+    /// ```
     pub fn with_capacity(format: Format, capacity: usize) -> Self {
         Self::with_capacity_and_hasher(format, capacity, RandomState::new())
     }
@@ -324,6 +366,16 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Par
     /// Makes a parser which uses the given hash builder to hash meshcode.
     ///
     /// See [`HashMap::with_hasher`], for detail.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use std::hash::RandomState;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::par::Parser;
+    ///
+    /// let parser = Parser::with_hasher(Format::SemiDynaEXE, RandomState::new());
+    /// ```
     #[inline]
     pub const fn with_hasher(format: Format, hash_builder: S) -> Self {
         Self {
@@ -339,6 +391,16 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Par
     /// is shrunk as much as possible.
     ///
     /// See [`HashMap::with_capacity_and_hasher`], for detail.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use std::hash::RandomState;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::par::Parser;
+    ///
+    /// let parser = Parser::with_capacity_and_hasher(Format::SemiDynaEXE, 10, RandomState::new());
+    /// ```
     #[inline]
     pub const fn with_capacity_and_hasher(
         format: Format,

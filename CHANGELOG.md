@@ -1,6 +1,12 @@
 # Change Log
 
-## 0.2.1 - 2024-06-03
+## 0.2.2 - 2024-07-05
+
+### Added
+
+- Add `Parser::with_capacity` and `Parser::with_capacity_and_hasher`
+
+## 0.2.1 - 2024-07-03
 
 ### Added
 

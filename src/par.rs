@@ -121,6 +121,7 @@ fn parse<S>(
     latitude: Option<Range<usize>>,
     longitude: Option<Range<usize>>,
     altitude: Option<Range<usize>>,
+    capacity: Option<usize>,
     hash_builder: S,
 ) -> Result<(HashMap<u32, Parameter, S>, Option<String>), ParseParError>
 where
@@ -146,7 +147,11 @@ where
         .join("\n")
         + "\n";
 
-    let mut parameter = HashMap::with_hasher(hash_builder);
+    let mut parameter = if let Some(cap) = capacity {
+        HashMap::with_capacity_and_hasher(cap, hash_builder)
+    } else {
+        HashMap::with_hasher(hash_builder)
+    };
     for (lineno, line) in lines {
         let meshcode: u32 = line
             .get(meshcode.clone())
@@ -293,6 +298,7 @@ where
 #[derive(Debug)]
 pub struct Parser<S = RandomState> {
     format: Format,
+    capacity: Option<usize>,
     hash_builder: S,
 }
 
@@ -302,16 +308,46 @@ impl Parser<RandomState> {
     pub fn new(format: Format) -> Self {
         Self::with_hasher(format, RandomState::new())
     }
+
+    /// Makes a parser with at least the specified initial capacity.
+    ///
+    /// Notes, the capacity of resulting [`Transformer::parameter`]
+    /// is shrunk as much as possible.
+    ///
+    /// See [`HashMap::with_capacity`], for detail.
+    pub fn with_capacity(format: Format, capacity: usize) -> Self {
+        Self::with_capacity_and_hasher(format, capacity, RandomState::new())
+    }
 }
 
 impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Parser<S> {
-    /// Makes a parser resulting [`Transformer`] which uses the given hash builder to hash meshcode.
+    /// Makes a parser which uses the given hash builder to hash meshcode.
     ///
     /// See [`HashMap::with_hasher`], for detail.
     #[inline]
     pub const fn with_hasher(format: Format, hash_builder: S) -> Self {
         Self {
             format,
+            capacity: None,
+            hash_builder,
+        }
+    }
+
+    /// Makes a parser with at least the specified initial capacity, which uses the given hash builder to hash meshcode.
+    ///
+    /// Notes, the capacity of resulting [`Transformer::parameter`]
+    /// is shrunk as much as possible.
+    ///
+    /// See [`HashMap::with_capacity_and_hasher`], for detail.
+    #[inline]
+    pub const fn with_capacity_and_hasher(
+        format: Format,
+        capacity: usize,
+        hash_builder: S,
+    ) -> Self {
+        Self {
+            format,
+            capacity: Some(capacity),
             hash_builder,
         }
     }
@@ -344,6 +380,7 @@ where
             latitude,
             longitude,
             altitude,
+            self.capacity,
             self.hash_builder,
         )?;
 
@@ -409,6 +446,7 @@ where
     fn clone(&self) -> Self {
         Self {
             format: self.format.clone(),
+            capacity: self.capacity,
             hash_builder: self.hash_builder.clone(),
         }
     }
@@ -416,7 +454,8 @@ where
     #[inline]
     fn clone_from(&mut self, source: &Self) {
         self.format.clone_from(&source.format);
-        self.hash_builder.clone_from(&source.hash_builder)
+        self.capacity.clone_from(&source.capacity);
+        self.hash_builder.clone_from(&source.hash_builder);
     }
 }
 

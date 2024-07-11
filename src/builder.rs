@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::hash::{BuildHasher, RandomState};
 
@@ -22,7 +23,7 @@ use crate::{Format, Parameter, Transformer};
 ///         (54401005, (-0.00622, 0.01516, 0.0946)),
 ///         (54401055, (-0.0062, 0.01529, 0.08972)),
 ///     ])
-///     .description("My parameter".to_string())
+///     .description("My parameter".into())
 ///     .build();
 ///
 /// assert_eq!(tf.format, Format::SemiDynaEXE);
@@ -37,15 +38,16 @@ use crate::{Format, Parameter, Transformer};
 /// ```
 #[derive(Debug, Default)]
 pub struct TransformerBuilder<
+    'a,
     #[cfg(not(feature = "serde"))] S = RandomState,
     #[cfg(feature = "serde")] S: Default = RandomState,
 > {
     format: Option<Format>,
     parameter: HashMap<u32, Parameter, S>,
-    description: Option<String>,
+    description: Option<Cow<'a, str>>,
 }
 
-impl TransformerBuilder<RandomState> {
+impl TransformerBuilder<'_, RandomState> {
     /// Makes a [`TransformerBuilder`].
     ///
     /// # Example
@@ -90,7 +92,9 @@ impl TransformerBuilder<RandomState> {
     }
 }
 
-impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> TransformerBuilder<S> {
+impl<'a, #[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default>
+    TransformerBuilder<'a, S>
+{
     /// Makes a [`TransformerBuilder`] which uses the given hash builder to hash meshcode.
     ///
     /// See [`HashMap::with_hasher`] for detail.
@@ -163,13 +167,13 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     /// #
     /// let tf = TransformerBuilder::new()
     ///     .format(Format::SemiDynaEXE)
-    ///     .description("My parameter".to_string())
+    ///     .description("My parameter".into())
     ///     .build();
     ///
     /// assert_eq!(tf.description, Some("My parameter".to_string()));
     /// ```
     #[inline]
-    pub fn description(mut self, s: String) -> Self {
+    pub fn description(mut self, s: Cow<'a, str>) -> Self {
         self.description = Some(s);
         self
     }
@@ -184,12 +188,13 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
         Transformer {
             format: self.format.expect("format is not assigned"),
             parameter: self.parameter,
-            description: self.description,
+            description: self.description.map(|c| c.to_string()),
         }
     }
 }
 
-impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> TransformerBuilder<S>
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default>
+    TransformerBuilder<'_, S>
 where
     S: BuildHasher,
 {
@@ -269,7 +274,7 @@ where
 }
 
 impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Clone
-    for TransformerBuilder<S>
+    for TransformerBuilder<'_, S>
 where
     S: Clone,
 {

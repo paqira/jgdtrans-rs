@@ -170,7 +170,7 @@ pub use par::{from_str, Format};
 #[doc(inline)]
 pub use point::Point;
 #[doc(inline)]
-pub use trans::{TransformError, TransformErrorKind};
+pub use transform::{TransformError, TransformErrorKind};
 #[doc(inline)]
 pub use transformer::{Correction, Parameter, StatisticData, Statistics, Transformer};
 
@@ -180,6 +180,6 @@ mod internal;
 pub mod mesh;
 pub mod par;
 mod point;
-mod trans;
+mod transform;
 mod transformer;
 mod vector;

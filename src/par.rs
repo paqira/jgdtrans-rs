@@ -113,6 +113,7 @@ impl Format {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 #[allow(clippy::type_complexity)]
 fn parse<S>(
     text: &str,
@@ -339,6 +340,7 @@ impl Parser<RandomState> {
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[inline]
+    #[must_use]
     pub fn new(format: Format) -> Self {
         Self::with_hasher(format, RandomState::new())
     }
@@ -357,6 +359,8 @@ impl Parser<RandomState> {
     /// # use jgdtrans::par::Parser;
     /// let parser = Parser::with_capacity(Format::SemiDynaEXE, 10);
     /// ```
+    #[inline]
+    #[must_use]
     pub fn with_capacity(format: Format, capacity: usize) -> Self {
         Self::with_capacity_and_hasher(format, capacity, RandomState::new())
     }

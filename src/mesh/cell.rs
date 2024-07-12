@@ -92,6 +92,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
+    #[must_use]
     pub const fn new(
         south_west: MeshNode,
         south_east: MeshNode,
@@ -165,6 +166,7 @@ impl MeshCell {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn south_west(&self) -> &MeshNode {
         &self.south_west
     }
@@ -188,6 +190,7 @@ impl MeshCell {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn south_east(&self) -> &MeshNode {
         &self.south_east
     }
@@ -211,6 +214,7 @@ impl MeshCell {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn north_west(&self) -> &MeshNode {
         &self.north_west
     }
@@ -234,6 +238,7 @@ impl MeshCell {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn north_east(&self) -> &MeshNode {
         &self.north_east
     }
@@ -257,6 +262,7 @@ impl MeshCell {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn mesh_unit(&self) -> &MeshUnit {
         &self.mesh_unit
     }
@@ -288,6 +294,7 @@ impl MeshCell {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn try_from_meshcode(meshcode: &u32, mesh_unit: MeshUnit) -> Option<Self> {
         match MeshNode::try_from_meshcode(meshcode) {
             Some(r) => Self::try_from_node(r, mesh_unit),
@@ -316,6 +323,7 @@ impl MeshCell {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
+    #[must_use]
     pub const fn try_from_node(node: MeshNode, mesh_unit: MeshUnit) -> Option<Self> {
         // TODO: use `?` when `feature(const_trait_impl)` stable
         let Some(next_lat_coord) = node.latitude.next_up(&mesh_unit) else {
@@ -400,6 +408,7 @@ impl MeshCell {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn try_from_point(point: &Point, mesh_unit: MeshUnit) -> Option<Self> {
         MeshNode::try_from_point(point, &mesh_unit)
             .and_then(|node| Self::try_from_node(node, mesh_unit))
@@ -471,6 +480,7 @@ impl MeshCell {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn position(&self, point: &Point) -> (f64, f64) {
         let pos = f64x2!(point.latitude, point.longitude)
             - f64x2!(
@@ -496,7 +506,7 @@ impl Clone for MeshCell {
             mesh_unit: self.mesh_unit,
         }
     }
-    
+
     fn clone_from(&mut self, source: &Self) {
         self.south_west = source.south_west.clone();
         self.south_east = source.south_east.clone();

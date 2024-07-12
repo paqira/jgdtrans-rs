@@ -148,6 +148,7 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn new(latitude: MeshCoord, longitude: MeshCoord) -> Option<Self> {
         // TODO: use Ord::gt (longitude.gt(&Self::MAX.longitude))
         //       when `feature(const_trait_impl)` stable
@@ -183,6 +184,7 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn latitude(&self) -> &MeshCoord {
         &self.latitude
     }
@@ -205,6 +207,7 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn longitude(&self) -> &MeshCoord {
         &self.longitude
     }
@@ -227,6 +230,7 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
         self.latitude.is_mesh_unit(mesh_unit) && self.longitude.is_mesh_unit(mesh_unit)
     }
@@ -267,6 +271,7 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn try_from_point(point: &Point, mesh_unit: &MeshUnit) -> Option<Self> {
         let latitude = MeshCoord::try_from_latitude(&point.latitude, mesh_unit)?;
         let longitude = MeshCoord::try_from_longitude(&point.longitude, mesh_unit)?;
@@ -301,6 +306,7 @@ impl MeshNode {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
+    #[must_use]
     pub const fn try_from_meshcode(meshcode: &u32) -> Option<Self> {
         #[allow(clippy::inconsistent_digit_grouping)]
         if *meshcode >= 10000_00_00 {
@@ -362,6 +368,7 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn to_meshcode(&self) -> u32 {
         (self.latitude.first as u32 * 100 + self.longitude.first as u32) * 10_000
             + (self.latitude.second as u32 * 10 + self.longitude.second as u32) * 100
@@ -389,6 +396,7 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn to_point(&self) -> Point {
         Point {
             latitude: self.latitude.to_latitude(),
@@ -418,6 +426,7 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn next_north(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         // TODO: use ? and Clone::clone() when they become stable.
         let Some(latitude) = self.latitude.next_up(mesh_unit) else {
@@ -455,6 +464,7 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn next_south(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         // TODO: use ? and Clone::clone() when they become stable.
         let Some(latitude) = self.latitude.next_down(mesh_unit) else {
@@ -492,6 +502,7 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn next_east(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         // TODO: use ? and Clone::clone() when they become stable.
         let Some(longitude) = self.longitude.next_up(mesh_unit) else {
@@ -529,6 +540,7 @@ impl MeshNode {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn next_west(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         // TODO: use ? and Clone::clone() when they become stable.
         let Some(longitude) = self.longitude.next_down(mesh_unit) else {

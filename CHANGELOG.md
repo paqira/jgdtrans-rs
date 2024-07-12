@@ -1,5 +1,11 @@
 # Change Log
 
+## x.x.x
+
+### Added
+
+- Make most of `fn`s as `#[must_use]`
+
 ## 0.2.2 - 2024-07-05
 
 ### Added

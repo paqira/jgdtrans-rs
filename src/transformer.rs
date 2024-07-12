@@ -86,6 +86,7 @@ impl Parameter {
     /// assert_eq!(parameter.altitude, 3.);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
@@ -96,6 +97,7 @@ impl Parameter {
 
     /// Returns √𝑙𝑎𝑡𝑖𝑡𝑢𝑑𝑒² + 𝑙𝑜𝑛𝑔𝑖𝑡𝑢𝑑𝑒².
     #[inline]
+    #[must_use]
     pub fn horizontal(&self) -> f64 {
         // here and [`Correction::horizontal`] are
         // only parts that use not an exact operation
@@ -145,6 +147,7 @@ impl Correction {
     /// assert_eq!(correction.altitude, 3.);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn new(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
@@ -155,6 +158,7 @@ impl Correction {
 
     /// Returns √𝑙𝑎𝑡𝑖𝑡𝑢𝑑𝑒² + 𝑙𝑜𝑛𝑔𝑖𝑡𝑢𝑑𝑒².
     #[inline]
+    #[must_use]
     pub fn horizontal(&self) -> f64 {
         // here and [`Parameter::horizontal`] are
         // only parts that use not an exact operation
@@ -349,6 +353,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     /// assert_eq!(tf.description, None);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn new(format: Format, parameter: HashMap<u32, Parameter, S>) -> Self {
         Self {
             format,
@@ -377,6 +382,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     /// assert_eq!(tf.description, Some("My Parameter".to_string()));
     /// ```
     #[inline]
+    #[must_use]
     pub const fn with_description(
         format: Format,
         parameter: HashMap<u32, Parameter, S>,
@@ -419,6 +425,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     /// assert_eq!(stats.latitude.min, Some(-0.00664));
     /// assert_eq!(stats.latitude.max, Some(-0.0062));
     /// ```
+    #[must_use]
     pub fn statistics(&self) -> Statistics {
         // it's not optimal, but length of parameters is enough small
 

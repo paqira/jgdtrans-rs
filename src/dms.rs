@@ -22,6 +22,7 @@ use crate::internal::mul_add;
 /// assert_eq!(to_dms(&140.08785504166664), Some("1400516.2781499999141488".to_string()));
 /// ```
 #[inline]
+#[must_use]
 pub fn to_dms(t: &f64) -> Option<String> {
     DMS::try_from(t).ok().map(|x| x.to_string())
 }
@@ -41,6 +42,7 @@ pub fn to_dms(t: &f64) -> Option<String> {
 /// assert_eq!(from_dms("1400516.27815"), Some(140.08785504166667));
 /// ```
 #[inline]
+#[must_use]
 pub fn from_dms(s: &str) -> Option<f64> {
     s.parse::<DMS>().ok().map(|x| x.to_degree())
 }
@@ -369,6 +371,7 @@ impl DMS {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn new(sign: Sign, degree: u8, minute: u8, second: u8, fract: f64) -> Option<Self> {
         if fract.is_nan()
             || degree.eq(&180) && (minute.gt(&0) || second.gt(&0) || fract.gt(&0.0))
@@ -404,6 +407,7 @@ impl DMS {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn sign(&self) -> &Sign {
         &self.sign
     }
@@ -422,6 +426,7 @@ impl DMS {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn degree(&self) -> &u8 {
         &self.degree
     }
@@ -440,6 +445,7 @@ impl DMS {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn minute(&self) -> &u8 {
         &self.minute
     }
@@ -458,6 +464,7 @@ impl DMS {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn second(&self) -> &u8 {
         &self.second
     }
@@ -476,6 +483,7 @@ impl DMS {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn fract(&self) -> &f64 {
         &self.fract
     }
@@ -503,6 +511,7 @@ impl DMS {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn to_degree(&self) -> f64 {
         // let temp = (self.degree as f64) + self.minute as f64 / 60. + (self.second as f64 + self.fract) / 3600.0;
         let temp = mul_add!(self.minute as f64, 1. / 60., self.degree as f64);

@@ -101,6 +101,7 @@ impl MeshCoord {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use = "method returns a new `MeshCoord` and does not mutate the original value"]
     pub const fn new(first: u8, second: u8, third: u8) -> Option<Self> {
         if first > Self::MAX.first || second > Self::MAX.second || third > Self::MAX.third {
             return None;
@@ -128,6 +129,7 @@ impl MeshCoord {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn first(&self) -> &u8 {
         &self.first
     }
@@ -147,6 +149,7 @@ impl MeshCoord {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn second(&self) -> &u8 {
         &self.second
     }
@@ -166,6 +169,7 @@ impl MeshCoord {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn third(&self) -> &u8 {
         &self.third
     }
@@ -188,6 +192,7 @@ impl MeshCoord {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub const fn is_mesh_unit(&self, mesh_unit: &MeshUnit) -> bool {
         match mesh_unit {
             MeshUnit::One => true,
@@ -251,6 +256,7 @@ impl MeshCoord {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn try_from_latitude(degree: &f64, mesh_unit: &MeshUnit) -> Option<Self> {
         if degree.is_nan() {
             return None;
@@ -303,6 +309,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
+    #[must_use]
     pub fn try_from_longitude(degree: &f64, mesh_unit: &MeshUnit) -> Option<Self> {
         if degree.lt(&100.0) || degree.gt(&180.0) || degree.is_nan() {
             return None;
@@ -340,6 +347,7 @@ impl MeshCoord {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn to_latitude(&self) -> f64 {
         2. * self.to_degree() / 3.
     }
@@ -366,6 +374,7 @@ impl MeshCoord {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn to_longitude(&self) -> f64 {
         100. + self.to_degree()
     }
@@ -396,6 +405,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
+    #[must_use]
     pub const fn next_up(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         if !self.is_mesh_unit(mesh_unit) {
             return None;
@@ -461,6 +471,7 @@ impl MeshCoord {
     /// # Some(())}
     /// # fn main() {wrapper();()}
     /// ```
+    #[must_use]
     pub const fn next_down(&self, mesh_unit: &MeshUnit) -> Option<Self> {
         if !self.is_mesh_unit(mesh_unit) {
             return None;

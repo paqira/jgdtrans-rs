@@ -184,6 +184,7 @@ impl<'a, #[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default>
     ///
     /// Panics when `format` is not assigned.
     #[inline]
+    #[must_use]
     pub fn build(self) -> Transformer<S> {
         Transformer {
             format: self.format.expect("format is not assigned"),

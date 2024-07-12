@@ -125,6 +125,7 @@ impl Point {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Option<Self> {
         if latitude.lt(&-90.)
             || 90.0.lt(&latitude)
@@ -160,6 +161,7 @@ impl Point {
     /// assert_eq!(point.altitude, 5.0);
     /// ```
     #[inline]
+    #[must_use]
     pub const fn new_unchecked(latitude: f64, longitude: f64, altitude: f64) -> Self {
         Self {
             latitude,
@@ -187,6 +189,7 @@ impl Point {
     /// );
     /// ```
     #[inline]
+    #[must_use]
     pub fn normalize(&self) -> Self {
         Self {
             latitude: normalize_latitude(&self.latitude),
@@ -218,6 +221,7 @@ impl Point {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn try_from_meshcode(meshcode: &u32) -> Option<Self> {
         MeshNode::try_from_meshcode(meshcode).map(|node| Self::from_node(&node))
     }
@@ -243,6 +247,7 @@ impl Point {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn from_node(node: &MeshNode) -> Self {
         let latitude = node.latitude.to_latitude();
         let longitude = node.longitude.to_longitude();
@@ -279,6 +284,7 @@ impl Point {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn try_to_meshcode(&self, mesh_unit: &MeshUnit) -> Option<u32> {
         self.try_to_node(mesh_unit).map(|node| node.to_meshcode())
     }
@@ -310,6 +316,7 @@ impl Point {
     /// );
     /// ```
     #[inline]
+    #[must_use]
     pub fn try_to_node(&self, mesh_unit: &MeshUnit) -> Option<MeshNode> {
         MeshNode::try_from_point(self, mesh_unit)
     }
@@ -341,6 +348,7 @@ impl Point {
     /// # fn main() {wrapper();()}
     /// ```
     #[inline]
+    #[must_use]
     pub fn try_to_cell(&self, mesh_unit: MeshUnit) -> Option<MeshCell> {
         MeshCell::try_from_point(self, mesh_unit)
     }

@@ -49,7 +49,7 @@ use crate::Point;
 /// # Some(())}
 /// # fn main() {wrapper();()}
 /// ```
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct MeshCell {
     /// The south-west node of the cell
@@ -483,6 +483,26 @@ impl MeshCell {
             MeshUnit::Five => f64x2!(24., 16.) * pos,
         }
         .into()
+    }
+}
+
+impl Clone for MeshCell {
+    fn clone(&self) -> Self {
+        Self {
+            south_west: self.south_west.clone(),
+            south_east: self.south_east.clone(),
+            north_west: self.north_west.clone(),
+            north_east: self.north_east.clone(),
+            mesh_unit: self.mesh_unit,
+        }
+    }
+    
+    fn clone_from(&mut self, source: &Self) {
+        self.south_west = source.south_west.clone();
+        self.south_east = source.south_east.clone();
+        self.north_west = source.north_west.clone();
+        self.north_east = source.north_east.clone();
+        self.mesh_unit = source.mesh_unit;
     }
 }
 

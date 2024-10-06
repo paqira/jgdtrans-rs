@@ -43,7 +43,7 @@ jobs:
       - name: Build
         run: cargo build
       - name: Test
-        run: cargo test --no-default-features -F serde
+        run: cargo test -F serde
   fma:
     strategy:
       matrix:
@@ -62,7 +62,7 @@ jobs:
       # Currently `cargo test` does not read RUSTFLAGS on doctest,
       # therefore backward_compat_corr fails (its test depends on fma target features).
       - name: Test
-        run: cargo test --no-default-features --tests -F serde
+        run: cargo test --tests -F serde
   release:
     # Just make Release draft
     if: startsWith(github.ref, 'refs/tags/')

@@ -404,9 +404,9 @@ where
     /// let corr = tf.forward_corr(&origin)?;
     ///
     /// # if cfg!(target_feature = "fma") {
-    /// #     assert_eq!(corr.latitude, 1.7729133100878252e-6);
+    /// #     assert_eq!(corr.latitude, -1.7729133100878252e-6);
     /// # } else {
-    /// assert_eq!(corr.latitude, 1.7729133100878255e-6);
+    /// assert_eq!(corr.latitude, -1.7729133100878255e-6);
     /// # };
     /// assert_eq!(corr.longitude, 4.202334510058886e-6);
     /// assert_eq!(corr.altitude, 0.09631385781030005);

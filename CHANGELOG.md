@@ -6,6 +6,10 @@
 
 - Make most of `fn`s as `#[must_use]`
 
+### Fixes
+
+- Remove some optimization to simplify code
+
 ## 0.2.2 - 2024-07-05
 
 ### Added

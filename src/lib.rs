@@ -182,4 +182,13 @@ pub mod par;
 mod point;
 mod transform;
 mod transformer;
-mod vector;
+
+// Utility
+#[inline(always)]
+pub(crate) fn fma(a: f64, b: f64, c: f64) -> f64 {
+    if cfg!(target_feature = "fma") {
+        a.mul_add(b, c)
+    } else {
+        a * b + c
+    }
+}

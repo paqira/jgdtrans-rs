@@ -3,23 +3,33 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::hash::BuildHasher;
 
-use crate::internal::mul_add;
 use crate::mesh::{MeshCell, MeshCode, MeshUnit};
-use crate::vector::{f64x2, f64x3, F64x2, F64x3};
-use crate::{Correction, Parameter, Point, Transformer};
+use crate::{fma, Correction, Parameter, Point, Transformer};
 
 type Result<T> = std::result::Result<T, TransformError>;
 
-struct Interpol<'a> {
+#[inline(always)]
+fn bilinear_interpol(sw: f64, se: f64, nw: f64, ne: f64, lat: f64, lng: f64) -> f64 {
+    // sw * (1. - lng) * (1. - lat) + se * lng * (1. - lat) + nw * (1. - lng) * lat + ne * lng * lat
+    let mlng = 1. - lng;
+    let mlat = 1. - lat;
+    fma(
+        sw,
+        mlng * mlat,
+        fma(se, lng * mlat, fma(nw, mlng * lat, ne * lng * lat)),
+    )
+}
+
+struct Params<'a> {
     sw: &'a Parameter,
     se: &'a Parameter,
     nw: &'a Parameter,
     ne: &'a Parameter,
 }
 
-impl<'a> Interpol<'a> {
+impl<'a> Params<'a> {
     #[inline(always)]
-    fn from<S>(parameter: &'a HashMap<u32, Parameter, S>, cell: &MeshCell) -> Result<Self>
+    fn new<S>(parameter: &'a HashMap<u32, Parameter, S>, cell: &MeshCell) -> Result<Self>
     where
         S: BuildHasher,
     {
@@ -47,7 +57,7 @@ impl<'a> Interpol<'a> {
     }
 
     #[inline(always)]
-    fn from_unchecked<S>(
+    fn new_unchecked<S>(
         parameter: &'a HashMap<u32, Parameter, S>,
         code: &MeshCode,
         mesh_unit: &MeshUnit,
@@ -80,73 +90,6 @@ impl<'a> Interpol<'a> {
         let ne = get!(meshcode, MeshCellCorner::NorthEast)?;
 
         Ok(Self { sw, se, nw, ne })
-    }
-
-    #[inline(always)]
-    pub(crate) fn interpol_horizontal(&self, x: f64, y: f64, scale: f64) -> F64x2 {
-        macro_rules! take {
-            ($corner:ident) => {
-                f64x2!(self.$corner.longitude, self.$corner.latitude)
-            };
-        }
-
-        let (dx, dy) = (1. - x, 1. - y);
-        let (xy, xdy, dxy, dxdy) = (x * y, x * dy, dx * y, dx * dy);
-
-        let temp = take!(sw) * f64x2!(dxdy);
-        let temp = take!(se).fma(f64x2!(xdy), temp);
-        let temp = take!(nw).fma(f64x2!(dxy), temp);
-        take!(ne).fma(f64x2!(xy), temp) * f64x2!(scale)
-    }
-
-    #[inline(always)]
-    pub(crate) fn interpol(&self, x: f64, y: f64, scale: f64) -> F64x3 {
-        macro_rules! take {
-            ($corner:ident) => {
-                f64x3!(
-                    self.$corner.longitude,
-                    self.$corner.latitude,
-                    self.$corner.altitude
-                )
-            };
-        }
-
-        let (dx, dy) = (1. - x, 1. - y);
-        let (xy, xdy, dxy, dxdy) = (x * y, x * dy, dx * y, dx * dy);
-
-        let temp = take!(sw) * f64x3!(dxdy);
-        let temp = take!(se).fma(f64x3!(xdy), temp);
-        let temp = take!(nw).fma(f64x3!(dxy), temp);
-        let temp = take!(ne).fma(f64x3!(xy), temp);
-
-        temp * f64x3!(scale, scale, 1.0)
-    }
-
-    /// Diagonal part, (fy_y, fx_x), notes, first component is fy_y
-    #[inline(always)]
-    pub(crate) fn minus_fzz(&self, zn: F64x2, dzn: F64x2, scale: f64) -> F64x2 {
-        macro_rules! comp {
-            ($a:ident, $b:ident) => {
-                f64x2!(self.$a.latitude, self.$b.longitude)
-            };
-        }
-
-        let temp = (comp!(ne, ne) - comp!(se, nw)) * zn;
-        let temp = (comp!(nw, se) - comp!(sw, sw)).fma(dzn, temp);
-        temp.fma(f64x2!(scale), f64x2!(1.))
-    }
-
-    // Anti-diagonal part, (fx_y, fy_x)
-    #[inline(always)]
-    pub(crate) fn minus_fzw(&self, zn: F64x2, dzn: F64x2, scale: f64) -> F64x2 {
-        macro_rules! comp {
-            ($a:ident, $b:ident) => {
-                f64x2!(self.$a.longitude, self.$b.latitude)
-            };
-        }
-
-        let temp = (comp!(ne, ne) - comp!(se, nw)) * zn;
-        (comp!(nw, se) - comp!(sw, sw)).fma(dzn, temp) * f64x2!(scale)
     }
 }
 
@@ -460,7 +403,11 @@ where
     /// let origin = Point::new_unchecked(36.10377479, 140.087855041, 0.0);
     /// let corr = tf.forward_corr(&origin)?;
     ///
-    /// assert_eq!(corr.latitude, -1.7729133100878255e-6);
+    /// # if cfg!(target_feature = "fma") {
+    /// #     assert_eq!(corr.latitude, 1.7729133100878252e-6);
+    /// # } else {
+    /// assert_eq!(corr.latitude, 1.7729133100878255e-6);
+    /// # };
     /// assert_eq!(corr.longitude, 4.202334510058886e-6);
     /// assert_eq!(corr.altitude, 0.09631385781030005);
     ///
@@ -473,19 +420,23 @@ where
             .ok_or(TransformError::new_oob())?;
 
         // Interpolation
-        let interpol = Interpol::from(&self.parameter, &cell)?;
+        let Params { sw, se, nw, ne } = Params::new(&self.parameter, &cell)?;
 
         // y: latitude, x: longitude
         let (y, x) = cell.position(point);
 
-        const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
+        const SCALE: f64 = 3600.;
 
-        let r = interpol.interpol(x, y, SCALE);
+        let latitude =
+            bilinear_interpol(sw.latitude, se.latitude, nw.latitude, ne.latitude, y, x) / SCALE;
+        let longitude =
+            bilinear_interpol(sw.longitude, se.longitude, nw.longitude, ne.longitude, y, x) / SCALE;
+        let altitude = bilinear_interpol(sw.altitude, se.altitude, nw.altitude, ne.altitude, y, x);
 
         Ok(Correction {
-            latitude: r[1],
-            longitude: r[0],
-            altitude: r[2],
+            latitude,
+            longitude,
+            altitude,
         })
     }
 
@@ -518,13 +469,9 @@ where
     /// let origin = Point::new_unchecked(36.103773017086695, 140.08785924333452, 0.0);
     /// let corr = tf.backward_compat_corr(&origin)?;
     ///
-    /// assert_eq!(corr.latitude, 1.7729133219831587e-6);
-    /// # if cfg!(target_feature = "fma") {
-    /// # assert_eq!(corr.longitude, -4.202334509042612e-6);
-    /// # } else {
-    /// assert_eq!(corr.longitude, -4.202334509042613e-6);
-    /// # };
-    /// assert_eq!(corr.altitude, -0.0963138582320569);
+    /// assert_eq!(corr.latitude, 1.772913321983159e-6);
+    /// assert_eq!(corr.longitude, -4.202334509042612e-6);
+    /// assert_eq!(corr.altitude, -0.09631385823205689);
     ///
     /// assert_eq!(&origin + corr, tf.backward_compat(&origin)?);
     /// # Ok::<(), Box<dyn Error>>(())
@@ -581,7 +528,11 @@ where
     /// let origin = Point::new_unchecked(36.103773017086695, 140.08785924333452, 0.0);
     /// let corr = tf.backward_corr(&origin)?;
     ///
+    /// # if cfg!(target_feature = "fma") {
+    /// #     assert_eq!(corr.latitude, 1.7729133100878252e-6);
+    /// # } else {
     /// assert_eq!(corr.latitude, 1.7729133100878255e-6);
+    /// # };
     /// assert_eq!(corr.longitude, -4.202334510058886e-6);
     /// assert_eq!(corr.altitude, -0.09631385781030005);
     ///
@@ -619,22 +570,24 @@ where
         // Reference:
         // 1. https://en.wikipedia.org/wiki/Newton%27s_method
 
-        const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
+        const SCALE: f64 = 3600.;
         const ITERATION: usize = 4;
 
-        let q = f64x2!(point.longitude, point.latitude);
-        let mut zn = f64x2!(point.longitude, point.latitude);
+        let (mut yn, mut xn) = (point.latitude, point.longitude);
+
+        let mesh_unit = self.format.mesh_unit();
 
         for _ in 0..ITERATION {
             //
             // Preparation
             //
-            let current = Point::new_unchecked(zn[1], zn[0], 0.0);
+            let current = Point::new_unchecked(yn, xn, 0.0);
 
-            let cell = MeshCell::try_from_point(&current, self.format.mesh_unit())
-                .ok_or(TransformError::new_oob())?;
+            let Some(cell) = MeshCell::try_from_point(&current, mesh_unit) else {
+                return Err(TransformError::new_oob());
+            };
 
-            let interpol = Interpol::from(&self.parameter, &cell)?;
+            let Params { sw, se, nw, ne } = Params::new(&self.parameter, &cell)?;
 
             //
             // Construct f(x)
@@ -642,48 +595,57 @@ where
 
             let (y, x) = cell.position(&current);
 
-            let drift = interpol.interpol_horizontal(x, y, SCALE);
+            let corr_x =
+                bilinear_interpol(sw.longitude, se.longitude, nw.longitude, ne.longitude, y, x)
+                    / SCALE;
+            let corr_y =
+                bilinear_interpol(sw.latitude, se.latitude, nw.latitude, ne.latitude, y, x) / SCALE;
 
-            // This is f(x)
-            let fz = q - (zn + drift);
+            // f(x, y) of the newton method
+            let fx = point.longitude - (xn + corr_x);
+            let fy = point.latitude - (yn + corr_y);
 
-            //
-            // Calculate an inverse of Jacobian J[f]
-            //
+            // which Jacobian
+            // let fx_x = -1. - ((se.longitude - sw.longitude) * (1. - yn) + (ne.longitude - nw.longitude) * yn) / SCALE;
+            let fx_x = -1.
+                - fma(
+                    se.longitude - sw.longitude,
+                    1. - yn,
+                    (ne.longitude - nw.longitude) * yn,
+                ) / SCALE;
+            // let fx_y = -((nw.longitude - sw.longitude) * (1. - xn) + (ne.longitude - se.longitude) * xn) / SCALE;
+            let fx_y = -fma(
+                nw.longitude - sw.longitude,
+                1. - xn,
+                (ne.longitude - se.longitude) * xn,
+            ) / SCALE;
+            // let fy_x = -((se.latitude - sw.latitude) * (1. - yn) + (ne.latitude - nw.latitude) * yn) / SCALE;
+            let fy_x = -fma(
+                se.latitude - sw.latitude,
+                1. - yn,
+                (ne.latitude - nw.latitude) * yn,
+            ) / SCALE;
+            // let fy_y = -1. - ((nw.latitude - sw.latitude) * (1. - xn) + (ne.latitude - se.latitude) * xn) / SCALE;
+            let fy_y = -1.
+                - fma(
+                    nw.latitude - sw.latitude,
+                    1. - xn,
+                    (ne.latitude - se.latitude) * xn,
+                ) / SCALE;
 
-            // Notes, Jacobian J[f] is a 2x2 matrix.
+            // and its determinant
+            let det = fx_x * fy_y - fx_y * fy_x;
 
-            // TODO: Here may be refactoring opportunity.
-            //   For example, we can refactor the following part
-            //   by introducing Jacobian struc.
-            //   for explicitly corresponding to equations.
-            //   But,
-            //     1. Does it really readable? Program of math eqs is ugly in general...
-            //     2. Does it fast as the present code?
-            //   Notes, we don't get performance regression.
+            // update Xn
+            xn -= (fy_y * fx - fx_y * fy) / det;
+            yn -= (fx_x * fy - fy_x * fx) / det;
 
-            let dzn = f64x2!(1.) - zn;
+            let temp = Point::new_unchecked(yn, xn, 0.0);
+            let corr = self.forward_corr_unchecked(&temp)?;
 
-            // (fy_y, fx_x)
-            let minus_fzz = interpol.minus_fzz(zn, dzn, SCALE);
-
-            // (fx_y, fy_x)
-            let minus_fzw = interpol.minus_fzw(zn, dzn, SCALE);
-
-            // determinant
-            let det = mul_add!(minus_fzz[0], minus_fzz[1], -minus_fzw.product());
-
-            // Perform a  step of Newton's method
-            zn = (minus_fzz * fz - minus_fzw * fz.reverse()).fma(f64x2!(1. / det), zn);
-
-            // Verify the current error
-            let temp = Point::new_unchecked(zn[1], zn[0], 0.0);
-            let corr = self.forward_corr(&temp)?;
-
-            let delta = q - (zn + f64x2!(corr.longitude, corr.latitude));
-
-            if delta.abs().lt(f64x2!(Self::MAX_ERROR)) {
-                // If ok, it's a result!
+            if (point.latitude - (yn + corr.latitude)).abs() < Self::MAX_ERROR
+                && (point.longitude - (xn + corr.longitude)).abs() < Self::MAX_ERROR
+            {
                 return Ok(Correction {
                     latitude: -corr.latitude,
                     longitude: -corr.longitude,
@@ -745,19 +707,23 @@ where
         let code = MeshCode::from_point(point, &mesh_unit);
 
         // Interpolation
-        let interpol = Interpol::from_unchecked(&self.parameter, &code, &mesh_unit)?;
+        let Params { sw, se, nw, ne } = Params::new_unchecked(&self.parameter, &code, &mesh_unit)?;
 
         // y: latitude, x: longitude
         let (y, x) = code.position(point, &mesh_unit);
 
-        const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
+        const SCALE: f64 = 3600.;
 
-        let r = interpol.interpol(x, y, SCALE);
+        let latitude =
+            bilinear_interpol(sw.latitude, se.latitude, nw.latitude, ne.latitude, y, x) / SCALE;
+        let longitude =
+            bilinear_interpol(sw.longitude, se.longitude, nw.longitude, ne.longitude, y, x) / SCALE;
+        let altitude = bilinear_interpol(sw.altitude, se.altitude, nw.altitude, ne.altitude, y, x);
 
         Ok(Correction {
-            latitude: r[1],
-            longitude: r[0],
-            altitude: r[2],
+            latitude,
+            longitude,
+            altitude,
         })
     }
 
@@ -872,47 +838,72 @@ where
         // See backward_corr for detail
         let mesh_unit = self.format.mesh_unit();
 
-        const SCALE: f64 = 0.0002777777777777778; // 1. / 3600.
+        const SCALE: f64 = 3600.;
         const ITERATION: usize = 4;
 
-        let q = f64x2!(point.longitude, point.latitude);
-        let mut zn = f64x2!(point.longitude, point.latitude);
+        let (mut yn, mut xn) = (point.latitude, point.longitude);
 
         for _ in 0..ITERATION {
-            let current = Point::new_unchecked(zn[1], zn[0], 0.0);
+            let current = Point::new_unchecked(yn, xn, 0.0);
 
             let code = MeshCode::from_point(&current, &mesh_unit);
 
-            let interpol = Interpol::from_unchecked(&self.parameter, &code, &mesh_unit)?;
+            let Params { sw, se, nw, ne } =
+                Params::new_unchecked(&self.parameter, &code, &mesh_unit)?;
 
             let (y, x) = code.position(&current, &mesh_unit);
 
-            let drift = interpol.interpol_horizontal(x, y, SCALE);
+            let corr_x =
+                bilinear_interpol(sw.longitude, se.longitude, nw.longitude, ne.longitude, y, x)
+                    / SCALE;
+            let corr_y =
+                bilinear_interpol(sw.latitude, se.latitude, nw.latitude, ne.latitude, y, x) / SCALE;
 
-            let fz = q - (zn + drift);
+            // f(x, y) of the newton method
+            let fx = point.longitude - (xn + corr_x);
+            let fy = point.latitude - (yn + corr_y);
 
-            let dzn = f64x2!(1.) - zn;
-
-            // (fy_y, fx_x)
-            let minus_fzz = interpol.minus_fzz(zn, dzn, SCALE);
-
-            // (fx_y, fy_x)
-            let minus_fzw = interpol.minus_fzw(zn, dzn, SCALE);
+            // which Jacobian
+            // let fx_x = -1. - ((se.longitude - sw.longitude) * (1. - yn) + (ne.longitude - nw.longitude) * yn) / SCALE;
+            let fx_x = -1.
+                - fma(
+                    se.longitude - sw.longitude,
+                    1. - yn,
+                    (ne.longitude - nw.longitude) * yn,
+                ) / SCALE;
+            // let fx_y = -((nw.longitude - sw.longitude) * (1. - xn) + (ne.longitude - se.longitude) * xn) / SCALE;
+            let fx_y = -fma(
+                nw.longitude - sw.longitude,
+                1. - xn,
+                (ne.longitude - se.longitude) * xn,
+            ) / SCALE;
+            // let fy_x = -((se.latitude - sw.latitude) * (1. - yn) + (ne.latitude - nw.latitude) * yn) / SCALE;
+            let fy_x = -fma(
+                se.latitude - sw.latitude,
+                1. - yn,
+                (ne.latitude - nw.latitude) * yn,
+            ) / SCALE;
+            // let fy_y = -1. - ((nw.latitude - sw.latitude) * (1. - xn) + (ne.latitude - se.latitude) * xn) / SCALE;
+            let fy_y = -1.
+                - fma(
+                    nw.latitude - sw.latitude,
+                    1. - xn,
+                    (ne.latitude - se.latitude) * xn,
+                ) / SCALE;
 
             // and its determinant
-            let det = mul_add!(minus_fzz[0], minus_fzz[1], -minus_fzw.product());
+            let det = fx_x * fy_y - fx_y * fy_x;
 
-            // update zn
-            // original, reduce sign flipping
-            // zn = (fzz * fz - fzw * fz.reverse()).fma(f64x2!(-1./det), zn);
-            zn = (minus_fzz * fz - minus_fzw * fz.reverse()).fma(f64x2!(1. / det), zn);
+            // update Xn
+            xn -= (fy_y * fx - fx_y * fy) / det;
+            yn -= (fx_x * fy - fy_x * fx) / det;
 
-            let temp = Point::new_unchecked(zn[1], zn[0], 0.0);
+            let temp = Point::new_unchecked(yn, xn, 0.0);
             let corr = self.forward_corr_unchecked(&temp)?;
 
-            let delta = q - (zn + f64x2!(corr.longitude, corr.latitude));
-
-            if delta.abs().lt(f64x2!(Self::MAX_ERROR)) {
+            if (point.latitude - (yn + corr.latitude)).abs() < Self::MAX_ERROR
+                && (point.longitude - (xn + corr.longitude)).abs() < Self::MAX_ERROR
+            {
                 return Ok(Correction {
                     latitude: -corr.latitude,
                     longitude: -corr.longitude,
@@ -1248,7 +1239,7 @@ mod test {
             let origin = Point::new_unchecked(36.103774791666666, 140.08785504166664, 0.0);
             assert_eq!(
                 tf.backward_unchecked(&origin).unwrap(),
-                tf.backward(&origin).unwrap()
+                tf.backward(&origin).unwrap(),
             );
             assert_eq!(
                 tf.backward_corr_unchecked(&origin).unwrap(),
@@ -1506,14 +1497,14 @@ mod test {
                     .zip([
                         Correction::new(-0.0000168814518646117, 0.00006262378469612878, 0.0),
                         Correction::new(-0.000016838096116009317, 0.00006258622379442354, 0.0),
-                        Correction::new(-0.000016729364806643504, 0.00006245235772614292, 0.0),
+                        Correction::new(-0.000016729364806643497, 0.00006245235772614292, 0.0),
                         Correction::new(-0.0000167927912747071, 0.00006249523883252357, 0.0),
                         Correction::new(-0.000016933832772111427, 0.00006267005867786031, 0.0),
                         Correction::new(-0.000016809693706255367, 0.00006251870596206315, 0.0),
                         Correction::new(-0.000016786470254049566, 0.00006246228557241947, 0.0),
                         Correction::new(-0.00001685044470202184, 0.00006259677006272436, 0.0),
                         Correction::new(-0.000016691037655080527, 0.00006237164728172895, 0.0),
-                        Correction::new(-0.00001687026026957804, 0.00006258535452990637, 0.0),
+                        Correction::new(-0.00001687026026957804, 0.00006258535452990634, 0.0),
                         Correction::new(-0.000016791839127120513, 0.0000625602113400046, 0.0),
                         Correction::new(-0.00001678754837251092, 0.00006250049437271753, 0.0),
                         Correction::new(-0.000016767471766493994, 0.0000624742742034364, 0.0),
@@ -1739,7 +1730,7 @@ mod test {
                         Correction::new(0.002606310999517925, 0.001447888620287575, 0.0),
                         Correction::new(0.002604684369343261, 0.0014260134049254973, 0.0),
                         Correction::new(0.00260626221837615, 0.0014353723867724917, 0.0),
-                        Correction::new(0.002600964757448706, 0.001439742194381401, 0.0),
+                        Correction::new(0.002600964757448706, 0.0014397421943814004, 0.0),
                         Correction::new(0.0026036845541074624, 0.0014361754579083328, 0.0),
                         Correction::new(0.002606753327162285, 0.0014495313122466396, 0.0),
                         Correction::new(0.0025968757136544513, 0.0014453329417000451, 0.0),

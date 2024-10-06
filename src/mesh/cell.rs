@@ -1,5 +1,4 @@
 use crate::mesh::{MeshCoord, MeshNode, MeshUnit};
-use crate::vector::f64x2;
 use crate::Point;
 
 /// Represents unit mesh cell, a quadruplet of [`MeshNode`]s and [`MeshUnit`].
@@ -482,17 +481,13 @@ impl MeshCell {
     #[inline]
     #[must_use]
     pub fn position(&self, point: &Point) -> (f64, f64) {
-        let pos = f64x2!(point.latitude, point.longitude)
-            - f64x2!(
-                self.south_west.latitude.to_latitude(),
-                self.south_west.longitude.to_longitude()
-            );
+        let x = point.longitude - self.south_west.longitude.to_longitude();
+        let y = point.latitude - self.south_west.latitude.to_latitude();
 
         match self.mesh_unit {
-            MeshUnit::One => f64x2!(120., 80.) * pos,
-            MeshUnit::Five => f64x2!(24., 16.) * pos,
+            MeshUnit::One => (120. * y, 80. * x),
+            MeshUnit::Five => (24. * y, 16. * x),
         }
-        .into()
     }
 }
 

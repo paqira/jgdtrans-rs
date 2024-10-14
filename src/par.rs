@@ -134,7 +134,7 @@ where
             text.lines().by_ref().last().map_or(0, str::len),
             text.lines().count(),
             ParseParErrorKind::Header,
-            Column::Meshcode,
+            None,
         ));
     }
 
@@ -153,15 +153,16 @@ where
     } else {
         HashMap::with_hasher(hash_builder)
     };
+
     for (lineno, line) in lines {
-        let meshcode: u32 = line
+        let meshcode = line
             .get(meshcode.clone())
             .ok_or(ParseParError::new(
                 meshcode.start,
                 meshcode.end,
                 lineno + 1,
                 ParseParErrorKind::ColumnNotFound,
-                Column::Meshcode,
+                Some(Column::Meshcode),
             ))?
             .trim()
             .parse()
@@ -171,11 +172,11 @@ where
                     meshcode.end,
                     lineno + 1,
                     ParseParErrorKind::ParseInt(e),
-                    Column::Meshcode,
+                    Some(Column::Meshcode),
                 )
             })?;
 
-        let latitude: f64 = match latitude {
+        let latitude = match latitude {
             None => 0.0,
             Some(ref range) => line
                 .get(range.clone())
@@ -184,7 +185,7 @@ where
                     range.end,
                     lineno + 1,
                     ParseParErrorKind::ColumnNotFound,
-                    Column::Latitude,
+                    Some(Column::Latitude),
                 ))?
                 .trim()
                 .parse()
@@ -194,12 +195,12 @@ where
                         range.end,
                         lineno + 1,
                         ParseParErrorKind::ParseFloat(e),
-                        Column::Latitude,
+                        Some(Column::Latitude),
                     )
                 })?,
         };
 
-        let longitude: f64 = match longitude {
+        let longitude = match longitude {
             None => 0.0,
             Some(ref range) => line
                 .get(range.clone())
@@ -208,7 +209,7 @@ where
                     range.end,
                     lineno + 1,
                     ParseParErrorKind::ColumnNotFound,
-                    Column::Longitude,
+                    Some(Column::Longitude),
                 ))?
                 .trim()
                 .parse()
@@ -218,12 +219,12 @@ where
                         range.end,
                         lineno + 1,
                         ParseParErrorKind::ParseFloat(e),
-                        Column::Longitude,
+                        Some(Column::Longitude),
                     )
                 })?,
         };
 
-        let altitude: f64 = match altitude {
+        let altitude = match altitude {
             None => 0.0,
             Some(ref range) => line
                 .get(range.clone())
@@ -232,7 +233,7 @@ where
                     range.end,
                     lineno + 1,
                     ParseParErrorKind::ColumnNotFound,
-                    Column::Altitude,
+                    Some(Column::Altitude),
                 ))?
                 .trim()
                 .parse()
@@ -242,7 +243,7 @@ where
                         range.end,
                         lineno + 1,
                         ParseParErrorKind::ParseFloat(e),
-                        Column::Altitude,
+                        Some(Column::Altitude),
                     )
                 })?,
         };
@@ -536,14 +537,14 @@ where
 pub struct ParseParError {
     /// Error kind
     kind: ParseParErrorKind,
-    /// Error Column
-    pub column: Column,
     /// Lineno of the data
-    pub lineno: usize,
+    lineno: usize,
+    /// Error part, `None` if `kind` is `Header`.
+    column: Option<Column>,
     /// Start colum no. of the data
-    pub start: usize,
+    start: usize,
     /// End colum no. of the data
-    pub end: usize,
+    end: usize,
 }
 
 /// An error kind of [`ParseParError`].
@@ -571,7 +572,7 @@ impl ParseParError {
         end: usize,
         lineno: usize,
         kind: ParseParErrorKind,
-        column: Column,
+        column: Option<Column>,
     ) -> Self {
         Self {
             kind,
@@ -585,6 +586,26 @@ impl ParseParError {
     /// Returns the detailed cause.
     pub const fn kind(&self) -> &ParseParErrorKind {
         &self.kind
+    }
+
+    /// Returns the error column name, `None` if it errors on header.
+    pub const fn column(&self) -> &Option<Column> {
+        &self.column
+    }
+
+    /// Returns the error line number.
+    pub const fn lineno(&self) -> &usize {
+        &self.lineno
+    }
+
+    /// Returns the error starts position.
+    pub const fn start(&self) -> &usize {
+        &self.start
+    }
+
+    /// Returns the error ends position.
+    pub const fn end(&self) -> &usize {
+        &self.end
     }
 }
 
@@ -600,15 +621,17 @@ impl Error for ParseParError {
 
 impl Display for ParseParError {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        let name = match self.kind {
-            ParseParErrorKind::Header => "header at",
-            _ => "at",
-        };
-        write!(
-            f,
-            "parse error: {} l{}:{}:{}",
-            name, self.lineno, self.start, self.end
-        )
+        match self.kind {
+            ParseParErrorKind::Header => f.write_str("parse error: header"),
+            _ => match &self.column {
+                None => unreachable!(),
+                Some(name) => write!(
+                    f,
+                    "parse error: {} l{}:{}:{}",
+                    name, self.lineno, self.start, self.end
+                ),
+            },
+        }
     }
 }
 
@@ -676,7 +699,7 @@ MeshCode   dB(sec)   dL(sec)
             assert_eq!(actual.start, 0);
             assert_eq!(actual.end, 8);
             assert_eq!(actual.lineno, 17);
-            assert!(matches!(actual.column, Column::Meshcode));
+            assert!(matches!(actual.column, Some(Column::Meshcode)));
         }
 
         #[test]
@@ -690,7 +713,7 @@ MeshCode   dB(sec)   dL(sec)
             assert_eq!(actual.start, 9);
             assert_eq!(actual.end, 18);
             assert_eq!(actual.lineno, 17);
-            assert!(matches!(actual.column, Column::Latitude));
+            assert!(matches!(actual.column, Some(Column::Latitude)));
         }
 
         #[test]
@@ -704,7 +727,7 @@ MeshCode   dB(sec)   dL(sec)
             assert_eq!(actual.start, 19);
             assert_eq!(actual.end, 28);
             assert_eq!(actual.lineno, 17);
-            assert!(matches!(actual.column, Column::Longitude));
+            assert!(matches!(actual.column, Some(Column::Longitude)));
         }
 
         #[test]
@@ -718,7 +741,7 @@ MeshCode   dB(sec)   dL(sec)
             assert_eq!(actual.start, 29);
             assert_eq!(actual.end, 38);
             assert_eq!(actual.lineno, 17);
-            assert!(matches!(actual.column, Column::Altitude));
+            assert!(matches!(actual.column, Some(Column::Altitude)));
         }
     }
 

@@ -1,5 +1,11 @@
 # Change Log
 
+## x.x.x
+
+### Added
+
+- Hide field of `ParseParError`
+
 ## 0.2.3 - 2024-10-06
 
 ### Added

@@ -244,7 +244,7 @@ fn parse_integer(chars: &mut Peekable<Chars>) -> Result<Option<(u8, u8, u8)>, Pa
 
     let mut acc: Option<u64> = None;
     while let Some(c) = chars.peek() {
-        if c.eq(&'.') {
+        if *c == '.' {
             break;
         }
 
@@ -286,7 +286,7 @@ fn parse_fraction(chars: &mut Peekable<Chars>) -> Result<Option<f64>, ParseDMSEr
         return Err(ParseDMSError::with_invalid_digit());
     }
 
-    let mut s = chars.filter(|c| c.ne(&'_')).collect::<String>();
+    let mut s = chars.filter(|c| *c != '_').collect::<String>();
     if s.is_empty() {
         Ok(None)
     } else {
@@ -330,7 +330,7 @@ impl TryFrom<&f64> for DMS {
     fn try_from(value: &f64) -> Result<Self, Self::Error> {
         if value.is_nan() {
             return Err(TryFromDMSError::new_nan());
-        } else if value.lt(&-180.0) || value.gt(&180.0) {
+        } else if !(-180.0..=180.0).contains(value) {
             return Err(TryFromDMSError::new_oob());
         };
 
@@ -374,12 +374,11 @@ impl DMS {
     #[must_use]
     pub fn new(sign: Sign, degree: u8, minute: u8, second: u8, fract: f64) -> Option<Self> {
         if fract.is_nan()
-            || degree.eq(&180) && (minute.gt(&0) || second.gt(&0) || fract.gt(&0.0))
-            || degree.gt(&180)
-            || minute.ge(&60)
-            || second.ge(&60)
-            || fract.lt(&0.0)
-            || fract.ge(&1.0)
+            || degree == 180 && (minute > 0 || second > 0 || fract > 0.0)
+            || degree > 180
+            || minute >= 60
+            || second >= 60
+            || !(0.0..1.0).contains(&fract)
         {
             return None;
         }

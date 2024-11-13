@@ -201,7 +201,7 @@ impl MeshCoord {
     }
 
     fn from_degree(degree: &f64, mesh_unit: &MeshUnit) -> Self {
-        assert!(0.0.le(degree) && 180.0.ge(degree));
+        assert!((0.0..=180.0).contains(degree));
 
         let integer = degree.floor() as u32;
 
@@ -268,14 +268,14 @@ impl MeshCoord {
             // Minimum add-hook trick to ensure the identity,
             // 1. MeshCoord::try_from_latitude(&coord.to_latitude(), &MeshUnit::One)
             // 2. MeshCoord::try_from_longitude(&coord.to_longitude(), &MeshUnit::One)
-            if (degree.to_bits() % 2).eq(&1) {
+            if (degree.to_bits() % 2) == 1 {
                 value.next_up()
             } else {
                 value
             }
         };
 
-        if value.lt(&0.0) || value.ge(&100.0) {
+        if !(0.0..100.0).contains(&value) {
             return None;
         };
 
@@ -311,7 +311,7 @@ impl MeshCoord {
     /// ```
     #[must_use]
     pub fn try_from_longitude(degree: &f64, mesh_unit: &MeshUnit) -> Option<Self> {
-        if degree.lt(&100.0) || degree.gt(&180.0) || degree.is_nan() {
+        if !(100.0..180.0).contains(degree) || degree.is_nan() {
             return None;
         };
 

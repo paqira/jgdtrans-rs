@@ -566,13 +566,13 @@ mod test {
     fn test_try_new() {
         let mut coord = MeshCoord::new(0, 0, 0).unwrap();
 
-        while coord.le(&MeshCoord::new(80, 0, 0).unwrap()) {
+        while coord <= MeshCoord::new(80, 0, 0).unwrap() {
             let temp = MeshNode::new(MeshCoord::new(0, 0, 0).unwrap(), coord.clone());
             assert!(temp.is_some());
             coord = coord.next_up(&MeshUnit::One).unwrap();
         }
 
-        while coord.lt(&MeshCoord::new(99, 7, 9).unwrap()) {
+        while coord < MeshCoord::new(99, 7, 9).unwrap() {
             let temp = MeshNode::new(MeshCoord::new(0, 0, 0).unwrap(), coord.clone());
             assert!(temp.is_none());
             coord = coord.next_up(&MeshUnit::One).unwrap();

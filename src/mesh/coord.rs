@@ -275,7 +275,7 @@ impl MeshCoord {
             }
         };
 
-        if !(0.0..100.0).contains(&value) {
+        if !(0.0..=100.0).contains(&value) {
             return None;
         };
 
@@ -311,7 +311,7 @@ impl MeshCoord {
     /// ```
     #[must_use]
     pub fn try_from_longitude(degree: &f64, mesh_unit: &MeshUnit) -> Option<Self> {
-        if !(100.0..180.0).contains(degree) || degree.is_nan() {
+        if !(100.0..=180.0).contains(degree) || degree.is_nan() {
             return None;
         };
 

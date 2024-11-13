@@ -16,7 +16,7 @@ impl MeshCode {
     pub(crate) fn from_point(point: &Point, mesh_unit: &MeshUnit) -> Self {
         let latitude = {
             let temp = 3.0 * point.latitude / 2.0;
-            if (point.latitude.to_bits() % 2).eq(&1) {
+            if (point.latitude.to_bits() % 2) == 1 {
                 temp.next_up()
             } else {
                 temp
@@ -36,36 +36,24 @@ impl MeshCode {
             (80. * longitude).floor() as u32 - 80 * integer[1] - 10 * second[1],
         ];
 
-        Self(
-            (
-                first[0] as u8,
-                second[0] as u8,
-                match mesh_unit {
-                    MeshUnit::One => third[0] as u8,
-                    MeshUnit::Five => {
-                        if third[0] < 5 {
-                            0
-                        } else {
-                            5
-                        }
-                    }
-                },
+        match mesh_unit {
+            MeshUnit::One => Self(
+                (first[0] as u8, second[0] as u8, third[0] as u8),
+                (first[1] as u8, second[1] as u8, third[1] as u8),
             ),
-            (
-                first[1] as u8,
-                second[1] as u8,
-                match mesh_unit {
-                    MeshUnit::One => third[1] as u8,
-                    MeshUnit::Five => {
-                        if third[1] < 5 {
-                            0
-                        } else {
-                            5
-                        }
-                    }
-                },
+            MeshUnit::Five => Self(
+                (
+                    first[0] as u8,
+                    second[0] as u8,
+                    if third[0] < 5 { 0 } else { 5 },
+                ),
+                (
+                    first[1] as u8,
+                    second[1] as u8,
+                    if third[1] < 5 { 0 } else { 5 },
+                ),
             ),
-        )
+        }
     }
 
     /// See [`MeshNode::to_meshcode`].

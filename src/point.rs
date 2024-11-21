@@ -8,12 +8,12 @@ use crate::Correction;
 /// Returns the normalized latitude into -90.0 <= and <= 90.0.
 #[inline(always)]
 fn normalize_latitude(t: &f64) -> f64 {
-    if t.is_nan() || t.ge(&-90.) && t.le(&90.0) {
+    if t.is_nan() || (-90.0..=90.0).contains(t) {
         *t
     } else {
         match t % 360.0 {
-            s if s.lt(&-270.0) || s.gt(&270.0) => s - f64::copysign(360.0, s),
-            s if s.lt(&-90.0) || s.gt(&90.0) => f64::copysign(180.0, s) - s,
+            s if !(-270.0..=270.0).contains(&s) => s - f64::copysign(360.0, s),
+            s if !(-90.0..=90.0).contains(&s) => f64::copysign(180.0, s) - s,
             s => s,
         }
     }
@@ -22,11 +22,11 @@ fn normalize_latitude(t: &f64) -> f64 {
 /// Returns the normalize longitude -180.0 <= and <= 180.0.
 #[inline(always)]
 fn normalize_longitude(t: &f64) -> f64 {
-    if t.is_nan() || t.ge(&-180.0) && t.le(&180.0) {
+    if t.is_nan() || (-180.0..=180.0).contains(t) {
         *t
     } else {
         match t % 360.0 {
-            s if s.lt(&-180.0) || s.gt(&180.0) => s - f64::copysign(360.0, s),
+            s if !(-180.0..180.0).contains(&s) => s - f64::copysign(360.0, s),
             s => s,
         }
     }
@@ -127,10 +127,8 @@ impl Point {
     #[inline]
     #[must_use]
     pub fn new(latitude: f64, longitude: f64, altitude: f64) -> Option<Self> {
-        if latitude.lt(&-90.)
-            || 90.0.lt(&latitude)
-            || longitude.lt(&-180.)
-            || 180.0.lt(&longitude)
+        if !(-90.0..=90.0).contains(&latitude)
+            || !(-180.0..=180.0).contains(&longitude)
             || latitude.is_nan()
             || longitude.is_nan()
             || altitude.is_nan()

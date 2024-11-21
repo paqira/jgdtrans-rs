@@ -1,7 +1,6 @@
 //! Provides [`Point`].
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-use crate::internal::{impl_assign_ops, impl_ops};
 use crate::mesh::{MeshCell, MeshNode, MeshUnit};
 use crate::Correction;
 
@@ -88,8 +87,92 @@ impl From<MeshNode> for Point {
     }
 }
 
+macro_rules! impl_ops {
+    ($t:ident, $m:ident, $s:ident, $rhs:ident) => {
+        impl $t<$rhs> for $s {
+            type Output = $s;
+
+            #[inline]
+            fn $m(self, rhs: $rhs) -> Self::Output {
+                Self::Output::new_unchecked(
+                    $t::$m(self.latitude, rhs.latitude),
+                    $t::$m(self.longitude, rhs.longitude),
+                    $t::$m(self.altitude, rhs.altitude),
+                )
+                .normalize()
+            }
+        }
+
+        impl $t<&$rhs> for $s {
+            type Output = $s;
+
+            #[inline]
+            fn $m(self, rhs: &$rhs) -> Self::Output {
+                Self::Output::new_unchecked(
+                    $t::$m(self.latitude, rhs.latitude),
+                    $t::$m(self.longitude, rhs.longitude),
+                    $t::$m(self.altitude, rhs.altitude),
+                )
+                .normalize()
+            }
+        }
+
+        impl $t<$rhs> for &$s {
+            type Output = $s;
+
+            #[inline]
+            fn $m(self, rhs: $rhs) -> Self::Output {
+                Self::Output::new_unchecked(
+                    $t::$m(self.latitude, rhs.latitude),
+                    $t::$m(self.longitude, rhs.longitude),
+                    $t::$m(self.altitude, rhs.altitude),
+                )
+                .normalize()
+            }
+        }
+
+        impl $t<&$rhs> for &$s {
+            type Output = $s;
+
+            #[inline]
+            fn $m(self, rhs: &$rhs) -> Self::Output {
+                Self::Output::new_unchecked(
+                    $t::$m(self.latitude, rhs.latitude),
+                    $t::$m(self.longitude, rhs.longitude),
+                    $t::$m(self.altitude, rhs.altitude),
+                )
+                .normalize()
+            }
+        }
+    };
+}
+
 impl_ops!(Add, add, Point, Correction);
 impl_ops!(Sub, sub, Point, Correction);
+
+macro_rules! impl_assign_ops {
+    ($t:ident, $m:ident, $s:ident, $rhs:ident) => {
+        impl $t<$rhs> for $s {
+            #[inline]
+            fn $m(&mut self, rhs: $rhs) {
+                $t::$m(&mut self.latitude, rhs.latitude);
+                $t::$m(&mut self.longitude, rhs.longitude);
+                $t::$m(&mut self.altitude, rhs.altitude);
+                *self = self.normalize();
+            }
+        }
+
+        impl $t<&$rhs> for $s {
+            #[inline]
+            fn $m(&mut self, rhs: &$rhs) {
+                $t::$m(&mut self.latitude, rhs.latitude);
+                $t::$m(&mut self.longitude, rhs.longitude);
+                $t::$m(&mut self.altitude, rhs.altitude);
+                *self = self.normalize();
+            }
+        }
+    };
+}
 
 impl_assign_ops!(AddAssign, add_assign, Point, Correction);
 impl_assign_ops!(SubAssign, sub_assign, Point, Correction);

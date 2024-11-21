@@ -176,7 +176,6 @@ pub use transformer::{Correction, Parameter, StatisticData, Statistics, Transfor
 
 mod builder;
 pub mod dms;
-mod internal;
 pub mod mesh;
 pub mod par;
 mod point;

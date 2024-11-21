@@ -1,13 +1,3 @@
-macro_rules! mul_add {
-    ($a:expr, $b:expr, $c:expr) => {
-        if cfg!(target_feature = "fma") {
-            f64::mul_add($a, $b, $c)
-        } else {
-            $a * $b + $c
-        }
-    };
-}
-
 macro_rules! impl_ops {
     ($t:ident, $m:ident, $s:ident, $rhs:ident) => {
         impl $t<$rhs> for $s {
@@ -94,4 +84,3 @@ macro_rules! impl_assign_ops {
 
 pub(crate) use impl_assign_ops;
 pub(crate) use impl_ops;
-pub(crate) use mul_add;

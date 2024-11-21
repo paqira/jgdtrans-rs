@@ -1,4 +1,4 @@
-use crate::internal::mul_add;
+use crate::fma;
 use crate::mesh::{MeshTryFromError, MeshUnit};
 
 /// Represents mesh coordinate, namely, discrete latitude and/or longitude.
@@ -321,8 +321,8 @@ impl MeshCoord {
     #[inline]
     fn to_degree(&self) -> f64 {
         // self.first as f64 + self.second as f64 / 8. + self.third as f64 / 80.
-        let r = mul_add!(self.second as f64, 1. / 8., self.first as f64);
-        mul_add!(self.third as f64, 1. / 80., r)
+        let r = fma(self.second as f64, 1. / 8., self.first as f64);
+        fma(self.third as f64, 1. / 80., r)
     }
 
     /// Returns the latitude that `self` converts into.

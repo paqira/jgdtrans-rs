@@ -1,11 +1,10 @@
 //! Provides utilities for DMS notation degree.
+use crate::fma;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::iter::Peekable;
 use std::num::FpCategory;
 use std::str::{Chars, FromStr};
-
-use crate::internal::mul_add;
 
 /// Returns a DMS notation [`str`] from a DD notation [`f64`].
 ///
@@ -513,8 +512,8 @@ impl DMS {
     #[must_use]
     pub fn to_degree(&self) -> f64 {
         // let temp = (self.degree as f64) + self.minute as f64 / 60. + (self.second as f64 + self.fract) / 3600.0;
-        let temp = mul_add!(self.minute as f64, 1. / 60., self.degree as f64);
-        let temp = mul_add!(self.second as f64 + self.fract, 1. / 3600.0, temp);
+        let temp = fma(self.minute as f64, 1. / 60., self.degree as f64);
+        let temp = fma(self.second as f64 + self.fract, 1. / 3600.0, temp);
 
         match self.sign {
             Sign::Positive => temp,

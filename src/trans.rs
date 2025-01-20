@@ -634,7 +634,7 @@ where
                 ) / SCALE;
 
             // and its determinant
-            let det = fx_x * fy_y - fx_y * fy_x;
+            let det = fma(fx_x, fy_y, -fx_y * fy_x);
 
             // update Xn
             xn -= (fy_y * fx - fx_y * fy) / det;
@@ -892,7 +892,7 @@ where
                 ) / SCALE;
 
             // and its determinant
-            let det = fx_x * fy_y - fx_y * fy_x;
+            let det = fma(fx_x, fy_y, -fx_y * fy_x);
 
             // update Xn
             xn -= (fy_y * fx - fx_y * fy) / det;

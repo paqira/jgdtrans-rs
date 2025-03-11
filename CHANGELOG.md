@@ -5,6 +5,7 @@
 ### Added
 
 - Hide field of `ParseParError`
+- Add trait for transformation
 
 ## 0.2.3 - 2024-10-06
 

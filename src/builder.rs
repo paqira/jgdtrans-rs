@@ -1,8 +1,7 @@
-use std::borrow::Cow;
 use std::collections::HashMap;
 use std::hash::{BuildHasher, RandomState};
 
-use crate::{Format, Parameter, Transformer};
+use crate::{Format, ParData, Parameter, Transformer};
 
 /// The builder of [`Transformer`].
 ///
@@ -17,37 +16,28 @@ use crate::{Format, Parameter, Transformer};
 /// # use jgdtrans::*;
 /// #
 /// // from SemiDynaEXE2023.par
-/// let tf: Transformer = TransformerBuilder::new()
+/// let tf = TransformerBuilder::new()
 ///     .format(Format::SemiDynaEXE)
 ///     .parameters([
 ///         (54401005, (-0.00622, 0.01516, 0.0946)),
 ///         (54401055, (-0.0062, 0.01529, 0.08972)),
 ///     ])
-///     .description("My parameter".into())
 ///     .build();
 ///
-/// assert_eq!(tf.format, Format::SemiDynaEXE);
-/// assert_eq!(
-///     tf.parameter,
-///     HashMap::from([
-///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-///     ])
-/// );
-/// assert_eq!(tf.description, Some("My parameter".to_string()));
+/// assert_eq!(tf.mesh_unit(), MeshUnit::Five);
+/// assert_eq!(tf.get(&54401005), Some(&Parameter::new(-0.00622, 0.01516, 0.0946)));
+/// assert_eq!(tf.get(&54401055), Some(&Parameter::new(-0.0062, 0.01529, 0.08972)));
 /// ```
 #[derive(Debug, Default)]
 pub struct TransformerBuilder<
-    'a,
     #[cfg(not(feature = "serde"))] S = RandomState,
     #[cfg(feature = "serde")] S: Default = RandomState,
 > {
     format: Option<Format>,
     parameter: HashMap<u32, Parameter, S>,
-    description: Option<Cow<'a, str>>,
 }
 
-impl TransformerBuilder<'_, RandomState> {
+impl TransformerBuilder<RandomState> {
     /// Makes a [`TransformerBuilder`].
     ///
     /// # Example
@@ -60,9 +50,7 @@ impl TransformerBuilder<'_, RandomState> {
     ///     .format(Format::SemiDynaEXE)
     ///     .build();
     ///
-    /// assert_eq!(tf.format, Format::SemiDynaEXE);
-    /// assert_eq!(tf.parameter, HashMap::new());
-    /// assert_eq!(tf.description, None);
+    /// assert_eq!(tf.mesh_unit(), MeshUnit::Five);
     /// ```
     #[inline]
     pub fn new() -> Self {
@@ -87,14 +75,11 @@ impl TransformerBuilder<'_, RandomState> {
         Self {
             format: None,
             parameter: HashMap::with_capacity_and_hasher(capacity, RandomState::new()),
-            description: None,
         }
     }
 }
 
-impl<'a, #[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default>
-    TransformerBuilder<'a, S>
-{
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> TransformerBuilder<S> {
     /// Makes a [`TransformerBuilder`] which uses the given hash builder to hash meshcode.
     ///
     /// See [`HashMap::with_hasher`] for detail.
@@ -114,7 +99,6 @@ impl<'a, #[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default>
         Self {
             format: None,
             parameter: HashMap::with_hasher(hash_builder),
-            description: None,
         }
     }
 
@@ -137,7 +121,6 @@ impl<'a, #[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default>
         Self {
             format: None,
             parameter: HashMap::with_capacity_and_hasher(capacity, hash_builder),
-            description: None,
         }
     }
 
@@ -152,29 +135,11 @@ impl<'a, #[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default>
     ///     .format(Format::SemiDynaEXE)
     ///     .build();
     ///
-    /// assert_eq!(tf.format, Format::SemiDynaEXE);
+    /// assert_eq!(tf.mesh_unit(), MeshUnit::Five);
     /// ```
     #[inline]
     pub const fn format(mut self, format: Format) -> Self {
         self.format = Some(format);
-        self
-    }
-
-    /// Updates [`description`](Transformer::description).
-    ///
-    /// ```
-    /// # use jgdtrans::*;
-    /// #
-    /// let tf = TransformerBuilder::new()
-    ///     .format(Format::SemiDynaEXE)
-    ///     .description("My parameter".into())
-    ///     .build();
-    ///
-    /// assert_eq!(tf.description, Some("My parameter".to_string()));
-    /// ```
-    #[inline]
-    pub fn description(mut self, s: Cow<'a, str>) -> Self {
-        self.description = Some(s);
         self
     }
 
@@ -185,17 +150,16 @@ impl<'a, #[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default>
     /// Panics when `format` is not assigned.
     #[inline]
     #[must_use]
-    pub fn build(self) -> Transformer<S> {
-        Transformer {
-            format: self.format.expect("format is not assigned"),
-            parameter: self.parameter,
-            description: self.description.map(|c| c.to_string()),
-        }
+    pub fn build(self) -> Transformer<ParData<S>> {
+        let data = ParData::new(
+            self.format.expect("mesh_unit is not assigned"),
+            self.parameter,
+        );
+        Transformer::new(data)
     }
 }
 
-impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default>
-    TransformerBuilder<'_, S>
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> TransformerBuilder<S>
 where
     S: BuildHasher,
 {
@@ -213,10 +177,7 @@ where
     ///     .parameter(54401005, (-0.00622, 0.01516, 0.0946))
     ///     .build();
     ///
-    /// assert_eq!(
-    ///     tf.parameter,
-    ///     HashMap::from([(54401005, Parameter::new(-0.00622, 0.01516, 0.0946)), ])
-    /// );
+    /// assert_eq!(tf.get(&54401005), Some(&Parameter::new(-0.00622, 0.01516, 0.0946)));
     /// ```
     #[inline]
     pub fn parameter(mut self, meshcode: u32, parameter: impl Into<Parameter>) -> Self {
@@ -243,15 +204,10 @@ where
     ///     ])
     ///     .build();
     ///
-    /// assert_eq!(
-    ///     tf.parameter,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
-    /// );
+    /// assert_eq!(tf.get(&54401005), Some(&Parameter::new(-0.00622, 0.01516, 0.0946)));
+    /// assert_eq!(tf.get(&54401055), Some(&Parameter::new(-0.0062, 0.01529, 0.08972)));
+    /// assert_eq!(tf.get(&54401100), Some(&Parameter::new(-0.00663, 0.01492, 0.10374)));
+    /// assert_eq!(tf.get(&54401150), Some(&Parameter::new(-0.00664, 0.01506, 0.10087)));
     /// ```
     #[inline]
     pub fn parameters(
@@ -275,16 +231,15 @@ where
 }
 
 impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Clone
-    for TransformerBuilder<'_, S>
+    for TransformerBuilder<S>
 where
     S: Clone,
 {
     #[inline]
     fn clone(&self) -> Self {
         Self {
-            format: self.format.clone(),
+            format: self.format,
             parameter: self.parameter.clone(),
-            description: self.description.clone(),
         }
     }
 
@@ -292,7 +247,6 @@ where
     fn clone_from(&mut self, source: &Self) {
         self.format.clone_from(&source.format);
         self.parameter.clone_from(&source.parameter);
-        self.description.clone_from(&source.description);
     }
 }
 
@@ -301,7 +255,7 @@ mod test {
     use super::*;
 
     #[test]
-    #[should_panic(expected = "format is not assigned")]
+    #[should_panic(expected = "mesh_unit is not assigned")]
     fn test_panic() {
         let _ = TransformerBuilder::new().build();
     }
@@ -316,13 +270,16 @@ mod test {
             .build();
 
         assert_eq!(
-            tf.parameter,
-            [
-                (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-                (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-                (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-            ]
-            .into()
+            tf.get(&54401005),
+            Some(&Parameter::new(-0.00622, 0.01516, 0.0946))
+        );
+        assert_eq!(
+            tf.get(&54401055),
+            Some(&Parameter::new(-0.0062, 0.01529, 0.08972))
+        );
+        assert_eq!(
+            tf.get(&54401100),
+            Some(&Parameter::new(-0.00663, 0.01492, 0.10374))
         );
     }
 }

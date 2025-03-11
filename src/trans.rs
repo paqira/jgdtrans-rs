@@ -1,10 +1,8 @@
-use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
-use std::hash::BuildHasher;
 
-use crate::mesh::{MeshCell, MeshCode, MeshUnit};
-use crate::{fma, Correction, Parameter, Point, Transformer};
+use crate::mesh::{MeshCell, MeshCode};
+use crate::{fma, Correction, MeshUnit, Parameter, ParameterSet, Point, Transformer};
 
 type Result<T> = std::result::Result<T, TransformError>;
 
@@ -29,14 +27,13 @@ struct Params<'a> {
 
 impl<'a> Params<'a> {
     #[inline(always)]
-    fn new<S>(parameter: &'a HashMap<u32, Parameter, S>, cell: &MeshCell) -> Result<Self>
+    fn new<T>(tf: &'a Transformer<T>, cell: &MeshCell) -> Result<Self>
     where
-        S: BuildHasher,
+        T: ParameterSet,
     {
         macro_rules! get {
             ($meshcode:ident, $corner:expr) => {
-                parameter
-                    .get(&$meshcode)
+                tf.get(&$meshcode)
                     .ok_or(TransformError::new_pnf($meshcode, $corner))
             };
         }
@@ -57,13 +54,13 @@ impl<'a> Params<'a> {
     }
 
     #[inline(always)]
-    fn new_unchecked<S>(
-        parameter: &'a HashMap<u32, Parameter, S>,
+    fn new_unchecked<T>(
+        tf: &'a Transformer<T>,
         code: &MeshCode,
         mesh_unit: &MeshUnit,
     ) -> Result<Self>
     where
-        S: BuildHasher,
+        T: ParameterSet,
     {
         let east = code.next_east(mesh_unit);
         let north = code.next_north(mesh_unit);
@@ -71,8 +68,7 @@ impl<'a> Params<'a> {
 
         macro_rules! get {
             ($meshcode:ident, $corner:expr) => {
-                parameter
-                    .get(&$meshcode)
+                tf.get(&$meshcode)
                     .ok_or(TransformError::new_pnf($meshcode, $corner))
             };
         }
@@ -93,9 +89,9 @@ impl<'a> Params<'a> {
     }
 }
 
-impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Transformer<S>
+impl<T> Transformer<T>
 where
-    S: BuildHasher,
+    T: ParameterSet,
 {
     /// Returns the forward-transformed position.
     ///
@@ -112,13 +108,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// let point = Point::new_unchecked(36.10377479, 140.087855041, 2.34);
@@ -155,13 +153,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// let point = Point::new_unchecked(36.103773017086695, 140.08785924333452, 2.4363138578103);
@@ -206,13 +206,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// // In this case, no error remains
@@ -256,13 +258,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// let point = Point::new_unchecked(36.10377479, 140.087855041, 2.34);
@@ -303,13 +307,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// let point = Point::new_unchecked(36.103773017086695, 140.08785924333452, 2.4363138578103);
@@ -351,13 +357,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// let point = Point::new_unchecked(36.103773017086695, 140.08785924333452, 2.4363138578103);
@@ -391,13 +399,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// let origin = Point::new_unchecked(36.10377479, 140.087855041, 0.0);
@@ -416,11 +426,11 @@ where
     /// ```
     #[inline]
     pub fn forward_corr(&self, point: &Point) -> Result<Correction> {
-        let cell = MeshCell::try_from_point(point, self.format.mesh_unit())
-            .ok_or(TransformError::new_oob())?;
+        let cell =
+            MeshCell::try_from_point(point, self.mesh_unit()).ok_or(TransformError::new_oob())?;
 
         // Interpolation
-        let Params { sw, se, nw, ne } = Params::new(&self.parameter, &cell)?;
+        let Params { sw, se, nw, ne } = Params::new(self, &cell)?;
 
         // y: latitude, x: longitude
         let (y, x) = cell.position(point);
@@ -457,13 +467,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// let origin = Point::new_unchecked(36.103773017086695, 140.08785924333452, 0.0);
@@ -516,13 +528,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// let origin = Point::new_unchecked(36.103773017086695, 140.08785924333452, 0.0);
@@ -575,7 +589,7 @@ where
 
         let (mut yn, mut xn) = (point.latitude, point.longitude);
 
-        let mesh_unit = self.format.mesh_unit();
+        let mesh_unit = self.mesh_unit();
 
         for _ in 0..ITERATION {
             //
@@ -587,7 +601,7 @@ where
                 return Err(TransformError::new_oob());
             };
 
-            let Params { sw, se, nw, ne } = Params::new(&self.parameter, &cell)?;
+            let Params { sw, se, nw, ne } = Params::new(self, &cell)?;
 
             //
             // Construct f(x)
@@ -681,13 +695,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// let origin = Point::new_unchecked(36.10377479, 140.087855041, 0.0);
@@ -702,12 +718,12 @@ where
     /// ```
     #[inline]
     pub fn forward_corr_unchecked(&self, point: &Point) -> Result<Correction> {
-        let mesh_unit = self.format.mesh_unit();
+        let mesh_unit = self.mesh_unit();
 
         let code = MeshCode::from_point(point, &mesh_unit);
 
         // Interpolation
-        let Params { sw, se, nw, ne } = Params::new_unchecked(&self.parameter, &code, &mesh_unit)?;
+        let Params { sw, se, nw, ne } = Params::new_unchecked(self, &code, &mesh_unit)?;
 
         // y: latitude, x: longitude
         let (y, x) = code.position(point, &mesh_unit);
@@ -751,13 +767,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// let origin = Point::new_unchecked(36.103773017086695, 140.08785924333452, 0.0);
@@ -816,13 +834,15 @@ where
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
     /// );
     ///
     /// let origin = Point::new_unchecked(36.103773017086695, 140.08785924333452, 0.0);
@@ -836,7 +856,7 @@ where
     /// ```
     pub fn backward_corr_unchecked(&self, point: &Point) -> Result<Correction> {
         // See backward_corr for detail
-        let mesh_unit = self.format.mesh_unit();
+        let mesh_unit = self.mesh_unit();
 
         const SCALE: f64 = 3600.;
         const ITERATION: usize = 4;
@@ -848,8 +868,7 @@ where
 
             let code = MeshCode::from_point(&current, &mesh_unit);
 
-            let Params { sw, se, nw, ne } =
-                Params::new_unchecked(&self.parameter, &code, &mesh_unit)?;
+            let Params { sw, se, nw, ne } = Params::new_unchecked(self, &code, &mesh_unit)?;
 
             let (y, x) = code.position(&current, &mesh_unit);
 

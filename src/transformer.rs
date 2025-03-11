@@ -1,8 +1,7 @@
 //! Provides [`Transformer`] etc.
-use std::collections::HashMap;
-use std::hash::{BuildHasher, RandomState};
-
-use crate::{Format, ParseParError};
+use crate::mesh::MeshUnit;
+use crate::{Format, ParData, ParseParError};
+use std::hash::RandomState;
 
 /// Improved Kahan–Babuška algorithm
 ///
@@ -254,6 +253,21 @@ pub struct Statistics {
     pub horizontal: StatisticData,
 }
 
+/// Trait for transformation.
+pub trait ParameterSet {
+    /// Returns [`MeshUnit`].
+    fn mesh_unit(&self) -> MeshUnit;
+
+    /// Returns [`Parameter`] associated with `meshcode`.
+    fn get(&self, meshcode: &u32) -> Option<&Parameter>;
+}
+
+/// Trait for statistical analysis.
+pub trait ParameterData {
+    /// Returns all pairs of meshcode and parameter.
+    fn to_vec(&self) -> Vec<(&u32, &Parameter)>;
+}
+
 /// The coordinate Transformer, and represents a deserializing result of par-formatted data.
 ///
 /// If the parameters is zero, such as the unsupported components,
@@ -272,13 +286,15 @@ pub struct Statistics {
 /// #
 /// // from SemiDynaEXE2023.par
 /// let tf = Transformer::new(
-///     Format::SemiDynaEXE,
-///     HashMap::from([
-///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-///     ])
+///     ParData::new(
+///         Format::SemiDynaEXE,
+///         HashMap::from([
+///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+///         ])
+///     )
 /// );
 ///
 /// // forward transformation
@@ -290,31 +306,11 @@ pub struct Statistics {
 /// # Ok::<(), TransformError>(())
 /// ```
 #[derive(Debug)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct Transformer<
-    #[cfg(not(feature = "serde"))] S = RandomState,
-    #[cfg(feature = "serde")] S: Default = RandomState,
-> {
-    /// The format of par file.
-    pub format: Format,
-    /// The transformation parameter.
-    ///
-    /// The entry represents single line of par-formatted file's parameter section,
-    /// the key is meshcode, and the value parameter.
-    #[cfg_attr(
-        feature = "serde",
-        serde(bound(
-            serialize = "HashMap<u32, Parameter, S>: serde::Serialize",
-            deserialize = "HashMap<u32, Parameter, S>: serde::Deserialize<'de>"
-        ))
-    )]
-    pub parameter: HashMap<u32, Parameter, S>,
-    /// The description, or the header of par-formatted data.
-    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
-    pub description: Option<String>,
+pub struct Transformer<T> {
+    inner: T,
 }
 
-impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Transformer<S> {
+impl<T> Transformer<T> {
     /// Max error of backward transformation.
     ///
     /// Used by [`Transformer::backward`], [`Transformer::backward_corr`]
@@ -334,128 +330,28 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Tra
     /// #
     /// // from SemiDynaEXE2023.par
     /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///     ])
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///         ])
+    ///     )
     /// );
     ///
-    /// assert_eq!(tf.format, Format::SemiDynaEXE);
-    /// assert_eq!(tf.format.mesh_unit(), MeshUnit::Five);
-    /// assert_eq!(
-    ///     tf.parameter,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///     ])
-    /// );
-    /// assert_eq!(tf.description, None);
+    /// assert_eq!(tf.mesh_unit(), MeshUnit::Five);
+    /// assert_eq!(tf.get(&54401005), Some(&Parameter::new(-0.00622, 0.01516, 0.0946)));
+    /// assert_eq!(tf.get(&54401055), Some(&Parameter::new(-0.0062, 0.01529, 0.08972)));
     /// ```
     #[inline]
     #[must_use]
-    pub const fn new(format: Format, parameter: HashMap<u32, Parameter, S>) -> Self {
-        Self {
-            format,
-            parameter,
-            description: None,
-        }
-    }
-
-    /// Makes a [`Transformer`] with [`description`](Transformer::description).
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use std::collections::HashMap;
-    /// # use jgdtrans::*;
-    /// # use jgdtrans::mesh::MeshUnit;
-    /// #
-    /// let tf = Transformer::with_description(
-    ///     Format::TKY2JGD,
-    ///     HashMap::new(),
-    ///     "My Parameter".to_string()
-    /// );
-    /// assert_eq!(tf.format, Format::TKY2JGD);
-    /// assert_eq!(tf.format.mesh_unit(), MeshUnit::One);
-    /// assert_eq!(tf.parameter, HashMap::new());
-    /// assert_eq!(tf.description, Some("My Parameter".to_string()));
-    /// ```
-    #[inline]
-    #[must_use]
-    pub const fn with_description(
-        format: Format,
-        parameter: HashMap<u32, Parameter, S>,
-        description: String,
-    ) -> Self {
-        Self {
-            format,
-            parameter,
-            description: Some(description),
-        }
-    }
-
-    /// Returns the statistics of the parameter.
-    ///
-    /// See [`StatisticData`] for details of result's components.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// # use std::collections::HashMap;
-    /// # use jgdtrans::*;
-    /// #
-    /// // from SemiDynaEXE2023.par
-    /// let tf = Transformer::new(
-    ///     Format::SemiDynaEXE,
-    ///     HashMap::from([
-    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
-    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
-    ///         (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
-    ///         (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
-    ///     ])
-    /// );
-    ///
-    /// let stats = tf.statistics();
-    ///
-    /// assert_eq!(stats.latitude.count, Some(4));
-    /// assert_eq!(stats.latitude.mean, Some(-0.0064225));
-    /// assert_eq!(stats.latitude.std, Some(0.019268673410486777));
-    /// assert_eq!(stats.latitude.abs, Some(0.006422499999999999));
-    /// assert_eq!(stats.latitude.min, Some(-0.00664));
-    /// assert_eq!(stats.latitude.max, Some(-0.0062));
-    /// ```
-    #[must_use]
-    pub fn statistics(&self) -> Statistics {
-        // it's not optimal, but length of parameters is enough small
-
-        // ensure summation order
-        let mut sorted: Vec<_> = self.parameter.iter().collect();
-        sorted.sort_by_key(|t| t.0);
-
-        let arr: Vec<f64> = sorted.iter().map(|t| t.1.latitude).collect();
-        let latitude = StatisticData::from_array(&arr);
-
-        let arr: Vec<f64> = sorted.iter().map(|t| t.1.longitude).collect();
-        let longitude = StatisticData::from_array(&arr);
-
-        let arr: Vec<f64> = sorted.iter().map(|t| t.1.altitude).collect();
-        let altitude = StatisticData::from_array(&arr);
-
-        let arr: Vec<f64> = sorted.iter().map(|t| t.1.horizontal()).collect();
-        let horizontal = StatisticData::from_array(&arr);
-
-        Statistics {
-            latitude,
-            longitude,
-            altitude,
-            horizontal,
-        }
+    pub const fn new(parameter: T) -> Self {
+        Self { inner: parameter }
     }
 }
 
-impl Transformer<RandomState> {
-    /// Deserialize par-formatted [`&str`] into a [`Transformer`].
+impl Transformer<ParData<RandomState>> {
+    /// Deserialize par-formatted [`&str`] into a [`Transformer`] with [`ParData`].
     ///
     /// Use `format` argument to specify the format of `s`.
     ///
@@ -491,16 +387,14 @@ impl Transformer<RandomState> {
     /// 12345678   0.00001   0.00002   0.00003";
     /// let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
     ///
-    /// assert_eq!(tf.format, Format::SemiDynaEXE);
-    /// assert_eq!(
-    ///     tf.parameter.get(&12345678),
-    ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
-    /// );
+    /// assert_eq!(tf.mesh_unit(), MeshUnit::Five);
+    /// assert_eq!(tf.get(&12345678),  Some(&Parameter::new(0.00001, 0.00002, 0.00003)));
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[inline]
     pub fn from_str(s: &str, format: Format) -> Result<Self, ParseParError> {
-        crate::par::from_str(s, format)
+        let data = ParData::from_str(s, format)?;
+        Ok(Self::new(data))
     }
 
     /// Deserialize par-formatted [`&str`] into a [`Transformer`] with description.
@@ -539,12 +433,8 @@ impl Transformer<RandomState> {
     ///     "SemiDyna2023.par".to_string(),
     /// )?;
     ///
-    /// assert_eq!(tf.format, Format::SemiDynaEXE);
-    /// assert_eq!(
-    ///     tf.parameter.get(&12345678),
-    ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
-    /// );
-    /// assert_eq!(tf.description, Some("SemiDyna2023.par".to_string()));
+    /// assert_eq!(tf.mesh_unit(), MeshUnit::Five);
+    /// assert_eq!(tf.get(&12345678), Some(&Parameter::new(0.00001, 0.00002, 0.00003)));
     /// # Ok::<(), Box<dyn Error>>(())
     /// ```
     #[inline]
@@ -553,42 +443,115 @@ impl Transformer<RandomState> {
         format: Format,
         description: String,
     ) -> Result<Self, ParseParError> {
-        crate::par::Parser::new(format).parse_with_description(s, description)
+        let mut data = ParData::from_str(s, format)?;
+        data.description = Some(description);
+        Ok(Self::new(data))
     }
 }
 
-impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> PartialEq
-    for Transformer<S>
+impl<T> Transformer<T>
 where
-    S: BuildHasher,
+    T: ParameterSet,
+{
+    #[must_use]
+    pub fn mesh_unit(&self) -> MeshUnit {
+        self.inner.mesh_unit()
+    }
+
+    #[must_use]
+    pub fn get(&self, meshcode: &u32) -> Option<&Parameter> {
+        self.inner.get(meshcode)
+    }
+}
+
+impl<T> Transformer<T>
+where
+    T: ParameterData,
+{
+    /// Returns the statistics of the parameter.
+    ///
+    /// See [`StatisticData`] for details of result's components.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::collections::HashMap;
+    /// # use jgdtrans::*;
+    /// #
+    /// // from SemiDynaEXE2023.par
+    /// let tf = Transformer::new(
+    ///     ParData::new(
+    ///         Format::SemiDynaEXE,
+    ///         HashMap::from([
+    ///             (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///             (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///             (54401100, Parameter::new(-0.00663, 0.01492, 0.10374)),
+    ///             (54401150, Parameter::new(-0.00664, 0.01506, 0.10087)),
+    ///         ])
+    ///     )
+    /// );
+    ///
+    /// let stats = tf.statistics();
+    ///
+    /// assert_eq!(stats.latitude.count, Some(4));
+    /// assert_eq!(stats.latitude.mean, Some(-0.0064225));
+    /// assert_eq!(stats.latitude.std, Some(0.019268673410486777));
+    /// assert_eq!(stats.latitude.abs, Some(0.006422499999999999));
+    /// assert_eq!(stats.latitude.min, Some(-0.00664));
+    /// assert_eq!(stats.latitude.max, Some(-0.0062));
+    /// ```
+    #[must_use]
+    pub fn statistics(&self) -> Statistics {
+        let mut params = self.inner.to_vec();
+
+        // Ensure summation order
+        params.sort_by_key(|(k, _)| *k);
+
+        let temp: Vec<_> = params.iter().map(|(_, p)| p.latitude).collect();
+        let latitude = StatisticData::from_array(&temp);
+
+        let temp: Vec<_> = params.iter().map(|(_, p)| p.longitude).collect();
+        let longitude = StatisticData::from_array(&temp);
+
+        let temp: Vec<_> = params.iter().map(|(_, p)| p.altitude).collect();
+        let altitude = StatisticData::from_array(&temp);
+
+        let temp: Vec<_> = params.iter().map(|(_, p)| p.horizontal()).collect();
+        let horizontal = StatisticData::from_array(&temp);
+
+        Statistics {
+            latitude,
+            longitude,
+            altitude,
+            horizontal,
+        }
+    }
+}
+
+impl<T> PartialEq for Transformer<T>
+where
+    T: PartialEq,
 {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-        self.format.eq(&other.format)
-            && self.description.eq(&other.description)
-            && self.parameter.eq(&other.parameter)
+        self.inner.eq(&other.inner)
     }
 }
 
-impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Clone
-    for Transformer<S>
+impl<T> Clone for Transformer<T>
 where
-    S: Clone,
+    T: Clone,
 {
     #[inline]
     fn clone(&self) -> Self {
         Self {
-            format: self.format.clone(),
-            parameter: self.parameter.clone(),
-            description: self.description.clone(),
+            inner: self.inner.clone(),
         }
     }
 
     #[inline]
     fn clone_from(&mut self, source: &Self) {
-        self.format.clone_from(&source.format);
-        self.parameter.clone_from(&source.parameter);
-        self.description.clone_from(&source.description);
+        self.inner.clone_from(&source.inner);
     }
 }
 
@@ -610,7 +573,7 @@ mod test {
 
     mod test_transformer {
         use super::*;
-
+    
         #[allow(non_upper_case_globals)]
         const SemiDynaEXE: [(u32, (f64, f64, f64)); 4] = [
             (54401005, (-0.00622, 0.01516, 0.0946)),
@@ -618,7 +581,7 @@ mod test {
             (54401100, (-0.00663, 0.01492, 0.10374)),
             (54401150, (-0.00664, 0.01506, 0.10087)),
         ];
-
+    
         #[test]
         fn test_stats() {
             let stats = TransformerBuilder::new()
@@ -626,7 +589,7 @@ mod test {
                 .parameters(SemiDynaEXE)
                 .build()
                 .statistics();
-
+    
             assert_eq!(
                 stats.latitude,
                 StatisticData {
@@ -660,7 +623,7 @@ mod test {
                     max: Some(0.10374)
                 }
             );
-
+    
             // Notes, horizontal (f64::hypot)
             // is an only non-exact operation in jgdtrans.
             assert_eq!(
@@ -686,7 +649,7 @@ mod test {
                     max: Some(0.016499215132847987)
                 }
             );
-
+    
             let stats = TransformerBuilder::new()
                 .format(Format::TKY2JGD)
                 .build()
@@ -735,13 +698,13 @@ mod test {
                     max: None
                 }
             );
-
+    
             let stats = TransformerBuilder::new()
                 .format(Format::SemiDynaEXE)
                 .parameters([(54401005, (1., 0.0, f64::NAN))])
                 .build()
                 .statistics();
-
+    
             assert_eq!(
                 stats.latitude,
                 StatisticData {

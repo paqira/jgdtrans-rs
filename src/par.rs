@@ -7,57 +7,10 @@ use std::num::{ParseFloatError, ParseIntError};
 use std::ops::Range;
 
 use crate::mesh::MeshUnit;
-use crate::{Parameter, Transformer};
-
-/// Deserialize par-formatted [`&str`] into a [`Transformer`].
-///
-/// Use `format` argument to specify the format of `s`.
-///
-/// This fills by 0.0 for altitude parameter when [`Format::TKY2JGD`] or [`Format::PatchJGD`] given,
-/// and for latitude and longitude when [`Format::PatchJGD_H`] or [`Format::HyokoRev`] given.
-///
-/// # Errors
-///
-/// Returns [`Err`] when the invalid data found.
-///
-/// # Example
-///
-/// ```
-/// # use std::error::Error;
-/// # use jgdtrans::*;
-/// #
-/// let s = r"<15 lines>
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// # ...
-/// MeshCode dB(sec)  dL(sec) dH(m)
-/// 12345678   0.00001   0.00002   0.00003";
-/// let tf = from_str(&s, Format::SemiDynaEXE)?;
-///
-/// assert_eq!(
-///     tf.parameter.get(&12345678),
-///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
-/// );
-/// # Ok::<(), Box<dyn Error>>(())
-/// ```
-#[inline]
-pub fn from_str(s: &str, format: Format) -> Result<Transformer, ParseParError> {
-    Parser::new(format).parse(s)
-}
+use crate::{Parameter, ParameterData, ParameterSet};
 
 /// Represents format of par-formatted text.
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Format {
     TKY2JGD,
@@ -113,6 +66,271 @@ impl Format {
     }
 }
 
+#[derive(Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ParData<
+    #[cfg(not(feature = "serde"))] S = RandomState,
+    #[cfg(feature = "serde")] S: Default = RandomState,
+> {
+    /// The format of par file.
+    pub format: Format,
+    /// The transformation parameter.
+    ///
+    /// The entry represents single line of par-formatted file's parameter section,
+    /// the key is meshcode, and the value parameter.
+    #[cfg_attr(
+        feature = "serde",
+        serde(bound(
+            serialize = "HashMap<u32, Parameter, S>: serde::Serialize",
+            deserialize = "HashMap<u32, Parameter, S>: serde::Deserialize<'de>"
+        ))
+    )]
+    pub parameter: HashMap<u32, Parameter, S>,
+    /// The description, or the header of par-formatted data.
+    #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
+    pub description: Option<String>,
+}
+
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> ParData<S> {
+    /// Makes a [`Transformer`].
+    ///
+    /// We note that we provide a builder, see [`TransformerBuilder`](crate::ParDataBuilder).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::collections::HashMap;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// #
+    /// // from SemiDynaEXE2023.par
+    /// let tf = ParData::new(
+    ///     Format::SemiDynaEXE,
+    ///     HashMap::from([
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///     ])
+    /// );
+    ///
+    /// assert_eq!(tf.format, Format::SemiDynaEXE);
+    /// assert_eq!(tf.format.mesh_unit(), MeshUnit::Five);
+    /// assert_eq!(
+    ///     tf.parameter,
+    ///     HashMap::from([
+    ///         (54401005, Parameter::new(-0.00622, 0.01516, 0.0946)),
+    ///         (54401055, Parameter::new(-0.0062, 0.01529, 0.08972)),
+    ///     ])
+    /// );
+    /// assert_eq!(tf.description, None);
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn new(format: Format, parameter: HashMap<u32, Parameter, S>) -> Self {
+        Self {
+            format,
+            parameter,
+            description: None,
+        }
+    }
+
+    /// Makes a [`Transformer`] with [`description`](Transformer::description).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::collections::HashMap;
+    /// # use jgdtrans::*;
+    /// # use jgdtrans::mesh::MeshUnit;
+    /// #
+    /// let tf = ParData::with_description(
+    ///     Format::TKY2JGD,
+    ///     HashMap::new(),
+    ///     "My Parameter".to_string()
+    /// );
+    /// assert_eq!(tf.format, Format::TKY2JGD);
+    /// assert_eq!(tf.format.mesh_unit(), MeshUnit::One);
+    /// assert_eq!(tf.parameter, HashMap::new());
+    /// assert_eq!(tf.description, Some("My Parameter".to_string()));
+    /// ```
+    #[inline]
+    #[must_use]
+    pub const fn with_description(
+        format: Format,
+        parameter: HashMap<u32, Parameter, S>,
+        description: String,
+    ) -> Self {
+        Self {
+            format,
+            parameter,
+            description: Some(description),
+        }
+    }
+}
+
+impl ParData<RandomState> {
+    /// Deserialize par-formatted [`&str`] into a [`Transformer`].
+    ///
+    /// Use `format` argument to specify the format of `s`.
+    ///
+    /// This fills by 0.0 for altitude parameter when [`Format::TKY2JGD`] or [`Format::PatchJGD`] given,
+    /// and for latitude and longitude when [`Format::PatchJGD_H`] or [`Format::HyokoRev`] given.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the invalid data found.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// #
+    /// let s = r"<15 lines>
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// MeshCode dB(sec)  dL(sec) dH(m)
+    /// 12345678   0.00001   0.00002   0.00003";
+    /// let data = ParData::from_str(&s, Format::SemiDynaEXE)?;
+    ///
+    /// assert_eq!(data.format, Format::SemiDynaEXE);
+    /// assert_eq!(
+    ///     data.parameter.get(&12345678),
+    ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
+    /// );
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[inline]
+    pub fn from_str(s: &str, format: Format) -> Result<Self, ParseParError> {
+        ParParser::new(format).parse(s)
+    }
+
+    /// Deserialize par-formatted [`&str`] into a [`Transformer`] with description.
+    ///
+    /// See [`Transformer::from_str`] for detail.
+    /// # Errors
+    ///
+    /// Returns [`Err`] when the invalid data found.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use std::error::Error;
+    /// # use jgdtrans::*;
+    /// #
+    /// let s = r"<15 lines>
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// # ...
+    /// MeshCode dB(sec)  dL(sec) dH(m)
+    /// 12345678   0.00001   0.00002   0.00003";
+    /// let data = ParData::from_str_with_description(
+    ///     &s,
+    ///     Format::SemiDynaEXE,
+    ///     "SemiDyna2023.par".to_string(),
+    /// )?;
+    ///
+    /// assert_eq!(data.format, Format::SemiDynaEXE);
+    /// assert_eq!(
+    ///     data.parameter.get(&12345678),
+    ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
+    /// );
+    /// assert_eq!(data.description, Some("SemiDyna2023.par".to_string()));
+    /// # Ok::<(), Box<dyn Error>>(())
+    /// ```
+    #[inline]
+    pub fn from_str_with_description(
+        s: &str,
+        format: Format,
+        description: String,
+    ) -> Result<Self, ParseParError> {
+        ParParser::new(format).parse_with_description(s, description)
+    }
+}
+
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> ParameterSet
+    for ParData<S>
+where
+    S: BuildHasher,
+{
+    #[inline]
+    fn mesh_unit(&self) -> MeshUnit {
+        self.format.mesh_unit()
+    }
+
+    #[inline]
+    fn get(&self, meshcode: &u32) -> Option<&Parameter> {
+        self.parameter.get(meshcode)
+    }
+}
+
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> ParameterData
+    for ParData<S>
+where
+    S: BuildHasher,
+{
+    #[inline]
+    fn to_vec(&self) -> Vec<(&u32, &Parameter)> {
+        self.parameter.iter().collect()
+    }
+}
+
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> PartialEq
+    for ParData<S>
+where
+    S: BuildHasher,
+{
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.format.eq(&other.format)
+            && self.description.eq(&other.description)
+            && self.parameter.eq(&other.parameter)
+    }
+}
+
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Clone for ParData<S>
+where
+    S: Clone,
+{
+    #[inline]
+    fn clone(&self) -> Self {
+        Self {
+            format: self.format.clone(),
+            parameter: self.parameter.clone(),
+            description: self.description.clone(),
+        }
+    }
+
+    #[inline]
+    fn clone_from(&mut self, source: &Self) {
+        self.format.clone_from(&source.format);
+        self.parameter.clone_from(&source.parameter);
+        self.description.clone_from(&source.description);
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::type_complexity)]
 fn parse<S>(
@@ -124,7 +342,7 @@ fn parse<S>(
     altitude: Option<Range<usize>>,
     capacity: Option<usize>,
     hash_builder: S,
-) -> Result<(HashMap<u32, Parameter, S>, Option<String>), ParseParError>
+) -> Result<(HashMap<u32, Parameter, S>, String), ParseParError>
 where
     S: BuildHasher,
 {
@@ -260,7 +478,7 @@ where
 
     parameter.shrink_to_fit();
 
-    Ok((parameter, Some(description)))
+    Ok((parameter, description))
 }
 
 /// Parser of par-formatted [`&str`].
@@ -270,7 +488,6 @@ where
 /// ```
 /// # use std::error::Error;
 /// # use jgdtrans::*;
-/// # use jgdtrans::par::Parser;
 /// #
 /// let s = r"<15 lines>
 /// # ...
@@ -289,22 +506,22 @@ where
 /// # ...
 /// MeshCode dB(sec)  dL(sec) dH(m)
 /// 12345678   0.00001   0.00002   0.00003";
-/// let tf = Parser::new(Format::SemiDynaEXE).parse(&s)?;
+/// let data = ParParser::new(Format::SemiDynaEXE).parse(&s)?;
 ///
 /// assert_eq!(
-///     tf.parameter.get(&12345678),
+///     data.parameter.get(&12345678),
 ///     Some(&Parameter::new(0.00001, 0.00002, 0.00003))
 /// );
 /// # Ok::<(), Box<dyn Error>>(())
 /// ```
 #[derive(Debug)]
-pub struct Parser<S = RandomState> {
+pub struct ParParser<S = RandomState> {
     format: Format,
     capacity: Option<usize>,
     hash_builder: S,
 }
 
-impl Parser<RandomState> {
+impl ParParser<RandomState> {
     /// Makes a parser.
     ///
     /// # Example
@@ -312,7 +529,6 @@ impl Parser<RandomState> {
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::par::Parser;
     /// let s = r"<15 lines>
     /// # ...
     /// # ...
@@ -331,7 +547,7 @@ impl Parser<RandomState> {
     /// MeshCode dB(sec)  dL(sec) dH(m)
     /// 12345678   0.00001   0.00002   0.00003";
     ///
-    /// let parser = Parser::new(Format::SemiDynaEXE);
+    /// let parser = ParParser::new(Format::SemiDynaEXE);
     /// let tf = parser.parse(s)?;
     ///
     /// assert_eq!(
@@ -357,8 +573,7 @@ impl Parser<RandomState> {
     ///
     /// ```
     /// # use jgdtrans::*;
-    /// # use jgdtrans::par::Parser;
-    /// let parser = Parser::with_capacity(Format::SemiDynaEXE, 10);
+    /// let parser = ParParser::with_capacity(Format::SemiDynaEXE, 10);
     /// ```
     #[inline]
     #[must_use]
@@ -367,7 +582,7 @@ impl Parser<RandomState> {
     }
 }
 
-impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Parser<S> {
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> ParParser<S> {
     /// Makes a parser which uses the given hash builder to hash meshcode.
     ///
     /// See [`HashMap::with_hasher`], for detail.
@@ -377,9 +592,8 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Par
     /// ```
     /// use std::hash::RandomState;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::par::Parser;
     ///
-    /// let parser = Parser::with_hasher(Format::SemiDynaEXE, RandomState::new());
+    /// let parser = ParParser::with_hasher(Format::SemiDynaEXE, RandomState::new());
     /// ```
     #[inline]
     pub const fn with_hasher(format: Format, hash_builder: S) -> Self {
@@ -402,9 +616,8 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Par
     /// ```
     /// use std::hash::RandomState;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::par::Parser;
     ///
-    /// let parser = Parser::with_capacity_and_hasher(Format::SemiDynaEXE, 10, RandomState::new());
+    /// let parser = ParParser::with_capacity_and_hasher(Format::SemiDynaEXE, 10, RandomState::new());
     /// ```
     #[inline]
     pub const fn with_capacity_and_hasher(
@@ -420,13 +633,13 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Par
     }
 }
 
-impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Parser<S>
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> ParParser<S>
 where
     S: BuildHasher,
 {
     /// Deserialize par-formatted [`&str`] into a [`Transformer`].
     #[inline]
-    pub fn parse(self, s: &str) -> Result<Transformer<S>, ParseParError> {
+    pub fn parse(self, s: &str) -> Result<ParData<S>, ParseParError> {
         let (header, meshcode, latitude, longitude, altitude) = match self.format {
             Format::TKY2JGD => (2, 0..8, Some(9..18), Some(19..28), None),
             Format::PatchJGD => (16, 0..8, Some(9..18), Some(19..28), None),
@@ -451,10 +664,10 @@ where
             self.hash_builder,
         )?;
 
-        Ok(Transformer {
-            format: self.format.clone(),
+        Ok(ParData {
+            format: self.format,
             parameter,
-            description,
+            description: Some(description),
         })
     }
 
@@ -465,7 +678,6 @@ where
     /// ```
     /// # use std::error::Error;
     /// # use jgdtrans::*;
-    /// # use jgdtrans::par::Parser;
     /// #
     /// let s = r"<15 lines>
     /// # ...
@@ -484,7 +696,7 @@ where
     /// # ...
     /// MeshCode dB(sec)  dL(sec) dH(m)
     /// 12345678   0.00001   0.00002   0.00003";
-    /// let tf = Parser::new(Format::SemiDynaEXE)
+    /// let tf = ParParser::new(Format::SemiDynaEXE)
     ///     .parse_with_description(&s, "My parameter".to_string())?;
     ///
     /// assert_eq!(
@@ -498,14 +710,14 @@ where
         self,
         s: &str,
         description: String,
-    ) -> Result<Transformer<S>, ParseParError> {
-        let mut tf = self.parse(s)?;
-        tf.description.replace(description);
-        Ok(tf)
+    ) -> Result<ParData<S>, ParseParError> {
+        let mut data = self.parse(s)?;
+        data.description.replace(description);
+        Ok(data)
     }
 }
 
-impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Clone for Parser<S>
+impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Clone for ParParser<S>
 where
     S: Clone,
 {
@@ -666,8 +878,8 @@ mod test {
         fn test_empty() {
             let text = "JGD2000-TokyoDatum Ver.2.1.2
 MeshCode   dB(sec)   dL(sec)";
-            let actual = from_str(&text, Format::TKY2JGD).unwrap();
-            let expected = Transformer {
+            let actual = ParData::from_str(&text, Format::TKY2JGD).unwrap();
+            let expected = ParData {
                 format: Format::TKY2JGD,
                 parameter: [].into_iter().collect(),
                 description: Some(
@@ -680,11 +892,11 @@ MeshCode   dB(sec)   dL(sec)
             transformer_eq!(expected, actual);
 
             let text = "JGD2000-TokyoDatum Ver.2.1.2";
-            let actual = from_str(&text, Format::TKY2JGD);
+            let actual = ParData::from_str(&text, Format::TKY2JGD);
             assert!(actual.is_err());
 
             let text = "";
-            let actual = from_str(&text, Format::TKY2JGD);
+            let actual = ParData::from_str(&text, Format::TKY2JGD);
             assert!(actual.is_err());
         }
 
@@ -694,7 +906,7 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode dB(sec)  dL(sec) dH(m)
 000x0000   0.00001   0.00002   0.00003
 10000000 -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::SemiDynaEXE).unwrap_err();
+            let actual = ParData::from_str(&text, Format::SemiDynaEXE).unwrap_err();
 
             assert_eq!(actual.start, 0);
             assert_eq!(actual.end, 8);
@@ -708,7 +920,7 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode dB(sec)  dL(sec) dH(m)
 00000000   0.0000x   0.00002   0.00003
 10000000 -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::SemiDynaEXE).unwrap_err();
+            let actual = ParData::from_str(&text, Format::SemiDynaEXE).unwrap_err();
 
             assert_eq!(actual.start, 9);
             assert_eq!(actual.end, 18);
@@ -722,7 +934,7 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode dB(sec)  dL(sec) dH(m)
 00000000   0.00001   0.0000x   0.00003
 10000000 -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::SemiDynaEXE).unwrap_err();
+            let actual = ParData::from_str(&text, Format::SemiDynaEXE).unwrap_err();
 
             assert_eq!(actual.start, 19);
             assert_eq!(actual.end, 28);
@@ -736,7 +948,7 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode dB(sec)  dL(sec) dH(m)
 00000000   0.00001   0.00002   0.0000x
 10000000 -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::SemiDynaEXE).unwrap_err();
+            let actual = ParData::from_str(&text, Format::SemiDynaEXE).unwrap_err();
 
             assert_eq!(actual.start, 29);
             assert_eq!(actual.end, 38);
@@ -755,8 +967,8 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode   dB(sec)   dL(sec)
 00000000   0.00001   0.00002
 10000000 -10.00001 -10.00002";
-            let actual = from_str(&text, Format::TKY2JGD).unwrap();
-            let expected = Transformer {
+            let actual = ParData::from_str(&text, Format::TKY2JGD).unwrap();
+            let expected = ParData {
                 format: Format::TKY2JGD,
                 parameter: [
                     (
@@ -789,8 +1001,8 @@ MeshCode   dB(sec)   dL(sec)
             let text = r"JGD2000-TokyoDatum Ver.2.1.2
 MeshCode   dB(sec)   dL(sec)
 ";
-            let actual = from_str(&text, Format::TKY2JGD).unwrap();
-            let expected = Transformer {
+            let actual = ParData::from_str(&text, Format::TKY2JGD).unwrap();
+            let expected = ParData {
                 format: Format::TKY2JGD,
                 parameter: HashMap::new(),
                 description: Some(
@@ -812,8 +1024,8 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode   dB(sec)   dL(sec)
 00000000   0.00001   0.00002
 10000000 -10.00001 -10.00002";
-            let actual = from_str(&text, Format::PatchJGD).unwrap();
-            let expected = Transformer {
+            let actual = ParData::from_str(&text, Format::PatchJGD).unwrap();
+            let expected = ParData {
                 format: Format::PatchJGD,
                 parameter: [
                     (
@@ -852,8 +1064,8 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode   dH(m)     0.00000
 00000000   0.00003   0.00000
 10000000 -10.00003   0.00000";
-            let actual = from_str(&text, Format::PatchJGD_H).unwrap();
-            let expected = Transformer {
+            let actual = ParData::from_str(&text, Format::PatchJGD_H).unwrap();
+            let expected = ParData {
                 format: Format::PatchJGD_H,
                 parameter: [
                     (
@@ -892,8 +1104,8 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode   dB(sec)   dL(sec)   dH(m)
 00000000   0.00001   0.00002   0.00003
 10000000 -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::PatchJGD_HV).unwrap();
-            let expected = Transformer {
+            let actual = ParData::from_str(&text, Format::PatchJGD_HV).unwrap();
+            let expected = ParData {
                 format: Format::PatchJGD_HV,
                 parameter: [
                     (
@@ -934,8 +1146,8 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode      dH(m)     0.00000
 00000000      0.00003   0.00000
 10000000    -10.00003   0.00000";
-            let actual = from_str(&text, Format::HyokoRev).unwrap();
-            let expected = Transformer {
+            let actual = ParData::from_str(&text, Format::HyokoRev).unwrap();
+            let expected = ParData {
                 format: Format::HyokoRev,
                 parameter: [
                     (
@@ -976,8 +1188,8 @@ MeshCode   dB(sec)   dL(sec)
                 + "MeshCode dB(sec)  dL(sec) dH(m)
 00000000   0.00001   0.00002   0.00003
 10000000 -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::SemiDynaEXE).unwrap();
-            let expected = Transformer {
+            let actual = ParData::from_str(&text, Format::SemiDynaEXE).unwrap();
+            let expected = ParData {
                 format: Format::SemiDynaEXE,
                 parameter: [
                     (
@@ -1018,8 +1230,8 @@ MeshCode   dB(sec)   dL(sec)
                 + "END OF HEADER
 00000000      0.00001   0.00002   0.00003
 10000000    -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::geonetF3).unwrap();
-            let expected = Transformer {
+            let actual = ParData::from_str(&text, Format::geonetF3).unwrap();
+            let expected = ParData {
                 format: Format::geonetF3,
                 parameter: [
                     (
@@ -1058,8 +1270,8 @@ MeshCode   dB(sec)   dL(sec)
                 + "END OF HEADER
 00000000      0.00001   0.00002   0.00003
 10000000    -10.00001 -10.00002 -10.00003";
-            let actual = from_str(&text, Format::ITRF2014).unwrap();
-            let expected = Transformer {
+            let actual = ParData::from_str(&text, Format::ITRF2014).unwrap();
+            let expected = ParData {
                 format: Format::ITRF2014,
                 parameter: [
                     (

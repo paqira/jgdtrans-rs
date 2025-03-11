@@ -75,7 +75,7 @@
 //! ## Optional Features
 //!
 //! - `serde`: supports serialization/deserialization by [`serde` crate][serde],
-//!            this requires dependency on [`serde`][serde].
+//!   this requires dependency on [`serde`][serde].
 //!
 //! [serde]: https://crates.io/crates/serde
 //! [fma]: https://en.wikipedia.org/wiki/Multiply–accumulate_operation
@@ -90,13 +90,11 @@
 //! use std::error::Error;
 //! # use std::fs;
 //!
-//! use jgdtrans::{Format, Transformer};
+//! use jgdtrans::{Format, ParData};
 //!
 //! # fn main() -> Result<(), Box<dyn Error>> {
 //! let s = fs::read_to_string("SemiDyna2023.par").expect("file not found 'SemiDyna2023.par'");
-//! let tf = Transformer::from_str(&s, Format::SemiDynaEXE)?;
-//! // This is equivalent to:
-//! // let tf = jgdtrans::from_str(&s, Format::SemiDynaEXE)?;
+//! let data = ParData::from_str(&s, Format::SemiDynaEXE)?;
 //! # Ok(())}
 //! ```
 //!
@@ -115,26 +113,25 @@
 //! use jgdtrans::{
 //!     Format,
 //!     Parameter,
-//!     Transformer,
-//!     TransformerBuilder,
+//!     ParData,
 //! };
 //!
 //! fn main() -> serde_json::Result<()> {
 //!     // Construct a Transformer by TransformerBuilder
-//!     let tf = TransformerBuilder::new()
-//!         .format(Format::TKY2JGD)
-//!         .parameter(12345678, (1., 2., 3.))
-//!         .build();
+//!     let data = ParData::new(
+//!         Format::TKY2JGD,
+//!         HashMap::from([(12345678, Parameter::new(1., 2., 3.))])
+//!     );
 //!
 //!     // Serialize to json
-//!     let json = serde_json::to_string(&tf)?;
+//!     let json = serde_json::to_string(&data)?;
 //!     assert_eq!(
 //!         json,
 //!         r#"{"format":"TKY2JGD","parameter":{"12345678":{"latitude":1.0,"longitude":2.0,"altitude":3.0}}}"#
 //!     );
 //!
 //!     // Deserialize from json
-//!     let result: Transformer = serde_json::from_str(&json)?;
+//!     let result: ParData = serde_json::from_str(&json)?;
 //!     assert_eq!(result.format, Format::TKY2JGD);
 //!     assert_eq!(result.parameter, HashMap::from([(12345678, Parameter::new(1., 2., 3.)), ]));
 //!     assert_eq!(result.description, None);
@@ -164,20 +161,22 @@
 #[doc(inline)]
 pub use builder::TransformerBuilder;
 #[doc(inline)]
-pub use par::ParseParError;
+pub use mesh::MeshUnit;
 #[doc(inline)]
-pub use par::{from_str, Format};
+pub use par::{Format, ParData, ParParser, ParseParError, ParseParErrorKind};
 #[doc(inline)]
 pub use point::Point;
 #[doc(inline)]
 pub use trans::{TransformError, TransformErrorKind};
 #[doc(inline)]
-pub use transformer::{Correction, Parameter, StatisticData, Statistics, Transformer};
+pub use transformer::{
+    Correction, Parameter, ParameterData, ParameterSet, StatisticData, Statistics, Transformer,
+};
 
 mod builder;
 pub mod dms;
 pub mod mesh;
-pub mod par;
+mod par;
 mod point;
 mod trans;
 mod transformer;

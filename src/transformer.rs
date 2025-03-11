@@ -573,7 +573,7 @@ mod test {
 
     mod test_transformer {
         use super::*;
-    
+
         #[allow(non_upper_case_globals)]
         const SemiDynaEXE: [(u32, (f64, f64, f64)); 4] = [
             (54401005, (-0.00622, 0.01516, 0.0946)),
@@ -581,7 +581,7 @@ mod test {
             (54401100, (-0.00663, 0.01492, 0.10374)),
             (54401150, (-0.00664, 0.01506, 0.10087)),
         ];
-    
+
         #[test]
         fn test_stats() {
             let stats = TransformerBuilder::new()
@@ -589,7 +589,7 @@ mod test {
                 .parameters(SemiDynaEXE)
                 .build()
                 .statistics();
-    
+
             assert_eq!(
                 stats.latitude,
                 StatisticData {
@@ -623,7 +623,7 @@ mod test {
                     max: Some(0.10374)
                 }
             );
-    
+
             // Notes, horizontal (f64::hypot)
             // is an only non-exact operation in jgdtrans.
             assert_eq!(
@@ -649,7 +649,7 @@ mod test {
                     max: Some(0.016499215132847987)
                 }
             );
-    
+
             let stats = TransformerBuilder::new()
                 .format(Format::TKY2JGD)
                 .build()
@@ -698,13 +698,13 @@ mod test {
                     max: None
                 }
             );
-    
+
             let stats = TransformerBuilder::new()
                 .format(Format::SemiDynaEXE)
                 .parameters([(54401005, (1., 0.0, f64::NAN))])
                 .build()
                 .statistics();
-    
+
             assert_eq!(
                 stats.latitude,
                 StatisticData {

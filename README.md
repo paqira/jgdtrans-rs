@@ -62,7 +62,7 @@ Sample code:
 use std::error::Error;
 use std::fs;
 
-use jgdtrans::{Point, Transformer, Format};
+use jgdtrans::{Format, Point, Transformer};
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Deserialize par-formatted file, e.g. SemiDyna2023.par

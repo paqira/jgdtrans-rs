@@ -117,7 +117,6 @@
 //! };
 //!
 //! fn main() -> serde_json::Result<()> {
-//!     // Construct a Transformer by TransformerBuilder
 //!     let data = ParData::new(
 //!         Format::TKY2JGD,
 //!         HashMap::from([(12345678, Parameter::new(1., 2., 3.))])

@@ -348,7 +348,7 @@ where
     if text.lines().count().lt(&header) {
         return Err(ParseParError::new(
             0,
-            text.lines().by_ref().last().map_or(0, str::len),
+            text.lines().by_ref().next_back().map_or(0, str::len),
             text.lines().count(),
             ParseParErrorKind::Header,
             None,

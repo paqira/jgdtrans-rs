@@ -84,7 +84,7 @@
 //!
 //! ### Par (Gridded Correction Parameter)
 //!
-//! We provide APIs, [`Transformer::from_str`] and [`from_str`].
+//! We provide APIs, [`ParData::from_str`].
 //!
 //! ```no_run
 //! use std::error::Error;

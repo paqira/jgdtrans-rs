@@ -66,6 +66,7 @@ impl Format {
     }
 }
 
+/// Data of par file.
 #[derive(Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ParData<
@@ -92,9 +93,7 @@ pub struct ParData<
 }
 
 impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> ParData<S> {
-    /// Makes a [`Transformer`].
-    ///
-    /// We note that we provide a builder, see [`TransformerBuilder`](crate::ParDataBuilder).
+    /// Makes a [`ParData`].
     ///
     /// # Example
     ///
@@ -133,7 +132,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Par
         }
     }
 
-    /// Makes a [`Transformer`] with [`description`](Transformer::description).
+    /// Makes a [`ParData`] with [`description`](ParData::description).
     ///
     /// # Example
     ///
@@ -168,7 +167,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Par
 }
 
 impl ParData<RandomState> {
-    /// Deserialize par-formatted [`&str`] into a [`Transformer`].
+    /// Deserialize par-formatted [`&str`] into a [`ParData`].
     ///
     /// Use `format` argument to specify the format of `s`.
     ///
@@ -216,9 +215,9 @@ impl ParData<RandomState> {
         ParParser::new(format).parse(s)
     }
 
-    /// Deserialize par-formatted [`&str`] into a [`Transformer`] with description.
+    /// Deserialize par-formatted [`&str`] into a [`ParData`] with description.
     ///
-    /// See [`Transformer::from_str`] for detail.
+    /// See [`ParData::from_str`] for detail.
     /// # Errors
     ///
     /// Returns [`Err`] when the invalid data found.
@@ -564,7 +563,7 @@ impl ParParser<RandomState> {
 
     /// Makes a parser with at least the specified initial capacity.
     ///
-    /// Notes, the capacity of resulting [`Transformer::parameter`]
+    /// Notes, the capacity of resulting [`ParData::parameter`]
     /// is shrunk as much as possible.
     ///
     /// See [`HashMap::with_capacity`], for detail.
@@ -606,7 +605,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Par
 
     /// Makes a parser with at least the specified initial capacity, which uses the given hash builder to hash meshcode.
     ///
-    /// Notes, the capacity of resulting [`Transformer::parameter`]
+    /// Notes, the capacity of resulting [`ParData::parameter`]
     /// is shrunk as much as possible.
     ///
     /// See [`HashMap::with_capacity_and_hasher`], for detail.
@@ -637,7 +636,7 @@ impl<#[cfg(not(feature = "serde"))] S, #[cfg(feature = "serde")] S: Default> Par
 where
     S: BuildHasher,
 {
-    /// Deserialize par-formatted [`&str`] into a [`Transformer`].
+    /// Deserialize par-formatted [`&str`] into a [`ParData`].
     #[inline]
     pub fn parse(self, s: &str) -> Result<ParData<S>, ParseParError> {
         let (header, meshcode, latitude, longitude, altitude) = match self.format {
@@ -671,7 +670,7 @@ where
         })
     }
 
-    /// Deserialize par-formatted [`&str`] into a [`Transformer`] with `description`.
+    /// Deserialize par-formatted [`&str`] into a [`ParData`] with `description`.
     ///
     /// # Example
     ///
@@ -744,7 +743,7 @@ where
 
 /// An error which can be returned on parsing par-formatted text.
 ///
-/// This error is used as the error type for the [`from_str`].
+/// This error is used as the error type for the [`ParData::from_str`].
 #[derive(Debug, PartialEq, Eq)]
 pub struct ParseParError {
     /// Error kind

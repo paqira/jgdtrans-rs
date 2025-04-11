@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.3.1 - 2025-xx-xx
+## 0.3.1 - 2025-04-11
 
 - Supports the stable rustc 🎉
 

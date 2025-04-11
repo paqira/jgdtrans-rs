@@ -1,6 +1,3 @@
-// For `Mesh::next_up` and `Mesh::next_down`.
-#![feature(float_next_up_down)]
-
 //! # jgdtrans
 //!
 //! Unofficial coordinate transformer by _Gridded Correction Parameter_

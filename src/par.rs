@@ -316,7 +316,7 @@ where
     #[inline]
     fn clone(&self) -> Self {
         Self {
-            format: self.format.clone(),
+            format: self.format,
             parameter: self.parameter.clone(),
             description: self.description.clone(),
         }
@@ -723,7 +723,7 @@ where
     #[inline]
     fn clone(&self) -> Self {
         Self {
-            format: self.format.clone(),
+            format: self.format,
             capacity: self.capacity,
             hash_builder: self.hash_builder.clone(),
         }
